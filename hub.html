@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fukari — Panel de Gestión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      min-height: 100vh;
+      background: #f1f5f9;
+      color: #111827;
+      visibility: hidden;
+    }
+    body.ready { visibility: visible; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: #1a1a2e;
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-logos { display: flex; align-items: center; gap: 12px; }
+    .topbar-logos img.yaku { height: 36px; }
+    .fuk-wrap {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px; padding: 4px 8px;
+      display: flex; align-items: center;
+    }
+    .fuk-wrap img { height: 26px; }
+    .topbar-title { color: #fff; font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .topbar-right span { color: #9ca3af; font-size: 12px; }
+    .topbar-user { color: #94a3b8; font-size: 12px; }
+    .btn-logout {
+      background: transparent; border: 1px solid #4b5563;
+      color: #d1d5db; padding: 6px 14px; border-radius: 6px;
+      font-family: inherit; font-size: 12px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-logout:hover { border-color: #9ca3af; color: #fff; }
+
+    /* ── CONTENT ── */
+    .contenido {
+      padding: 40px 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .page-header { margin-bottom: 32px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+    .page-header p { font-size: 13.5px; color: #6b7280; }
+
+    /* ── TASK GRID ── */
+    .tasks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .task-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 28px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      border: 1.5px solid #e5e7eb;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+      position: relative;
+      overflow: hidden;
+    }
+    .task-card:hover {
+      border-color: #1a1a2e;
+      box-shadow: 0 6px 20px rgba(26,26,46,0.12);
+      transform: translateY(-2px);
+    }
+    .task-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: #1a1a2e;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.2s;
+    }
+    .task-card:hover::after { transform: scaleX(1); }
+
+    .task-card.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .task-icon {
+      width: 44px; height: 44px;
+      background: #f1f5f9;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .task-card:hover .task-icon { background: #1a1a2e; }
+
+    .task-body {}
+    .task-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 5px; }
+    .task-desc { font-size: 12.5px; color: #6b7280; line-height: 1.55; }
+
+    .task-footer {
+      display: flex; align-items: center; justify-content: space-between; margin-top: 4px;
+    }
+    .task-badge {
+      font-size: 10.5px; font-weight: 600; padding: 3px 9px;
+      border-radius: 20px; background: #dcfce7; color: #16a34a; letter-spacing: 0.02em;
+    }
+    .task-badge.soon { background: #fef3c7; color: #d97706; }
+    .task-arrow { color: #9ca3af; font-size: 16px; transition: transform 0.15s, color 0.15s; }
+    .task-card:hover .task-arrow { transform: translateX(4px); color: #1a1a2e; }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: 0.08em; margin: 36px 0 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
+    <div class="fuk-wrap">
+      <img src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari">
+    </div>
+  </div>
+  <span class="topbar-title">Panel de Gestión</span>
+  <div class="topbar-right">
+    <span id="fecha-hoy"></span>
+    <span class="topbar-user" id="user-email"></span>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="contenido">
+  <div class="page-header">
+    <h1>¿Qué querés gestionar?</h1>
+    <p>Seleccioná una tarea para continuar</p>
+  </div>
+
+  <div class="section-label">Disponible</div>
+
+  <div class="tasks-grid">
+    <a href="/yaku-panel.html" class="task-card">
+      <div class="task-icon">📋</div>
+      <div class="task-body">
+        <div class="task-title">Órdenes de Instalación</div>
+        <div class="task-desc">Visualizá, filtrá y administrá todas las órdenes. Accedé al detalle y generá PDFs.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge">Activo</span>
+        <span class="task-arrow">→</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Próximamente</div>
+
+  <div class="tasks-grid">
+    <div class="task-card disabled">
+      <div class="task-icon">👥</div>
+      <div class="task-body">
+        <div class="task-title">Clientes</div>
+        <div class="task-desc">Gestión de clientes, historial de órdenes y datos de contacto.</div>
+      </div>
+      <div class="task-footer"><span class="task-badge soon">Próximamente</span></div>
+    </div>
+
+    <div class="task-card disabled">
+      <div class="task-icon">📦</div>
+      <div class="task-body">
+        <div class="task-title">Stock y Modelos</div>
+        <div class="task-desc">Administrá los modelos disponibles y precios unitarios.</div>
+      </div>
+      <div class="task-footer"><span class="task-badge soon">Próximamente</span></div>
+    </div>
+
+    <div class="task-card disabled">
+      <div class="task-icon">📊</div>
+      <div class="task-body">
+        <div class="task-title">Reportes</div>
+        <div class="task-desc">Facturación mensual, métricas de instalaciones y exportación de datos.</div>
+      </div>
+      <div class="task-footer"><span class="task-badge soon">Próximamente</span></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+  const { createClient } = window.supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (!session) {
+      window.location.href = '/index.html';
+      return;
+    }
+    // Mostrar página
+    document.body.classList.add('ready');
+
+    // Email en topbar
+    const email = session.user.email;
+    document.getElementById('user-email').textContent = email;
+
+    // Fecha
+    const d = new Date();
+    document.getElementById('fecha-hoy').textContent =
+      d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+  });
+
+  async function logout() {
+    await sb.auth.signOut();
+    window.location.href = '/index.html';
+  }
+</script>
+</body>
+</html>

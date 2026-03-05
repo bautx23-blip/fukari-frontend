@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Órdenes — Yakú</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;background:#f1f5f9;min-height:100vh;color:#111827;visibility:hidden;}
+body.ready{visibility:visible;}
+
+/* ── PANEL ── */
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.topbar-logos img.yaku{height:36px;}
+.topbar-logos .fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
+.topbar-logos img.fuk{height:26px;}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:0.3px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-right span{color:#9ca3af;font-size:12px;}
+.btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.15s;}
+.btn-logout:hover{border-color:#9ca3af;color:#fff;}
+
+.contenido{padding:28px 32px;max-width:1200px;margin:0 auto;}
+.stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+.stat-card{background:#fff;border-radius:8px;padding:16px 22px;flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.stat-card .label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.stat-card .value{font-size:26px;font-weight:700;color:#1a1a2e;margin-top:4px;}
+.stat-card .sub{font-size:11px;color:#9ca3af;margin-top:2px;}
+
+.filtros{background:#fff;border-radius:8px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.filtros input,.filtros select{padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;transition:border-color 0.15s;}
+.filtros input:focus,.filtros select:focus{border-color:#1a1a2e;}
+.filtros input{flex:1;min-width:180px;}
+.btn-refresh{padding:8px 16px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.btn-refresh:hover{background:#2a2a45;}
+
+.tabla-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:hidden;}
+.tabla-header{padding:16px 20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;}
+.tabla-header h3{font-size:14px;font-weight:600;color:#374151;}
+.tabla-header span{font-size:12px;color:#9ca3af;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:#f9fafb;padding:10px 16px;text-align:left;font-size:11.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e5e7eb;}
+tbody tr{border-bottom:1px solid #f3f4f6;transition:background 0.1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f9fafb;}
+tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
+.badge-num{background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;font-family:monospace;}
+.total-cell{font-weight:600;color:#16a34a;}
+.btn-ver{padding:5px 12px;background:#1a1a2e;color:#fff;border:none;border-radius:5px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.btn-ver:hover{background:#2a2a45;}
+.btn-dl{padding:5px 10px;background:#f3f4f6;color:#374151;border:none;border-radius:5px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;}
+.btn-dl:hover{background:#e5e7eb;}
+.sin-pdf{color:#9ca3af;font-size:12px;font-style:italic;}
+
+.loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
+.error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
+.empty-msg{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
+
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid #f3f4f6;font-size:13px;color:#6b7280;}
+.pag-btns{display:flex;gap:8px;}
+.pag-btn{padding:6px 14px;border:1.5px solid #e5e7eb;background:#fff;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;}
+.pag-btn:hover:not(:disabled){border-color:#1a1a2e;color:#1a1a2e;}
+.pag-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* Modal detalle */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;}
+#modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:10px;width:560px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.modal-header{padding:18px 22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:15px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;}
+.modal-close:hover{color:#374151;}
+.modal-body{padding:20px 22px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.detail-item label{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:3px;}
+.detail-item span{font-size:13px;color:#111827;}
+.detail-full{grid-column:1/-1;}
+.modal-prods{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px;}
+.modal-prods th{background:#f9fafb;padding:7px 10px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;border-bottom:1px solid #e5e7eb;}
+.modal-prods td{padding:7px 10px;border-bottom:1px solid #f3f4f6;}
+.modal-footer{padding:16px 22px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end;}
+.btn-modal-pdf{padding:9px 20px;background:#1a1a2e;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;}
+.btn-modal-close{padding:9px 20px;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- PANEL -->
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
+    <div class="fuk-wrap"><img class="fuk" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
+  </div>
+  <span class="topbar-title">Panel de Órdenes de Instalación</span>
+  <div class="topbar-right">
+    <span id="topbar-fecha"></span>
+    <a href="/hub.html" class="btn-logout" style="text-decoration:none;">&#8592; Inicio</a>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="contenido">
+  <div class="stats-row">
+    <div class="stat-card"><div class="label">Total órdenes</div><div class="value" id="stat-total">—</div><div class="sub">históricas</div></div>
+    <div class="stat-card"><div class="label">Este mes</div><div class="value" id="stat-mes">—</div><div class="sub" id="stat-mes-label">—</div></div>
+    <div class="stat-card"><div class="label">Última orden</div><div class="value" id="stat-ultima">—</div><div class="sub">número</div></div>
+    <div class="stat-card"><div class="label">Total facturado</div><div class="value" id="stat-monto">—</div><div class="sub">este mes</div></div>
+  </div>
+
+  <div class="filtros">
+    <input type="text" id="filtro-buscar" placeholder="Buscar por razón social, CUIT o localidad..." oninput="filtrar()">
+    <select id="filtro-mes" onchange="filtrar()">
+      <option value="">Todos los meses</option>
+    </select>
+    <button class="btn-refresh" onclick="cargarOrdenes()">&#8635; Actualizar</button>
+    <a href="/yaku-orden-instalacion.html" class="btn-refresh" style="background:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Crear orden nueva</a>
+  </div>
+
+  <div class="tabla-wrap">
+    <div class="tabla-header">
+      <h3>Órdenes de Instalación</h3>
+      <span id="contador-visible">—</span>
+    </div>
+    <div id="tabla-body">
+      <div class="loading">Cargando órdenes...</div>
+    </div>
+    <div class="pagination" id="pagination" style="display:none;">
+      <span id="pag-info"></span>
+      <div class="pag-btns">
+        <button class="pag-btn" id="btn-prev" onclick="cambiarPagina(-1)" disabled>&#8592; Anterior</button>
+        <button class="pag-btn" id="btn-next" onclick="cambiarPagina(1)">Siguiente &#8594;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div id="modal-overlay" onclick="cerrarModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-titulo">Detalle de Orden</h3>
+      <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('open')">&#215;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-modal-close" onclick="document.getElementById('modal-overlay').classList.remove('open')">Cerrar</button>
+      <a class="btn-modal-pdf" id="modal-pdf-btn" href="#" target="_blank">&#128196; Ver PDF</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const API_URL = 'https://fukari-backend-production.up.railway.app';
+const SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const POR_PAGINA = 20;
+let todasLasOrdenes = [];
+let ordenesFiltradas = [];
+let paginaActual = 1;
+
+// ── AUTH GUARD ──
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (!session) {
+    window.location.href = '/index.html';
+    return;
+  }
+  document.body.classList.add('ready');
+  iniciarPanel();
+});
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = '/index.html';
+}
+
+// ── INIT ──
+function iniciarPanel() {
+  const ahora = new Date();
+  document.getElementById('topbar-fecha').textContent = ahora.toLocaleDateString('es-AR', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  cargarOrdenes();
+}
+
+// ── CARGAR ÓRDENES ──
+async function cargarOrdenes() {
+  document.getElementById('tabla-body').innerHTML = '<div class="loading">Cargando...</div>';
+  try {
+    const res = await fetch(API_URL + '/api/ordenes');
+    if (!res.ok) throw new Error('Error ' + res.status);
+    todasLasOrdenes = await res.json();
+    poblarFiltroMes();
+    calcularStats();
+    filtrar();
+  } catch(err) {
+    document.getElementById('tabla-body').innerHTML = '<div class="error-msg">Error al cargar: ' + err.message + '</div>';
+  }
+}
+
+function poblarFiltroMes() {
+  const meses = {};
+  todasLasOrdenes.forEach(function(o) {
+    if (o.fecha_orden) { const k = o.fecha_orden.substring(0,7); meses[k] = true; }
+  });
+  const sel = document.getElementById('filtro-mes');
+  const val = sel.value;
+  sel.innerHTML = '<option value="">Todos los meses</option>';
+  Object.keys(meses).sort().reverse().forEach(function(k) {
+    const parts = k.split('-');
+    const label = new Date(parseInt(parts[0]), parseInt(parts[1])-1, 1).toLocaleDateString('es-AR', {month:'long', year:'numeric'});
+    sel.innerHTML += '<option value="' + k + '">' + label.charAt(0).toUpperCase() + label.slice(1) + '</option>';
+  });
+  sel.value = val;
+}
+
+function calcularStats() {
+  const ahora = new Date();
+  const mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
+  const delMes = todasLasOrdenes.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
+  const totalMes = delMes.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
+  document.getElementById('stat-total').textContent = todasLasOrdenes.length;
+  document.getElementById('stat-mes').textContent = delMes.length;
+  document.getElementById('stat-mes-label').textContent = ahora.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
+  document.getElementById('stat-ultima').textContent = todasLasOrdenes.length > 0 ? todasLasOrdenes[0].numero_completo : '—';
+  document.getElementById('stat-monto').textContent = totalMes > 0 ? '$' + totalMes.toLocaleString('es-AR', {minimumFractionDigits:0}) : '$0';
+}
+
+function filtrar() {
+  const q = document.getElementById('filtro-buscar').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const mes = document.getElementById('filtro-mes').value;
+  ordenesFiltradas = todasLasOrdenes.filter(function(o) {
+    var match = true;
+    if (q) {
+      var rs = (o.razon_social||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      var cuit = (o.cuit||'').toLowerCase();
+      var loc = (o.localidad||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      var num = (o.numero_completo||'').toLowerCase();
+      match = rs.includes(q) || cuit.includes(q) || loc.includes(q) || num.includes(q);
+    }
+    if (mes && match) { match = o.fecha_orden && o.fecha_orden.startsWith(mes); }
+    return match;
+  });
+  paginaActual = 1;
+  renderTabla();
+}
+
+function renderTabla() {
+  const total = ordenesFiltradas.length;
+  document.getElementById('contador-visible').textContent = total + ' órdenes';
+  if (total === 0) {
+    document.getElementById('tabla-body').innerHTML = '<div class="empty-msg">No se encontraron órdenes.</div>';
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+  const inicio = (paginaActual-1) * POR_PAGINA;
+  const pagina = ordenesFiltradas.slice(inicio, inicio + POR_PAGINA);
+  const totalPags = Math.ceil(total / POR_PAGINA);
+  var html = '<table><thead><tr><th>N° Orden</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Total</th><th>PDF</th><th></th></tr></thead><tbody>';
+  pagina.forEach(function(o) {
+    var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
+    var total = o.total_general ? '$' + parseFloat(o.total_general).toLocaleString('es-AR', {minimumFractionDigits:2}) : '—';
+    var pdfBtn = o.pdf_url ? '<a class="btn-ver" href="' + o.pdf_url + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
+    html += '<tr><td><span class="badge-num">' + (o.numero_completo||'—') + '</span></td><td>' + (o.razon_social||'—') + '</td><td>' + (o.localidad||'—') + '</td><td>' + fecha + '</td><td class="total-cell">' + total + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('tabla-body').innerHTML = html;
+  if (totalPags > 1) {
+    document.getElementById('pagination').style.display = 'flex';
+    document.getElementById('pag-info').textContent = 'Página ' + paginaActual + ' de ' + totalPags + ' (' + total + ' resultados)';
+    document.getElementById('btn-prev').disabled = paginaActual === 1;
+    document.getElementById('btn-next').disabled = paginaActual === totalPags;
+  } else {
+    document.getElementById('pagination').style.display = 'none';
+  }
+}
+
+function cambiarPagina(dir) {
+  paginaActual += dir;
+  renderTabla();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function verDetalle(o) {
+  document.getElementById('modal-titulo').textContent = 'Orden ' + (o.numero_completo||'');
+  var productos = (o.productos||[]).filter(function(p){ return p.modelo; });
+  var prodHtml = '';
+  if (productos.length > 0) {
+    prodHtml = '<table class="modal-prods"><thead><tr><th>Modelo</th><th>Cant.</th><th>P. Unitario</th><th>Total</th></tr></thead><tbody>';
+    productos.forEach(function(p) {
+      var t = (parseFloat(p.cantidad)||0) * (parseFloat(p.precio_unitario)||0);
+      prodHtml += '<tr><td>' + p.modelo + '</td><td>' + p.cantidad + '</td><td>$' + parseFloat(p.precio_unitario).toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td><td>$' + t.toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td></tr>';
+    });
+    prodHtml += '</tbody></table>';
+  } else { prodHtml = '<p style="color:#9ca3af;font-size:13px;font-style:italic;">Sin productos</p>'; }
+  var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
+  document.getElementById('modal-body').innerHTML =
+    '<div class="detail-grid">' +
+    '<div class="detail-item detail-full"><label>Razón Social</label><span>' + (o.razon_social||'—') + '</span></div>' +
+    '<div class="detail-item"><label>CUIT</label><span>' + (o.cuit||'—') + '</span></div>' +
+    '<div class="detail-item"><label>Teléfono</label><span>' + (o.telefono||'—') + '</span></div>' +
+    '<div class="detail-item detail-full"><label>Domicilio de Instalación</label><span>' + (o.dom_instalacion||'—') + '</span></div>' +
+    '<div class="detail-item"><label>Localidad</label><span>' + (o.localidad||'—') + '</span></div>' +
+    '<div class="detail-item"><label>Fecha</label><span>' + fecha + '</span></div>' +
+    '<div class="detail-item"><label>Email</label><span>' + (o.email||'—') + '</span></div>' +
+    '<div class="detail-item"><label>Total</label><span style="font-weight:700;color:#16a34a;">' + (o.total_general ? '$'+parseFloat(o.total_general).toLocaleString('es-AR',{minimumFractionDigits:2}) : '—') + '</span></div>' +
+    '</div><div style="margin-top:4px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Productos</label>' + prodHtml + '</div>';
+  var pdfBtn = document.getElementById('modal-pdf-btn');
+  if (o.pdf_url) { pdfBtn.href = o.pdf_url; pdfBtn.style.display = 'inline-block'; }
+  else { pdfBtn.style.display = 'none'; }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function cerrarModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+</script>
+</body>
+</html>
