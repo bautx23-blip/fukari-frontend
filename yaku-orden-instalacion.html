@@ -445,6 +445,15 @@ async function guardarOrden() {
   btn.disabled = true;
   btn.textContent = 'Generando...';
   try {
+    // Asegurar que el nombre del vendedor esté cargado
+    if (!window._currentUserName) {
+      var _map = {
+        'renebiagioni@yakuagua.com.ar': 'René Biagioni',
+        'ventas@yakuagua.com.ar': 'Pía Bologñese'
+      };
+      var { data: { session } } = await window._sb.auth.getSession();
+      if (session) window._currentUserName = _map[session.user.email] || session.user.email;
+    }
     var datos = recolectarDatos();
     var res = await fetch(API_URL + '/api/ordenes', {
       method: 'POST',
