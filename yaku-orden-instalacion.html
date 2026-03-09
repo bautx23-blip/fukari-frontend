@@ -220,7 +220,14 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
   window._sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   window._sb.auth.getSession().then(({ data: { session } }) => {
     if (!session) window.location.href = '/index.html';
-    else window._currentUserEmail = session.user.email;
+    else {
+      window._currentUserEmail = session.user.email;
+      var _map = {
+        'renebiagioni@yakuagua.com.ar': 'René Biagioni',
+        'ventas@yakuagua.com.ar': 'Pía Bologñese'
+      };
+      window._currentUserName = _map[session.user.email] || session.user.email;
+    }
   });
 })();
 </script>
@@ -410,15 +417,7 @@ function recolectarDatos() {
     aclaraciones: document.getElementById('aclaraciones').value,
     fecha_orden: fecha,
     productos: productos,
-    vendedor: (function() {
-      var s = window._sb && window._sb.auth.getSession ? null : null;
-      var email = (window._currentUserEmail || '');
-      var map = {
-        'renebiagioni@yakuagua.com.ar': 'René Biagioni',
-        'ventas@yakuagua.com.ar': 'Pía Bologñese'
-      };
-      return map[email] || email;
-    })()
+    vendedor: (window._currentUserName || '')
   };
 }
 
