@@ -111,6 +111,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 
   <div class="filtros">
     <input type="text" id="filtro-buscar" placeholder="Buscar por razón social, CUIT o localidad..." oninput="filtrar()">
+    <select id="filtro-vendedor" onchange="filtrar()"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="Pía Bologñese">Pía Bologñese</option></select>
     <select id="filtro-mes" onchange="filtrar()">
       <option value="">Todos los meses</option>
     </select>
@@ -232,9 +233,11 @@ function calcularStats() {
 function filtrar() {
   const q = document.getElementById('filtro-buscar').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const mes = document.getElementById('filtro-mes').value;
+  const vendedor = document.getElementById('filtro-vendedor').value;
   ordenesFiltradas = todasLasOrdenes.filter(function(o) {
     var match = true;
     if (q) {
+      if (vendedor && (o.vendedor||'') !== vendedor) return false;
       var rs = (o.razon_social||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
       var cuit = (o.cuit||'').toLowerCase();
       var loc = (o.localidad||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -259,12 +262,12 @@ function renderTabla() {
   const inicio = (paginaActual-1) * POR_PAGINA;
   const pagina = ordenesFiltradas.slice(inicio, inicio + POR_PAGINA);
   const totalPags = Math.ceil(total / POR_PAGINA);
-  var html = '<table><thead><tr><th>N° Orden</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Total</th><th>PDF</th><th></th></tr></thead><tbody>';
+  var html = '<table><thead><tr><th>N° Orden</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Vendedor</th><th>Total</th><th>PDF</th><th></th></tr></thead><tbody>';
   pagina.forEach(function(o) {
     var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
     var total = o.total_general ? '$' + parseFloat(o.total_general).toLocaleString('es-AR', {minimumFractionDigits:2}) : '—';
     var pdfBtn = o.pdf_url ? '<a class="btn-ver" href="' + o.pdf_url + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
-    html += '<tr><td><span class="badge-num">' + (o.numero_completo||'—') + '</span></td><td>' + (o.razon_social||'—') + '</td><td>' + (o.localidad||'—') + '</td><td>' + fecha + '</td><td class="total-cell">' + total + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td></tr>';
+    html += '<tr><td><span class="badge-num">' + (o.numero_completo||'—') + '</span></td><td>' + (o.razon_social||'—') + '</td><td>' + (o.localidad||'—') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + total + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
@@ -306,6 +309,7 @@ function verDetalle(o) {
     '<div class="detail-item"><label>Localidad</label><span>' + (o.localidad||'—') + '</span></div>' +
     '<div class="detail-item"><label>Fecha</label><span>' + fecha + '</span></div>' +
     '<div class="detail-item"><label>Email</label><span>' + (o.email||'—') + '</span></div>' +
+    '<div class="detail-item"><label>Vendedor</label><span>' + (o.vendedor||'—') + '</span></div>' +
     '<div class="detail-item"><label>Total</label><span style="font-weight:700;color:#16a34a;">' + (o.total_general ? '$'+parseFloat(o.total_general).toLocaleString('es-AR',{minimumFractionDigits:2}) : '—') + '</span></div>' +
     '</div><div style="margin-top:4px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Productos</label>' + prodHtml + '</div>';
   var pdfBtn = document.getElementById('modal-pdf-btn');
