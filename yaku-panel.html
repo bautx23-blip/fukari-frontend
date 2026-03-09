@@ -300,6 +300,15 @@ function verDetalle(o) {
     prodHtml += '</tbody></table>';
   } else { prodHtml = '<p style="color:#9ca3af;font-size:13px;font-style:italic;">Sin productos</p>'; }
   var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
+  var dniHtml = '';
+  if (o.rubro === 'PARTICULAR') {
+    dniHtml = '<div style="margin-top:14px;">' +
+      '<label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Documentación DNI</label>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      (o.dni_frente_url ? '<a href="' + o.dni_frente_url + '" target="_blank" download style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;font-size:12px;color:#374151;text-decoration:none;font-weight:600;">&#128196; DNI Frente</a>' : '<span style="font-size:12px;color:#9ca3af;padding:8px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:6px;">DNI Frente — no cargado</span>') +
+      (o.dni_dorso_url ? '<a href="' + o.dni_dorso_url + '" target="_blank" download style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;font-size:12px;color:#374151;text-decoration:none;font-weight:600;">&#128196; DNI Dorso</a>' : '<span style="font-size:12px;color:#9ca3af;padding:8px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:6px;">DNI Dorso — no cargado</span>') +
+      '</div></div>';
+  }
   document.getElementById('modal-body').innerHTML =
     '<div class="detail-grid">' +
     '<div class="detail-item detail-full"><label>Razón Social</label><span>' + (o.razon_social||'—') + '</span></div>' +
@@ -309,9 +318,15 @@ function verDetalle(o) {
     '<div class="detail-item"><label>Localidad</label><span>' + (o.localidad||'—') + '</span></div>' +
     '<div class="detail-item"><label>Fecha</label><span>' + fecha + '</span></div>' +
     '<div class="detail-item"><label>Email</label><span>' + (o.email||'—') + '</span></div>' +
+    '<div class="detail-item"><label>Método de Pago</label><span>' + (o.metodo_pago||'—') + '</span></div>' +
+    '<div class="detail-item"><label>Rubro</label><span>' + (o.rubro||'—') + '</span></div>' +
+    '<div class="detail-item detail-full"><label>Responsable</label><span>' + (o.responsable||'—') + '</span></div>' +
+    '<div class="detail-item"><label>Celular Responsable</label><span>' + (o.responsable_celular||'—') + '</span></div>' +
     '<div class="detail-item"><label>Vendedor</label><span>' + (o.vendedor||'—') + '</span></div>' +
     '<div class="detail-item"><label>Total</label><span style="font-weight:700;color:#16a34a;">' + (o.total_general ? '$'+parseFloat(o.total_general).toLocaleString('es-AR',{minimumFractionDigits:2}) : '—') + '</span></div>' +
-    '</div><div style="margin-top:4px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Productos</label>' + prodHtml + '</div>';
+    '</div>' +
+    dniHtml +
+    '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Productos</label>' + prodHtml + '</div>';
   var pdfBtn = document.getElementById('modal-pdf-btn');
   if (o.pdf_url) { pdfBtn.href = o.pdf_url; pdfBtn.style.display = 'inline-block'; }
   else { pdfBtn.style.display = 'none'; }
