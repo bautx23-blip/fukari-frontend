@@ -143,7 +143,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
     </div>
     <div class="datos-row">
       <div class="dato-cell" style="flex:1.4;"><label>C.U.I.T.:</label><input type="text" id="cuit" placeholder="20-12345678-9" maxlength="15" oninput="normalizarCuit(this)" onblur="normalizarCuit(this)"><span id="cuit-status"></span></div>
-      <div class="dato-cell" style="flex:0.6;"><label>Tel.:</label><input type="text" id="telefono" placeholder="+54 342 000-0000" oninput="normalizarTel(this)"></div>
+      <div class="dato-cell" style="flex:0.6;"><label>Tel.:</label><input type="text" id="telefono" placeholder="341-000-0000" onblur="normalizarTel(this)"></div>
     </div>
     <div class="datos-row">
       <div class="dato-cell" style="flex:2.2;"><label>Domicilio de Instalacion:</label><input type="text" id="dom-instalacion"></div>
@@ -170,7 +170,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
     <div class="datos-row">
       <div class="dato-cell" style="flex:1;"><label>Responsable / Nombre:</label><input type="text" id="responsable-nombre" placeholder="Nombre"></div>
       <div class="dato-cell" style="flex:1;"><label>Apellido:</label><input type="text" id="responsable-apellido" placeholder="Apellido"></div>
-      <div class="dato-cell" style="flex:0.8;"><label>Celular:</label><input type="text" id="responsable-celular" placeholder="+54 341 000-0000"></div>
+      <div class="dato-cell" style="flex:0.8;"><label>Celular:</label><input type="text" id="responsable-celular" placeholder="341-000-0000" onblur="normalizarTel(this)"></div>
     </div>
     <div class="datos-row" id="dni-section" style="display:none;">
       <div class="dato-cell" style="flex:1;flex-direction:column;align-items:flex-start;gap:6px;">
@@ -282,6 +282,22 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ── CUIT ──
+
+function normalizarTel(input) {
+  var digits = input.value.replace(/\D/g, '');
+  if (digits.length === 0) return;
+  if (digits.length !== 10) { input.style.borderColor = '#e53935'; return; }
+  input.style.borderColor = '';
+  var fmt;
+  if (digits.startsWith('11')) {
+    fmt = digits.slice(0,2) + '-' + digits.slice(2,6) + '-' + digits.slice(6);
+  } else if (digits.slice(0,4).match(/^(3492|3498|3487|3462|3464|3466|3468|3472|3474|3476|3478|3482|3484|3486|3488|3756|3751|3743|3741|3735|3731|3725|3721|3715|3711|2966|2964|2962|2954|2952|2948|2946|2942|2936|2934|2932|2928|2926|2924|2922|2902|2657|2655|2654|2652|2648|2646|2644|2642|2626|2625|2624|2622|2478|2477|2476|2475|2474|2473|2472|2394|2393|2392|2352|2346|2345|2344|2343|2342|2338|2337|2336|2335|2334|2333|2331|2326|2325|2324|2323|2322|2321)/)) {
+    fmt = digits.slice(0,4) + '-' + digits.slice(4,6) + '-' + digits.slice(6);
+  } else {
+    fmt = digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
+  }
+  input.value = fmt;
+}
 function normalizarCuit(input) {
   var raw = input.value.replace(/\D/g, '');
   var status = document.getElementById('cuit-status');
