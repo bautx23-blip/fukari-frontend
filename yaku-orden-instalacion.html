@@ -93,6 +93,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
   .localidad-dropdown{display:none !important;}
 }
 </style>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
@@ -636,6 +637,13 @@ function limpiarForm() {
     .then(function(r){ return r.json(); })
     .then(function(d){ document.getElementById('nro-orden').value = d.numero_completo; })
     .catch(function(){ document.getElementById('nro-orden').value = ''; });
+}
+</script>
+
+<script>
+if (window.Telegram && window.Telegram.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
 }
 </script>
 </body>
