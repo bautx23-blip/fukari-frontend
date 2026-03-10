@@ -491,6 +491,26 @@ async function guardarOrden() {
       return;
     }
     var datos = recolectarDatos();
+
+    // Subir fotos DNI si corresponde
+    if (datos.rubro === 'PARTICULAR') {
+      var nroTemp = document.getElementById('nro-orden').value || ('dni-' + Date.now());
+      for (var lado of ['dni-frente', 'dni-dorso']) {
+        var file = _dniFiles[lado];
+        if (file) {
+          var ext = file.name.split('.').pop();
+          var fileName = nroTemp + '-' + lado + '.' + ext;
+          var { data: upData, error: upErr } = await window._sb.storage
+            .from('ordenes-dni')
+            .upload(fileName, file, { upsert: true });
+          if (!upErr) {
+            var { data: urlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(fileName);
+            datos[lado.replace('-', '_') + '_url'] = urlData.publicUrl;
+          }
+        }
+      }
+    }
+
     var res = await fetch(API_URL + '/api/ordenes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
