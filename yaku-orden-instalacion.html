@@ -520,14 +520,16 @@ async function guardarOrden() {
     if (!res.ok) throw new Error(json.error || 'Error al guardar');
     document.getElementById('nro-orden').value = json.numero_completo;
 
-    // Actualizar URLs de DNI en Supabase si corresponde
-    if (datos.rubro === 'PARTICULAR' && json.id) {
-      var updateData = {};
-      if (datos.dni_frente_url) updateData.dni_frente_url = datos.dni_frente_url;
-      if (datos.dni_dorso_url) updateData.dni_dorso_url = datos.dni_dorso_url;
-      if (Object.keys(updateData).length > 0) {
-        await window._sb.from('ordenes').update(updateData).eq('id', json.id);
-      }
+    // Actualizar URLs de DNI via backend
+    if (datos.rubro === 'PARTICULAR' && json.id && (datos.dni_frente_url || datos.dni_dorso_url)) {
+      await fetch(API_URL + '/api/ordenes/' + json.id + '/dni', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dni_frente_url: datos.dni_frente_url || '',
+          dni_dorso_url: datos.dni_dorso_url || ''
+        })
+      });
     }
 
     mostrarToast('Orden ' + json.numero_completo + ' guardada', json.pdf_url);
