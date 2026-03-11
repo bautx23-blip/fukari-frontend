@@ -113,7 +113,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
     <div class="stat-card"><div class="label">Total órdenes</div><div class="value" id="stat-total">—</div><div class="sub">históricas</div></div>
     <div class="stat-card"><div class="label">Este mes</div><div class="value" id="stat-mes">—</div><div class="sub" id="stat-mes-label">—</div></div>
     <div class="stat-card"><div class="label">Última orden</div><div class="value" id="stat-ultima">—</div><div class="sub">número</div></div>
-    <div class="stat-card"><div class="label">Total facturado</div><div class="value" id="stat-monto">—</div><div class="sub">este mes</div></div>
+    <div class="stat-card"><div class="label">Total facturado</div><div class="value" id="stat-monto">—</div><div class="sub">este mes (sin IVA)</div></div>
   </div>
 
   <div class="filtros">
@@ -219,11 +219,12 @@ function calcularStats() {
   const mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
   const delMes = todasLasOrdenes.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
   const totalMes = delMes.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
+  const totalMesSinIVA = totalMes / 1.21;
   document.getElementById('stat-total').textContent = todasLasOrdenes.length;
   document.getElementById('stat-mes').textContent = delMes.length;
   document.getElementById('stat-mes-label').textContent = ahora.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
   document.getElementById('stat-ultima').textContent = todasLasOrdenes.length > 0 ? todasLasOrdenes[0].numero_completo : '—';
-  document.getElementById('stat-monto').textContent = totalMes > 0 ? '$' + totalMes.toLocaleString('es-AR', {minimumFractionDigits:0}) : '$0';
+  document.getElementById('stat-monto').textContent = totalMesSinIVA > 0 ? '$' + totalMesSinIVA.toLocaleString('es-AR', {minimumFractionDigits:0}) : '$0';
 }
 
 function filtrar() {
