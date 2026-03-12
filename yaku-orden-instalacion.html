@@ -198,7 +198,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 <div class="orden" id="orden">
   <div class="header">
     <div class="logos">
-      <div class="logo-yaku"><img id="img-yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yaku"></div>
+      <div class="logo-yaku"><img id="img-yaku" src="https://nlwvnjztfczoiaelysqb.supabase.co/storage/v1/object/public/dual/shape_IxRPGK2cbf-adWTjEOorZ.png" alt="Yaku"></div>
       <div class="logo-fukari"><img id="img-fukari" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari Filters"></div>
     </div>
     <div class="empresa-info">
@@ -206,7 +206,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       Rosario: 0341-4914538 / +54 9 341 211-9009<br>
       Santa Fe: 0342-4904558 / +54 9 342 548-2868<br>
       www.yakuagua.com.ar / www.fukari.net<br>
-      info@yakuagua.com.ar
+      <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8ce5e2eae3ccf5ede7f9edebf9eda2efe3e1a2edfe">[email&#160;protected]</a>
     </div>
     <div class="header-right">
       <div class="orden-box">
@@ -235,8 +235,17 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       <div class="dato-cell" style="flex:0.6;"><label>Tel.:</label><input type="text" id="telefono" placeholder="5493424485582" oninput="normalizarTelIntl(this)" onblur="normalizarTelIntl(this)"></div>
     </div>
     <div class="datos-row" id="dom-row">
-      <div class="dato-cell" style="flex:2.2;"><label>Domicilio de Instalacion:</label><input type="text" id="dom-instalacion"></div>
-      <div class="dato-cell" style="flex:0.5;"><label>Plano:</label><input type="text" id="plano"></div>
+      <div class="dato-cell" style="flex:2;"><label>Domicilio de Instalacion:</label><input type="text" id="dom-instalacion"></div>
+      <div class="dato-cell" style="flex:0.9;overflow:visible;"><label>Localidad:</label>
+        <div class="localidad-wrap">
+          <input type="text" id="localidad-input" placeholder="Buscar..." autocomplete="off"
+            oninput="filtrarLocalidadesEn(this.value,'loc-dropdown',this)"
+            onfocus="filtrarLocalidadesEn(this.value,'loc-dropdown',this)"
+            onkeydown="navLocalidadEn(event,'loc-dropdown',this)">
+          <div class="localidad-dropdown" id="loc-dropdown"></div>
+        </div>
+      </div>
+      <div class="dato-cell" style="flex:0.4;"><label>Plano:</label><input type="text" id="plano"></div>
     </div>
     <div id="dom-extra-wrap"></div>
     <div class="datos-row" style="border-bottom:none;">
@@ -245,16 +254,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       </div>
     </div>
     <div class="datos-row">
-      <div class="dato-cell" style="flex:2.2;"><label>Método de Pago:</label><select id="metodo-pago"><option value="">-- Seleccionar --</option><option value="Efectivo">Efectivo</option><option value="Transferencia">Transferencia</option><option value="Link de pago">Link de pago</option><option value="Débito en cuenta">Débito en cuenta</option></select></div>
-      <div class="dato-cell" style="flex:0.5;overflow:visible;"><label>Localidad:</label>
-        <div class="localidad-wrap">
-          <input type="text" id="localidad-input" placeholder="Buscar..." autocomplete="off"
-            oninput="filtrarLocalidades(this.value)"
-            onfocus="filtrarLocalidades(this.value)"
-            onkeydown="navLocalidad(event)">
-          <div class="localidad-dropdown" id="loc-dropdown"></div>
-        </div>
-      </div>
+      <div class="dato-cell" style="flex:2.7;"><label>Método de Pago:</label><select id="metodo-pago"><option value="">-- Seleccionar --</option><option value="Efectivo">Efectivo</option><option value="Transferencia">Transferencia</option><option value="Link de pago">Link de pago</option><option value="Débito en cuenta">Débito en cuenta</option></select></div>
     </div>
     <div class="datos-row">
       <div class="dato-cell"><label>Correo Electronico:</label><input type="email" id="email" placeholder="cliente@ejemplo.com"></div>
@@ -342,7 +342,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ── AUTH GUARD ──
 (function() {
@@ -387,10 +387,6 @@ document.addEventListener('DOMContentLoaded', function() {
     .catch(function(){ document.getElementById('nro-orden').value = '00002 - ????????'; });
 
   for (var i = 0; i < 5; i++) agregarFila();
-
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('.localidad-wrap')) cerrarDropdown();
-  });
 });
 
 // ── TELÉFONO ──
@@ -430,16 +426,21 @@ function normalizarCuit(input) {
   }
 }
 
-// ── LOCALIDADES ──
+// ── LOCALIDADES (multi-instancia) ──
 var locActivo = -1;
 var locFiltradas = [];
+var _locActiveInput = null;
+var _locActiveDropId = null;
 
 function normStr(s) {
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 }
 
-function filtrarLocalidades(q) {
-  var drop = document.getElementById('loc-dropdown');
+function filtrarLocalidadesEn(q, dropId, inputEl) {
+  _locActiveInput = inputEl;
+  _locActiveDropId = dropId;
+  var drop = document.getElementById(dropId);
+  if (!drop) return;
   locActivo = -1;
   if (!q || q.trim() === '') {
     locFiltradas = LOCALIDADES.slice(0, 30);
@@ -451,7 +452,7 @@ function filtrarLocalidades(q) {
     drop.innerHTML = '<div class="localidad-no-results">Sin resultados</div>';
   } else {
     drop.innerHTML = locFiltradas.map(function(l, i) {
-      return '<div class="localidad-item" data-idx="' + i + '" onmousedown="elegirLocalidad(' + i + ')">' +
+      return '<div class="localidad-item" data-idx="' + i + '" onmousedown="elegirLocalidadEn(' + i + ',\'' + dropId + '\')">' +
         '<span>' + l.nombre + '</span>' +
         '<span class="depto">' + l.departamento + '</span>' +
         '</div>';
@@ -460,17 +461,17 @@ function filtrarLocalidades(q) {
   drop.classList.add('open');
 }
 
-function elegirLocalidad(idx) {
-  document.getElementById('localidad-input').value = locFiltradas[idx].nombre;
-  cerrarDropdown();
+function elegirLocalidadEn(idx, dropId) {
+  if (_locActiveInput) _locActiveInput.value = locFiltradas[idx].nombre;
+  var drop = document.getElementById(dropId);
+  if (drop) drop.classList.remove('open');
 }
 
-function cerrarDropdown() {
-  document.getElementById('loc-dropdown').classList.remove('open');
-}
-
-function navLocalidad(e) {
-  var drop = document.getElementById('loc-dropdown');
+function navLocalidadEn(e, dropId, inputEl) {
+  _locActiveInput = inputEl;
+  _locActiveDropId = dropId;
+  var drop = document.getElementById(dropId);
+  if (!drop) return;
   var items = drop.querySelectorAll('.localidad-item');
   if (e.key === 'ArrowDown') {
     e.preventDefault();
@@ -482,12 +483,19 @@ function navLocalidad(e) {
     items.forEach(function(el, i){ el.classList.toggle('active', i === locActivo); });
   } else if (e.key === 'Enter') {
     e.preventDefault();
-    if (locActivo >= 0 && locFiltradas[locActivo]) elegirLocalidad(locActivo);
-    else cerrarDropdown();
+    if (locActivo >= 0 && locFiltradas[locActivo]) elegirLocalidadEn(locActivo, dropId);
+    else { var d = document.getElementById(dropId); if(d) d.classList.remove('open'); }
   } else if (e.key === 'Escape') {
-    cerrarDropdown();
+    var d = document.getElementById(dropId); if(d) d.classList.remove('open');
   }
 }
+
+// Cerrar todos los dropdowns de localidad al click afuera
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.localidad-wrap')) {
+    document.querySelectorAll('.localidad-dropdown').forEach(function(d){ d.classList.remove('open'); });
+  }
+});
 
 // ── TABLA PRODUCTOS ──
 var filaId = 0;
@@ -511,6 +519,7 @@ function eliminarFila(id) {
   var tr = document.getElementById('fila-' + id);
   if (tr) tr.remove();
   recalcularTotal();
+  actualizarEquiposEnDirecciones();
 }
 
 function recalcularFila(id) {
@@ -523,6 +532,7 @@ function recalcularFila(id) {
   var txtInputs = tr.querySelectorAll('input[type="text"]');
   txtInputs[0].value = total > 0 ? formatPeso(total) : '';
   recalcularTotal();
+  actualizarEquiposEnDirecciones();
 }
 
 function recalcularTotal() {
@@ -559,24 +569,29 @@ function recolectarDatos() {
   var aa = document.getElementById('f-aa').value;
   var fecha = (aa && mm && dd) ? aa + '-' + mm.padStart(2,'0') + '-' + dd.padStart(2,'0') : new Date().toISOString().split('T')[0];
 
-  // Múltiples domicilios
-  var domicilios = [document.getElementById('dom-instalacion').value.trim()];
-  document.querySelectorAll('.dom-extra-input').forEach(function(inp) {
-    var v = inp.value.trim();
-    if (v) domicilios.push(v);
+  // Múltiples domicilios con localidad y equipos
+  var domicilios = [{
+    direccion: document.getElementById('dom-instalacion').value.trim(),
+    localidad: document.getElementById('localidad-input').value.trim(),
+    equipos: _recolectarEquiposDeDir(0)
+  }];
+  document.querySelectorAll('.dom-extra-wrap-item').forEach(function(item) {
+    var domId = item.dataset.domid;
+    var dirInput = item.querySelector('.dom-extra-input');
+    var locInput = item.querySelector('.dom-extra-loc');
+    var dir = dirInput ? dirInput.value.trim() : '';
+    var loc = locInput ? locInput.value.trim() : '';
+    if (dir) {
+      domicilios.push({ direccion: dir, localidad: loc, equipos: _recolectarEquiposDeDir(domId) });
+    }
   });
-  // Si hay más de 1 domicilio, incluir qué equipos van en cada dirección
-  var equiposPorDir = [];
-  if (domicilios.length > 1) {
-    document.querySelectorAll('.dom-extra-wrap-item').forEach(function(item, idx) {
-      var dir = item.querySelector('.dom-extra-input') ? item.querySelector('.dom-extra-input').value.trim() : '';
-      var equipos = item.querySelector('.dom-equipos-input') ? item.querySelector('.dom-equipos-input').value.trim() : '';
-      if (dir) equiposPorDir.push({ direccion: dir, equipos: equipos });
-    });
-    // Primera dirección también puede tener equipos especificados
-    var equiposPrimera = document.getElementById('dom-equipos-0') ? document.getElementById('dom-equipos-0').value.trim() : '';
-    if (equiposPrimera) equiposPorDir.unshift({ direccion: domicilios[0], equipos: equiposPrimera });
-  }
+
+  // dom_instalacion = concatenación de todas las direcciones para el backend/PDF
+  var domStr = domicilios.map(function(d) {
+    return d.direccion + (d.localidad ? ' (' + d.localidad + ')' : '');
+  }).join(' | ');
+  // localidad principal
+  var localidadPrincipal = domicilios[0].localidad;
 
   var nombre = document.getElementById('responsable-nombre').value.trim();
   var apellido = document.getElementById('responsable-apellido').value.trim();
@@ -586,14 +601,14 @@ function recolectarDatos() {
     razon_social: document.getElementById('razon-social').value,
     cuit: document.getElementById('cuit').value,
     telefono: document.getElementById('telefono').value,
-    dom_instalacion: domicilios.join(' | '),
+    dom_instalacion: domStr,
     domicilios_multiples: domicilios.length > 1 ? domicilios : null,
-    equipos_por_direccion: equiposPorDir.length > 0 ? equiposPorDir : null,
+    equipos_por_direccion: domicilios.length > 1 ? domicilios : null,
     metodo_pago: document.getElementById('metodo-pago').value,
     rubro: document.getElementById('rubro').value,
     responsable: responsable,
     responsable_celular: document.getElementById('responsable-celular').value,
-    localidad: document.getElementById('localidad-input').value,
+    localidad: localidadPrincipal,
     plano: document.getElementById('plano').value,
     email: document.getElementById('email').value,
     plazo_mantenimiento: document.getElementById('plazo').value,
@@ -603,6 +618,17 @@ function recolectarDatos() {
     productos: productos,
     vendedor: (window._currentUserName || '')
   };
+}
+
+function _recolectarEquiposDeDir(domId) {
+  var container = document.getElementById('equipos-dir-' + domId);
+  if (!container) return [];
+  var lista = [];
+  container.querySelectorAll('.eq-qty-input').forEach(function(inp) {
+    var qty = parseInt(inp.value) || 0;
+    if (qty > 0) lista.push({ modelo: inp.dataset.modelo, cantidad: qty });
+  });
+  return lista;
 }
 
 function mostrarToast(msg, pdfUrl) {
@@ -750,7 +776,7 @@ function validarCampos() {
     { id: 'cuit', label: 'C.U.I.T.' },
     { id: 'telefono', label: 'Teléfono' },
     { id: 'dom-instalacion', label: 'Domicilio de Instalación' },
-    { id: 'localidad-input', label: 'Localidad' },
+    { id: 'localidad-input', label: 'Localidad (dir. 1)' },
     { id: 'email', label: 'Correo Electrónico' },
     { id: 'responsable-nombre', label: 'Nombre del Responsable' },
     { id: 'responsable-celular', label: 'Celular del Responsable' },
@@ -776,6 +802,24 @@ function validarCampos() {
     if (sel && sel.value) hayProducto = true;
   });
   if (!hayProducto) errores.push('Al menos un producto');
+
+  // Validar distribución de equipos si hay múltiples domicilios
+  var extras = document.querySelectorAll('.dom-extra-wrap-item');
+  if (extras.length > 0) {
+    var prods = _getProductosActuales();
+    prods.forEach(function(p) {
+      var total = 0;
+      var eq0 = document.getElementById('equipos-dir-0');
+      if (eq0) { var i0 = eq0.querySelector('[data-modelo="' + p.modelo + '"]'); total += i0 ? (parseInt(i0.value)||0) : 0; }
+      extras.forEach(function(item) {
+        var eqC = document.getElementById('equipos-dir-' + item.dataset.domid);
+        if (eqC) { var inp = eqC.querySelector('[data-modelo="' + p.modelo + '"]'); total += inp ? (parseInt(inp.value)||0) : 0; }
+      });
+      if (total !== p.cantidad && p.cantidad > 0) {
+        errores.push('Distribución de ' + p.modelo + ': asignados ' + total + ' de ' + p.cantidad);
+      }
+    });
+  }
   return errores;
 }
 
@@ -818,50 +862,186 @@ function limpiarForm() {
   if (cd) cd.classList.remove('ok');
   // Limpiar direcciones extra
   document.getElementById('dom-extra-wrap').innerHTML = '';
+  var eq0Row = document.getElementById('dom-eq0-row');
+  if (eq0Row) eq0Row.remove();
+  var warn = document.getElementById('dist-warning');
+  if (warn) warn.remove();
   recalcularTotal();
 }
 
 // ── MÚLTIPLES DOMICILIOS ──
-var _domCount = 0;
-function agregarDireccion() {
-  // Solo disponible si hay más de 1 producto (o siempre, para flexibilidad)
-  _domCount++;
-  var idx = _domCount;
-  var wrap = document.getElementById('dom-extra-wrap');
-  var div = document.createElement('div');
-  div.className = 'datos-row dom-extra-wrap-item';
-  div.id = 'dom-extra-item-' + idx;
-  div.innerHTML =
-    '<div class="dato-cell" style="flex:1.5;">' +
-    '<label>Domicilio ' + (idx+1) + ':</label>' +
-    '<input type="text" class="dom-extra-input" placeholder="Dirección...">' +
-    '</div>' +
-    '<div class="dato-cell" style="flex:1.2;">' +
-    '<label>Equipos en esta dirección:</label>' +
-    '<input type="text" class="dom-equipos-input" placeholder="Ej: 2x 11B, 1x 22A">' +
-    '</div>' +
-    '<div class="dato-cell" style="flex:0.2;align-items:center;justify-content:center;">' +
-    '<button type="button" onclick="quitarDireccion(' + idx + ')" style="background:none;border:none;color:#dc2626;font-size:14px;cursor:pointer;padding:4px;">✕</button>' +
-    '</div>';
-  wrap.appendChild(div);
-  // Si es el primer extra, mostrar campo de equipos en dirección 1 también
-  if (idx === 1 && !document.getElementById('dom-equipos-0')) {
-    var domRow = document.getElementById('dom-row');
-    var eq0 = document.createElement('div');
-    eq0.className = 'dato-cell';
-    eq0.style.flex = '1.2';
-    eq0.innerHTML = '<label>Equipos en dir. 1:</label><input type="text" id="dom-equipos-0" placeholder="Ej: 1x 11B">';
-    domRow.appendChild(eq0);
+function _getProductosActuales() {
+  var lista = [];
+  document.querySelectorAll('#productos-body tr').forEach(function(tr) {
+    var sel = tr.querySelector('select');
+    var nums = tr.querySelectorAll('input[type="number"]');
+    if (sel && sel.value) {
+      lista.push({ modelo: sel.value, cantidad: parseInt(nums[0].value) || 0 });
+    }
+  });
+  return lista;
+}
+
+function _renderEquiposDir(domId) {
+  var container = document.getElementById('equipos-dir-' + domId);
+  if (!container) return;
+  var prods = _getProductosActuales();
+  if (prods.length === 0) {
+    container.innerHTML = '<span style="font-size:9px;color:#9ca3af;font-style:italic;">Cargá primero los productos en la tabla</span>';
+    return;
+  }
+  // Preservar valores ingresados previamente
+  var previos = {};
+  container.querySelectorAll('.eq-qty-input').forEach(function(inp) {
+    previos[inp.dataset.modelo] = inp.value;
+  });
+  container.innerHTML = prods.map(function(p) {
+    var prev = previos[p.modelo] || '';
+    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">' +
+      '<span style="font-size:9.5px;flex:1;color:#374151;">' + p.modelo + '</span>' +
+      '<input type="number" min="0" max="' + p.cantidad + '" step="1" value="' + prev + '" placeholder="0" ' +
+      'data-modelo="' + p.modelo + '" data-max="' + p.cantidad + '" ' +
+      'class="eq-qty-input" style="width:52px;border:none;border-bottom:1px solid #bbb;font-size:10px;text-align:center;padding:1px 2px;font-family:inherit;" ' +
+      'oninput="validarDistribucion()">' +
+      '<span style="font-size:9px;color:#9ca3af;">/ ' + p.cantidad + '</span>' +
+      '</div>';
+  }).join('');
+  validarDistribucion();
+}
+
+function actualizarEquiposEnDirecciones() {
+  document.querySelectorAll('.dom-extra-wrap-item').forEach(function(item) {
+    _renderEquiposDir(item.dataset.domid);
+  });
+}
+
+function validarDistribucion() {
+  var prods = _getProductosActuales();
+  var items = document.querySelectorAll('.dom-extra-wrap-item');
+  if (items.length === 0) return;
+  var warn = document.getElementById('dist-warning');
+  var errores = [];
+  prods.forEach(function(p) {
+    var totalDir = 0;
+    // Dir 1
+    var eq0 = document.getElementById('equipos-dir-0');
+    if (eq0) {
+      var inp0 = eq0.querySelector('[data-modelo="' + p.modelo + '"]');
+      totalDir += inp0 ? (parseInt(inp0.value) || 0) : 0;
+    }
+    // Dirs extra
+    items.forEach(function(item) {
+      var eqC = document.getElementById('equipos-dir-' + item.dataset.domid);
+      if (eqC) {
+        var inp = eqC.querySelector('[data-modelo="' + p.modelo + '"]');
+        totalDir += inp ? (parseInt(inp.value) || 0) : 0;
+      }
+    });
+    if (totalDir !== p.cantidad && p.cantidad > 0) {
+      errores.push(p.modelo + ': distribuidos ' + totalDir + ' de ' + p.cantidad);
+    }
+  });
+  if (!warn) return;
+  if (errores.length > 0) {
+    warn.textContent = '⚠️ Cantidades no coinciden: ' + errores.join(' · ');
+    warn.style.display = 'block';
+  } else {
+    warn.textContent = '';
+    warn.style.display = 'none';
   }
 }
-function quitarDireccion(idx) {
-  var el = document.getElementById('dom-extra-item-' + idx);
-  if (el) el.remove();
-  // Si no quedan extras, quitar campo de equipos en dir 1
-  if (document.querySelectorAll('.dom-extra-wrap-item').length === 0) {
-    var eq0 = document.getElementById('dom-equipos-0');
-    if (eq0) eq0.parentElement.remove();
+
+function renumerarDirecciones() {
+  var items = document.querySelectorAll('.dom-extra-wrap-item');
+  items.forEach(function(item, i) {
+    var lbl = item.querySelector('.dom-num-label');
+    if (lbl) lbl.textContent = 'Domicilio ' + (i + 2) + ':';
+  });
+}
+
+function agregarDireccion() {
+  var wrap = document.getElementById('dom-extra-wrap');
+  var domId = Date.now(); // ID único, sin contador incremental
+  var div = document.createElement('div');
+  div.className = 'datos-row dom-extra-wrap-item';
+  div.dataset.domid = domId;
+
+  // Si es la primera extra, agregar también equipos en dir 1
+  var hayExtras = wrap.querySelectorAll('.dom-extra-wrap-item').length;
+  var numLabel = hayExtras + 2; // dir 1 ya existe, esta es la #2, 3, etc.
+
+  div.innerHTML =
+    '<div style="width:100%;border-top:1px dashed #d1d5db;padding-top:6px;margin-top:2px;">' +
+    // Fila: domicilio + localidad + quitar
+    '<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:4px;">' +
+      '<div class="dato-cell" style="flex:2;">' +
+        '<label class="dom-num-label">Domicilio ' + numLabel + ':</label>' +
+        '<input type="text" class="dom-extra-input" placeholder="Dirección...">' +
+      '</div>' +
+      '<div class="dato-cell" style="flex:0.9;overflow:visible;">' +
+        '<label>Localidad:</label>' +
+        '<div class="localidad-wrap">' +
+          '<input type="text" class="dom-extra-loc" placeholder="Buscar..." autocomplete="off" ' +
+            'oninput="filtrarLocalidadesEn(this.value,\'loc-drop-' + domId + '\',this)" ' +
+            'onfocus="filtrarLocalidadesEn(this.value,\'loc-drop-' + domId + '\',this)" ' +
+            'onkeydown="navLocalidadEn(event,\'loc-drop-' + domId + '\',this)">' +
+          '<div class="localidad-dropdown" id="loc-drop-' + domId + '"></div>' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" onclick="quitarDireccion(this)" ' +
+        'style="background:none;border:none;color:#dc2626;font-size:14px;cursor:pointer;padding:4px 6px;flex-shrink:0;">✕</button>' +
+    '</div>' +
+    // Equipos
+    '<div style="padding:4px 0 6px 4px;">' +
+      '<label style="font-size:8.5px;font-weight:700;color:#555;text-transform:uppercase;display:block;margin-bottom:4px;">Equipos en esta dirección:</label>' +
+      '<div id="equipos-dir-' + domId + '"></div>' +
+    '</div>' +
+    '</div>';
+
+  wrap.appendChild(div);
+
+  // Si es la primera extra, agregar sección de equipos para dir 1 también
+  if (hayExtras === 0) {
+    var domRow = document.getElementById('dom-row');
+    if (!document.getElementById('equipos-dir-0')) {
+      var eq0Wrap = document.createElement('div');
+      eq0Wrap.style.cssText = 'padding:4px 0 4px 4px;width:100%;';
+      eq0Wrap.innerHTML =
+        '<label style="font-size:8.5px;font-weight:700;color:#555;text-transform:uppercase;display:block;margin-bottom:4px;">Equipos en dir. 1:</label>' +
+        '<div id="equipos-dir-0"></div>';
+      // Insertar dentro del dom-row como un item extra en una nueva fila
+      var eq0Row = document.createElement('div');
+      eq0Row.id = 'dom-eq0-row';
+      eq0Row.className = 'datos-row';
+      eq0Row.style.borderBottom = 'none';
+      eq0Row.innerHTML = '<div class="dato-cell" style="flex:1;">' + eq0Wrap.outerHTML + '</div>';
+      domRow.parentNode.insertBefore(eq0Row, domRow.nextSibling);
+      // Agregar el warning de distribución
+      var warnDiv = document.createElement('div');
+      warnDiv.id = 'dist-warning';
+      warnDiv.style.cssText = 'display:none;font-size:9.5px;color:#dc2626;background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;padding:4px 8px;margin:2px 0;';
+      eq0Row.parentNode.insertBefore(warnDiv, eq0Row.nextSibling);
+    }
+    _renderEquiposDir(0);
   }
+
+  _renderEquiposDir(domId);
+  renumerarDirecciones();
+}
+
+function quitarDireccion(btn) {
+  var item = btn.closest('.dom-extra-wrap-item');
+  if (!item) return;
+  item.remove();
+  // Si no quedan extras, quitar la sección de equipos de dir 1 y el warning
+  var wrap = document.getElementById('dom-extra-wrap');
+  if (wrap.querySelectorAll('.dom-extra-wrap-item').length === 0) {
+    var eq0Row = document.getElementById('dom-eq0-row');
+    if (eq0Row) eq0Row.remove();
+    var warn = document.getElementById('dist-warning');
+    if (warn) warn.remove();
+  }
+  renumerarDirecciones();
 }
 
 // ══════════════════════════════════════════
@@ -1006,11 +1186,3 @@ function omitirBCRA() {
 
 function reiniciarBCRA() {
   document.getElementById('bcra-result').style.display = 'none';
-  document.getElementById('bcra-step-input').style.display = 'block';
-  document.getElementById('bcra-cuit-input').value = '';
-  document.getElementById('bcra-btn-continuar').onclick = continuarOrden;
-}
-
-</script>
-</body>
-</html>
