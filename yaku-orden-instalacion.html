@@ -1096,8 +1096,15 @@ function mostrarResultadoBCRA(data, cuitRaw) {
 
   if (data.error || !data.results) {
     bcraData = { cuit: cuitRaw, situacion_peor: null, sin_datos: true, fecha_consulta: ahora.toISOString(), raw: data };
+    var errMsg = data.error || '';
+    var esSrvError = /50[0-9]|timeout|agotado|conexi/i.test(errMsg);
+    var titulo = esSrvError ? 'Servicio BCRA no disponible' : 'Sin datos en la Central de Deudores';
+    var desc = esSrvError
+      ? 'El servidor del BCRA no respondió en este momento. Podés continuar — la orden quedará registrada sin datos crediticios.'
+      : (errMsg || 'El CUIT no registra deudas en el sistema financiero');
+    var icono = esSrvError ? '⚠️' : 'ℹ️';
     document.getElementById('bcra-badge-wrap').innerHTML =
-      '<div class="bcra-situacion-badge sit-sin-datos"><span class="bcra-icon">ℹ️</span><div class="sit-info"><h3>Sin datos en la Central de Deudores</h3><p>' + (data.error || 'El CUIT no registra deudas en el sistema financiero') + '</p></div></div>';
+      '<div class="bcra-situacion-badge sit-sin-datos"><span class="bcra-icon">' + icono + '</span><div class="sit-info"><h3>' + titulo + '</h3><p>' + desc + '</p></div></div>';
     document.getElementById('bcra-denominacion').textContent = '';
     document.getElementById('bcra-tabla-wrap').innerHTML = '';
     document.getElementById('bcra-deuda-total').textContent = '';
