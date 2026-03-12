@@ -1068,21 +1068,29 @@ function formatBcraCuit(input) {
 async function verificarBCRA() {
   var raw = document.getElementById('bcra-cuit-input').value.replace(/\D/g,'');
   if (raw.length !== 11) { alert('El CUIT debe tener 11 dígitos.'); return; }
+  // Reset limpio de todos los estados
   document.getElementById('bcra-step-input').style.display = 'none';
   document.getElementById('bcra-loading').style.display = 'block';
   document.getElementById('bcra-result').style.display = 'none';
+  document.getElementById('bcra-btn-continuar').style.display = 'none';
   try {
-    var res = await fetch(API_URL + '/api/bcra/' + raw);
+    // Timeout de 10 segundos para no quedar colgado
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function(){ controller.abort(); }, 10000);
+    var res = await fetch(API_URL + '/api/bcra/' + raw, { signal: controller.signal });
+    clearTimeout(timeoutId);
     var data = await res.json();
     mostrarResultadoBCRA(data, raw);
   } catch(e) {
-    mostrarResultadoBCRA({ error: 'No se pudo conectar con el BCRA.' }, raw);
+    var msg = e.name === 'AbortError' ? 'Tiempo de espera agotado. El servicio BCRA no respondió.' : 'No se pudo conectar con el BCRA.';
+    mostrarResultadoBCRA({ error: msg }, raw);
   }
 }
 
 function mostrarResultadoBCRA(data, cuitRaw) {
   document.getElementById('bcra-loading').style.display = 'none';
   document.getElementById('bcra-result').style.display = 'block';
+  document.getElementById('bcra-btn-continuar').style.display = 'inline-flex';
   var ahora = new Date();
   var fechaStr = ahora.toLocaleDateString('es-AR') + ' ' + ahora.toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'});
 
