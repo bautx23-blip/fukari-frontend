@@ -623,10 +623,23 @@ function recolectarDatos() {
 function _recolectarEquiposDeDir(domId) {
   var container = document.getElementById('equipos-dir-' + domId);
   if (!container) return [];
+  // Armar lookup de precio_unitario desde la tabla de productos
+  var precios = {};
+  document.querySelectorAll('#productos-body tr').forEach(function(tr) {
+    var sel = tr.querySelector('select');
+    var nums = tr.querySelectorAll('input[type="number"]');
+    if (sel && sel.value && nums[1]) {
+      precios[sel.value] = parseFloat(nums[1].value) || 0;
+    }
+  });
   var lista = [];
   container.querySelectorAll('.eq-qty-input').forEach(function(inp) {
     var qty = parseInt(inp.value) || 0;
-    if (qty > 0) lista.push({ modelo: inp.dataset.modelo, cantidad: qty });
+    if (qty > 0) lista.push({
+      modelo: inp.dataset.modelo,
+      cantidad: qty,
+      precio_unitario: precios[inp.dataset.modelo] || 0
+    });
   });
   return lista;
 }
