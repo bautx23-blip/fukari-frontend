@@ -214,6 +214,31 @@ function poblarFiltroMes() {
   sel.value = val;
 }
 
+
+// Devuelve string con todas las localidades únicas de la orden (localidad + productos)
+function todasLocalidades(o) {
+  var locs = [];
+  if (o.localidad) locs.push(o.localidad);
+  if (Array.isArray(o.productos)) {
+    o.productos.forEach(function(p) {
+      if (p.localidad && !locs.includes(p.localidad)) locs.push(p.localidad);
+    });
+  }
+  return locs.join(' ');
+}
+
+function localidadesUnicas(o) {
+  var locs = [];
+  if (o.localidad) locs.push(o.localidad);
+  if (Array.isArray(o.productos)) {
+    o.productos.forEach(function(p) {
+      if (p.localidad && !locs.includes(p.localidad)) locs.push(p.localidad);
+    });
+  }
+  // Deduplicar manteniendo orden
+  return locs.filter(function(v,i,a){ return a.indexOf(v)===i; });
+}
+
 function calcularStats() {
   const ahora = new Date();
   const mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
@@ -237,7 +262,7 @@ function filtrar() {
     if (q) {
       var rs = (o.razon_social||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
       var cuit = (o.cuit||'').toLowerCase();
-      var loc = (o.localidad||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      var loc = todasLocalidades(o).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
       var num = (o.numero_completo||'').toLowerCase();
       match = rs.includes(q) || cuit.includes(q) || loc.includes(q) || num.includes(q);
     }
@@ -264,7 +289,7 @@ function renderTabla() {
     var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
     var tot = o.total_general ? '$' + parseFloat(o.total_general).toLocaleString('es-AR', {minimumFractionDigits:2}) : '—';
     var pdfBtn = o.pdf_url ? '<a class="btn-ver" href="' + o.pdf_url + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
-    html += '<tr><td><span class="badge-num">' + (o.numero_completo||'—') + '</span></td><td>' + (o.razon_social||'—') + '</td><td>' + (o.localidad||'—') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td></tr>';
+    html += '<tr><td><span class="badge-num">' + (o.numero_completo||'—') + '</span></td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
@@ -358,10 +383,16 @@ function verDetalle(o) {
   var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
 
   var dniHtml = '';
+  var btnStyle = 'display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;font-size:12px;color:#374151;text-decoration:none;font-weight:600;';
+  var emptyStyle = 'font-size:12px;color:#9ca3af;padding:8px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:6px;';
   if (o.rubro === 'PARTICULAR') {
     dniHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Documentación DNI</label><div style="display:flex;gap:10px;flex-wrap:wrap;">' +
-      (o.dni_frente_url ? '<a href="' + o.dni_frente_url + '" target="_blank" download style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;font-size:12px;color:#374151;text-decoration:none;font-weight:600;">&#128196; DNI Frente</a>' : '<span style="font-size:12px;color:#9ca3af;padding:8px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:6px;">DNI Frente — no cargado</span>') +
-      (o.dni_dorso_url ? '<a href="' + o.dni_dorso_url + '" target="_blank" download style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;font-size:12px;color:#374151;text-decoration:none;font-weight:600;">&#128196; DNI Dorso</a>' : '<span style="font-size:12px;color:#9ca3af;padding:8px 14px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:6px;">DNI Dorso — no cargado</span>') +
+      (o.dni_frente_url ? '<a href="' + o.dni_frente_url + '" target="_blank" style="' + btnStyle + '">&#128196; DNI Frente</a>' : '<span style="' + emptyStyle + '">DNI Frente — no cargado</span>') +
+      (o.dni_dorso_url ? '<a href="' + o.dni_dorso_url + '" target="_blank" style="' + btnStyle + '">&#128196; DNI Dorso</a>' : '<span style="' + emptyStyle + '">DNI Dorso — no cargado</span>') +
+      '</div></div>';
+  } else if (o.rubro === 'EMPRESA') {
+    dniHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Documentación</label><div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      (o.constancia_url ? '<a href="' + o.constancia_url + '" target="_blank" style="' + btnStyle + '">&#128196; Constancia AFIP/IIBB</a>' : '<span style="' + emptyStyle + '">Constancia — no cargada</span>') +
       '</div></div>';
   }
 
