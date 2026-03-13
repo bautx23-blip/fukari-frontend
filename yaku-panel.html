@@ -91,6 +91,22 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .bcra-panel-tabla{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:6px;}
 .bcra-panel-tabla th{background:#f9fafb;padding:5px 8px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;}
 .bcra-panel-tabla td{padding:5px 8px;border-bottom:1px solid #f9fafb;}
+/* Borrar orden */
+.btn-del-orden{background:transparent;border:1.5px solid #fca5a5;border-radius:5px;color:#dc2626;font-size:14px;padding:4px 8px;cursor:pointer;transition:all 0.15s;line-height:1;}
+.btn-del-orden:hover{background:#fee2e2;border-color:#dc2626;}
+/* Modal borrar */
+#modal-borrar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center;}
+.modal-borrar{background:#fff;border-radius:10px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;}
+.modal-borrar-header{background:#dc2626;color:#fff;padding:16px 22px;display:flex;align-items:center;gap:10px;}
+.modal-borrar-header h3{font-size:15px;font-weight:700;margin:0;}
+.modal-borrar-body{padding:22px 24px;font-size:14px;color:#374151;line-height:1.6;}
+.modal-borrar-body strong{color:#dc2626;}
+.modal-borrar-footer{padding:14px 22px;border-top:1px solid #f3f4f6;display:flex;gap:10px;justify-content:flex-end;}
+.btn-confirmar-borrar{padding:9px 20px;background:#dc2626;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-confirmar-borrar:hover{background:#b91c1c;}
+.btn-confirmar-borrar:disabled{opacity:0.6;cursor:not-allowed;}
+.btn-cancelar-borrar{padding:9px 20px;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;}
+.btn-cancelar-borrar:hover{background:#e5e7eb;}
 </style>
 </head>
 <body>
@@ -154,6 +170,23 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
   </div>
 </div>
 
+<div id="modal-borrar-overlay">
+  <div class="modal-borrar">
+    <div class="modal-borrar-header">
+      <span style="font-size:20px;">&#128465;</span>
+      <h3>Confirmar eliminación</h3>
+    </div>
+    <div class="modal-borrar-body">
+      ¿Estás seguro que querés borrar la orden <strong id="modal-borrar-num"></strong>?<br>
+      <span style="font-size:12px;color:#9ca3af;margin-top:6px;display:block;">Esta acción no se puede deshacer. La orden se eliminará permanentemente de la base de datos.</span>
+    </div>
+    <div class="modal-borrar-footer">
+      <button class="btn-cancelar-borrar" onclick="cerrarModalBorrar()">Cancelar</button>
+      <button class="btn-confirmar-borrar" id="btn-confirmar-borrar" onclick="ejecutarBorrar()">Sí, borrar</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const API_URL = 'https://fukari-backend-production.up.railway.app';
@@ -166,9 +199,12 @@ const POR_PAGINA = 20;
 let todasLasOrdenes = [];
 let ordenesFiltradas = [];
 let paginaActual = 1;
+let _currentUserEmail = null;
+const ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
 
 sb.auth.getSession().then(({ data: { session } }) => {
   if (!session) { window.location.href = '/index.html'; return; }
+  _currentUserEmail = session.user.email;
   document.body.classList.add('ready');
   iniciarPanel();
 });
@@ -284,12 +320,14 @@ function renderTabla() {
   const inicio = (paginaActual-1) * POR_PAGINA;
   const pagina = ordenesFiltradas.slice(inicio, inicio + POR_PAGINA);
   const totalPags = Math.ceil(total / POR_PAGINA);
-  var html = '<table><thead><tr><th>N° Orden</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Vendedor</th><th>Total</th><th>PDF</th><th></th></tr></thead><tbody>';
+  const esAdmin = _currentUserEmail === ADMIN_EMAIL;
+  var html = '<table><thead><tr><th>N° Orden</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Vendedor</th><th>Total</th><th>PDF</th><th></th>' + (esAdmin ? '<th></th>' : '') + '</tr></thead><tbody>';
   pagina.forEach(function(o) {
     var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
     var tot = o.total_general ? '$' + parseFloat(o.total_general).toLocaleString('es-AR', {minimumFractionDigits:2}) : '—';
     var pdfBtn = o.pdf_url ? '<a class="btn-ver" href="' + o.pdf_url + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
-    html += '<tr><td><span class="badge-num">' + (o.numero_completo||'—') + '</span></td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td></tr>';
+    var deleteBtn = esAdmin ? '<td><button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')">&#128465;</button></td>' : '';
+    html += '<tr><td><span class="badge-num">' + (o.numero_completo||'—') + '</span></td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td>' + deleteBtn + '</tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
@@ -300,6 +338,42 @@ function renderTabla() {
     document.getElementById('btn-next').disabled = paginaActual === totalPags;
   } else {
     document.getElementById('pagination').style.display = 'none';
+  }
+}
+
+// ── BORRAR ORDEN ──
+function confirmarBorrar(id, numero) {
+  var overlay = document.getElementById('modal-borrar-overlay');
+  document.getElementById('modal-borrar-num').textContent = numero;
+  overlay.dataset.borrarId = id;
+  overlay.style.display = 'flex';
+}
+
+function cerrarModalBorrar() {
+  document.getElementById('modal-borrar-overlay').style.display = 'none';
+}
+
+async function ejecutarBorrar() {
+  var overlay = document.getElementById('modal-borrar-overlay');
+  var id = overlay.dataset.borrarId;
+  var btn = document.getElementById('btn-confirmar-borrar');
+  btn.disabled = true;
+  btn.textContent = 'Borrando...';
+  try {
+    var res = await fetch(API_URL + '/api/ordenes/' + id, { method: 'DELETE' });
+    if (!res.ok) {
+      var j = await res.json();
+      throw new Error(j.error || 'Error al borrar');
+    }
+    cerrarModalBorrar();
+    todasLasOrdenes = todasLasOrdenes.filter(function(o){ return String(o.id) !== String(id); });
+    filtrar();
+    calcularStats();
+  } catch(err) {
+    alert('Error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sí, borrar';
   }
 }
 

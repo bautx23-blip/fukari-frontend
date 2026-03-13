@@ -149,6 +149,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
   <button class="btn btn-primary" id="btn-guardar" onclick="guardarOrden()">&#128190; Guardar y generar PDF</button>
   <button class="btn btn-secondary" onclick="window.print()">&#128438; Imprimir</button>
   <button class="btn btn-danger" onclick="limpiarForm()">&#10005; Limpiar</button>
+  <a href="yaku-panel.html" class="btn btn-secondary" style="text-decoration:none;">&#8592; Volver al Panel</a>
 </div>
 
 <!-- ── BCRA OVERLAY ── -->
@@ -270,7 +271,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
     </div>
     <div class="datos-row" id="constancia-section" style="display:none;">
       <div class="dato-cell" style="flex:1;flex-direction:column;align-items:flex-start;gap:6px;">
-        <label style="font-size:8.5px;font-weight:700;color:#444;text-transform:uppercase;">Constancia de Inscripción (AFIP/IIBB)</label>
+        <label style="font-size:8.5px;font-weight:700;color:#444;text-transform:uppercase;" id="constancia-label-titulo">Constancia de Inscripción (AFIP/IIBB)</label>
         <div class="dni-drop" id="constancia-drop" ondrop="handleDrop(event,'constancia')" ondragover="event.preventDefault()" onclick="document.getElementById('constancia-input').click()">
           <span id="constancia-label">Arrastrá o hacé click — PDF, JPG o PNG</span>
           <input type="file" id="constancia-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="handleFile(event,'constancia')">
@@ -694,7 +695,7 @@ async function guardarOrden() {
         }
       }
     }
-    if (datos.rubro === 'EMPRESA' && _dniFiles['constancia']) {
+    if ((datos.rubro === 'EMPRESA' || datos.rubro === 'COMERCIO') && _dniFiles['constancia']) {
       var nroTemp2 = document.getElementById('nro-orden').value || ('const-' + Date.now());
       var cFile = _dniFiles['constancia'];
       var cExt = cFile.name.split('.').pop();
@@ -739,7 +740,14 @@ async function guardarOrden() {
 function onRubroChange() {
   var rubro = document.getElementById('rubro').value;
   document.getElementById('dni-section').style.display = rubro === 'PARTICULAR' ? 'flex' : 'none';
-  document.getElementById('constancia-section').style.display = rubro === 'EMPRESA' ? 'flex' : 'none';
+  var mostrarConstancia = rubro === 'EMPRESA' || rubro === 'COMERCIO';
+  document.getElementById('constancia-section').style.display = mostrarConstancia ? 'flex' : 'none';
+  if (mostrarConstancia) {
+    var titulo = document.getElementById('constancia-label-titulo');
+    titulo.textContent = rubro === 'COMERCIO'
+      ? 'Constancia de Inscripción (CUIT / Monotributo)'
+      : 'Constancia de Inscripción (AFIP/IIBB)';
+  }
 }
 
 var _dniFiles = { 'dni-frente': null, 'dni-dorso': null, 'constancia': null };
@@ -794,8 +802,8 @@ function validarCampos() {
     if (!_dniFiles['dni-frente']) errores.push('DNI Frente');
     if (!_dniFiles['dni-dorso']) errores.push('DNI Dorso');
   }
-  if (rubro.value === 'EMPRESA') {
-    if (!_dniFiles['constancia']) errores.push('Constancia de Inscripción (AFIP/IIBB)');
+  if (rubro.value === 'EMPRESA' || rubro.value === 'COMERCIO') {
+    if (!_dniFiles['constancia']) errores.push('Constancia de Inscripción');
   }
   var hayProducto = false;
   document.querySelectorAll('#productos-body tr').forEach(function(tr) {
