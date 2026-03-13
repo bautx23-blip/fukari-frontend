@@ -468,6 +468,10 @@ function verDetalle(o) {
     dniHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Documentación</label><div style="display:flex;gap:10px;flex-wrap:wrap;">' +
       (o.constancia_url ? '<a href="' + o.constancia_url + '" target="_blank" style="' + btnStyle + '">&#128196; Constancia AFIP/IIBB</a>' : '<span style="' + emptyStyle + '">Constancia — no cargada</span>') +
       '</div></div>';
+  } else if (o.rubro === 'COMERCIO') {
+    dniHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Documentación</label><div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+      (o.constancia_url ? '<a href="' + o.constancia_url + '" target="_blank" style="' + btnStyle + '">&#128196; Constancia CUIT / Monotributo</a>' : '<span style="' + emptyStyle + '">Constancia — no cargada</span>') +
+      '</div></div>';
   }
 
   document.getElementById('modal-body').innerHTML =
