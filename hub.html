@@ -96,6 +96,15 @@
     }
     .task-card:hover::after { transform: scaleX(1); }
 
+    /* Card de baja: acento rojo */
+    .task-card.baja:hover {
+      border-color: #c0392b;
+      box-shadow: 0 6px 20px rgba(192,57,43,0.12);
+    }
+    .task-card.baja::after { background: #c0392b; }
+    .task-card.baja:hover .task-icon { background: #c0392b; }
+    .task-card.baja:hover .task-arrow { color: #c0392b; }
+
     .task-card.disabled {
       opacity: 0.45;
       cursor: not-allowed;
@@ -109,7 +118,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 22px;
     }
-    .task-card:hover .task-icon { background: #1a1a2e; }
+    .task-card:not(.baja):hover .task-icon { background: #1a1a2e; }
 
     .task-body {}
     .task-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 5px; }
@@ -123,6 +132,7 @@
       border-radius: 20px; background: #dcfce7; color: #16a34a; letter-spacing: 0.02em;
     }
     .task-badge.soon { background: #fef3c7; color: #d97706; }
+    .task-badge.baja { background: #fee2e2; color: #c0392b; }
     .task-arrow { color: #9ca3af; font-size: 16px; transition: transform 0.15s, color 0.15s; }
     .task-card:hover .task-arrow { transform: translateX(4px); color: #1a1a2e; }
 
@@ -130,6 +140,7 @@
       font-size: 11px; font-weight: 700; color: #9ca3af;
       text-transform: uppercase; letter-spacing: 0.08em; margin: 36px 0 16px;
     }
+    .section-label:first-of-type { margin-top: 0; }
   </style>
 </head>
 <body>
@@ -158,6 +169,7 @@
   <div class="section-label">Disponible</div>
 
   <div class="tasks-grid">
+
     <a href="/yaku-panel.html" class="task-card">
       <div class="task-icon">📋</div>
       <div class="task-body">
@@ -169,6 +181,19 @@
         <span class="task-arrow">→</span>
       </div>
     </a>
+
+    <a href="/yaku-orden-baja.html" class="task-card baja">
+      <div class="task-icon">🔴</div>
+      <div class="task-body">
+        <div class="task-title">Órdenes de Baja</div>
+        <div class="task-desc">Registrá bajas de servicio, documentá el motivo y generá el PDF de baja.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge baja">Activo</span>
+        <span class="task-arrow">→</span>
+      </div>
+    </a>
+
   </div>
 
   <div class="section-label">Próximamente</div>
@@ -215,14 +240,9 @@
       window.location.href = '/index.html';
       return;
     }
-    // Mostrar página
     document.body.classList.add('ready');
-
-    // Email en topbar
     const email = session.user.email;
     document.getElementById('user-email').textContent = email;
-
-    // Fecha
     const d = new Date();
     document.getElementById('fecha-hoy').textContent =
       d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
