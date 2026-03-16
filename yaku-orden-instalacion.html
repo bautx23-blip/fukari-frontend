@@ -1089,39 +1089,34 @@ async function buscarCliente() {
   wrap.innerHTML = '<div class="cliente-loading">Buscando...</div>';
 
   try {
-    // Determinar si es CUIT (solo dígitos y guiones)
-    var esCuit = /^[\d\-]+$/.test(q) && q.replace(/\D/g, '').length >= 5;
-    var query;
-    if (esCuit) {
-      // Buscar por CUIT (con o sin guiones)
-      var cuitLimpio = q.replace(/\D/g, '');
-      var cuitFormateado = '';
-      if (cuitLimpio.length >= 11) {
-        cuitFormateado = cuitLimpio.slice(0,2) + '-' + cuitLimpio.slice(2,10) + '-' + cuitLimpio.slice(10,11);
+    var res = await fetch(API_URL + '/api/ordenes');
+    if (!res.ok) throw new Error('Error al consultar órdenes');
+    var todas = await res.json();
+
+    // Filtrar por CUIT o razón social
+    var qLower = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    var qDigits = q.replace(/\D/g, '');
+    var esCuit = /^[\d\-]+$/.test(q) && qDigits.length >= 5;
+
+    var resultados = todas.filter(function(o) {
+      if (esCuit) {
+        var cuitLimpio = (o.cuit || '').replace(/\D/g, '');
+        return cuitLimpio.indexOf(qDigits) !== -1;
+      } else {
+        var rs = (o.razon_social || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        return rs.indexOf(qLower) !== -1;
       }
-      query = window._sb.from('ordenes')
-        .select('id, numero_completo, razon_social, cuit, telefono, email, metodo_pago, rubro, responsable, responsable_celular, plano, dom_instalacion, localidad, plazo_mantenimiento, aclaraciones, cobrar, productos, fecha_orden')
-        .or('cuit.eq.' + q + ',cuit.eq.' + cuitFormateado + ',cuit.ilike.*' + cuitLimpio + '*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-    } else {
-      // Buscar por razón social
-      query = window._sb.from('ordenes')
-        .select('id, numero_completo, razon_social, cuit, telefono, email, metodo_pago, rubro, responsable, responsable_celular, plano, dom_instalacion, localidad, plazo_mantenimiento, aclaraciones, cobrar, productos, fecha_orden')
-        .ilike('razon_social', '*' + q + '*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-    }
+    });
 
-    var { data, error } = await query;
-    if (error) throw error;
+    // Más recientes primero y limitar a 10
+    resultados = resultados.slice(0, 10);
 
-    if (!data || data.length === 0) {
+    if (resultados.length === 0) {
       wrap.innerHTML = '<div class="cliente-no-results">No se encontraron resultados para "<strong>' + q + '</strong>"</div>';
       return;
     }
 
-    wrap.innerHTML = data.map(function(o, i) {
+    wrap.innerHTML = resultados.map(function(o, i) {
       return '<div class="cliente-result-item" onclick="seleccionarCliente(' + i + ')">' +
         '<div class="cr-razon">' + (o.razon_social || 'Sin razón social') + '</div>' +
         '<div class="cr-cuit">CUIT: ' + (o.cuit || '-') + ' · Tel: ' + (o.telefono || '-') + '</div>' +
@@ -1129,8 +1124,7 @@ async function buscarCliente() {
         '</div>';
     }).join('');
 
-    // Guardar resultados para selección
-    window._clienteResultados = data;
+    window._clienteResultados = resultados;
   } catch(err) {
     wrap.innerHTML = '<div class="cliente-no-results">Error al buscar: ' + err.message + '</div>';
   }
