@@ -372,13 +372,21 @@ async function ejecutarBorrar() {
       var j = await res.json();
       throw new Error(j.error || 'Error al anular');
     }
+    var result = await res.json();
     cerrarModalBorrar();
-    // Marcar como anulada en local (no quitar del array)
     todasLasOrdenes.forEach(function(o) {
       if (String(o.id) === String(id)) o.anulada = true;
     });
     filtrar();
     calcularStats();
+
+    // Si el cliente quedó huérfano, preguntar si eliminarlo
+    if (result.cliente_huerfano && result.cliente_id) {
+      var eliminar = confirm('La orden fue anulada.\n\nEste cliente fue creado desde esta orden y no tiene otras órdenes activas.\n\n¿Querés eliminarlo también de la base de clientes?');
+      if (eliminar) {
+        await fetch(API_URL + '/api/clientes/' + result.cliente_id, { method: 'DELETE' });
+      }
+    }
   } catch(err) {
     alert('Error: ' + err.message);
   } finally {
