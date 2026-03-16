@@ -85,13 +85,39 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 .pie{position:absolute;bottom:9mm;left:13mm;font-size:7px;color:#888;line-height:1.5;}
 @media print{
   body{background:white;padding:0;}
-  .toolbar,#toast,td:last-child,.btn-del-row,.add-row-wrap,#bcra-overlay{display:none !important;}
+  .toolbar,#toast,td:last-child,.btn-del-row,.add-row-wrap,#bcra-overlay,#cliente-overlay{display:none !important;}
   .orden{box-shadow:none;width:100%;min-height:unset;padding:10mm 12mm 20mm;}
   input,textarea,select{border-bottom-color:transparent !important;}
   .logo-fukari{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .tabla-productos th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .localidad-dropdown{display:none !important;}
 }
+/* ── CLIENTE OVERLAY ── */
+#cliente-overlay{position:fixed;inset:0;background:rgba(15,15,30,0.85);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;}
+#cliente-modal{background:#fff;border-radius:12px;width:100%;max-width:480px;box-shadow:0 24px 60px rgba(0,0,0,0.4);overflow:hidden;}
+.cliente-header{background:#1565c0;color:#fff;padding:20px 28px 16px;}
+.cliente-header h2{font-size:16px;font-weight:700;margin:0 0 3px;}
+.cliente-header p{font-size:12px;opacity:0.8;margin:0;}
+.cliente-body{padding:24px 28px;}
+.cliente-btns{display:flex;gap:12px;margin-bottom:0;}
+.cliente-btn{flex:1;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.cliente-btn-si{background:#16a34a;color:#fff;}.cliente-btn-si:hover{background:#15803d;}
+.cliente-btn-no{background:#f3f4f6;color:#374151;border:1.5px solid #d1d5db;}.cliente-btn-no:hover{background:#e5e7eb;}
+#cliente-search-section{display:none;margin-top:18px;}
+.cliente-search-group{display:flex;gap:10px;margin-bottom:10px;}
+.cliente-search-group input{flex:1;border:1.5px solid #d1d5db;border-radius:6px;padding:10px 14px;font-size:14px;font-family:inherit;outline:none;}
+.cliente-search-group input:focus{border-color:#1565c0;box-shadow:0 0 0 3px rgba(21,101,192,0.1);}
+.cliente-search-group button{padding:10px 18px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;}
+.cliente-search-group button:hover{background:#1976d2;}
+.cliente-results{max-height:220px;overflow-y:auto;}
+.cliente-result-item{padding:10px 14px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all 0.15s;}
+.cliente-result-item:hover{background:#eff6ff;border-color:#1565c0;}
+.cliente-result-item .cr-razon{font-weight:600;font-size:13px;color:#111827;}
+.cliente-result-item .cr-cuit{font-size:11px;color:#6b7280;}
+.cliente-result-item .cr-orden{font-size:11px;color:#1565c0;font-weight:500;}
+.cliente-no-results{text-align:center;color:#6b7280;font-size:12px;padding:12px 0;}
+.cliente-loading{text-align:center;padding:16px 0;color:#6b7280;font-size:13px;}
+.cliente-hint{font-size:11px;color:#6b7280;margin-bottom:12px;}
 /* ── DNI drop zone ── */
 .dni-drop{border:2px dashed #d1d5db;border-radius:6px;padding:10px 14px;cursor:pointer;font-size:11px;color:#6b7280;text-align:center;transition:border-color 0.15s;}
 .dni-drop:hover{border-color:#1565c0;color:#1565c0;}
@@ -152,8 +178,36 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
   <a href="yaku-panel.html" class="btn btn-secondary" style="text-decoration:none;">&#8592; Volver al Panel</a>
 </div>
 
+<!-- ── CLIENTE OVERLAY ── -->
+<div id="cliente-overlay">
+  <div id="cliente-modal">
+    <div class="cliente-header">
+      <h2>Nueva Orden de Instalación</h2>
+      <p>¿El destinatario ya es cliente de Yakú?</p>
+    </div>
+    <div class="cliente-body">
+      <div class="cliente-btns" id="cliente-btns-main">
+        <button class="cliente-btn cliente-btn-si" onclick="clienteSi()">✓ Sí, es cliente</button>
+        <button class="cliente-btn cliente-btn-no" onclick="clienteNo()">✗ No, es nuevo</button>
+      </div>
+      <div id="cliente-search-section">
+        <p class="cliente-hint">Buscá por CUIT o Razón Social para autocompletar los datos.</p>
+        <div class="cliente-search-group">
+          <input type="text" id="cliente-search-input" placeholder="CUIT o Razón Social..." onkeydown="if(event.key==='Enter')buscarCliente()">
+          <button onclick="buscarCliente()">Buscar</button>
+        </div>
+        <div id="cliente-results-wrap"></div>
+        <div style="margin-top:12px;display:flex;gap:10px;">
+          <button class="cliente-btn cliente-btn-no" style="flex:none;padding:8px 16px;font-size:12px;" onclick="clienteVolver()">← Volver</button>
+          <button class="cliente-btn cliente-btn-no" style="flex:none;padding:8px 16px;font-size:12px;" onclick="clienteNo()">Continuar sin datos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── BCRA OVERLAY ── -->
-<div id="bcra-overlay">
+<div id="bcra-overlay" style="display:none;">
   <div id="bcra-modal">
     <div class="bcra-header">
       <div class="step-badge">PASO 1 DE 2</div>
@@ -781,55 +835,8 @@ function setDniFile(id, file) {
 
 // ── VALIDACIÓN ──
 function validarCampos() {
-  var errores = [];
-  var campos = [
-    { id: 'razon-social', label: 'Razón Social' },
-    { id: 'cuit', label: 'C.U.I.T.' },
-    { id: 'telefono', label: 'Teléfono' },
-    { id: 'email', label: 'Correo Electrónico' },
-    { id: 'responsable-nombre', label: 'Nombre del Responsable' },
-    { id: 'responsable-celular', label: 'Celular del Responsable' },
-  ];
-  campos.forEach(function(c) {
-    var el = document.getElementById(c.id);
-    if (el && !el.value.trim()) errores.push(c.label);
-  });
-  var metodo = document.getElementById('metodo-pago');
-  if (!metodo.value) errores.push('Método de Pago');
-  var rubro = document.getElementById('rubro');
-  if (!rubro.value) errores.push('Rubro');
-  if (rubro.value === 'PARTICULAR') {
-    if (!_dniFiles['dni-frente']) errores.push('DNI Frente');
-    if (!_dniFiles['dni-dorso']) errores.push('DNI Dorso');
-  }
-  if (rubro.value === 'EMPRESA' || rubro.value === 'COMERCIO') {
-    if (!_dniFiles['constancia']) errores.push('Constancia de Inscripción');
-  }
-  var hayProducto = false;
-  document.querySelectorAll('#productos-body tr').forEach(function(tr) {
-    var sel = tr.querySelector('select');
-    if (sel && sel.value) hayProducto = true;
-  });
-  if (!hayProducto) errores.push('Al menos un producto');
-
-  // Validar distribución de equipos si hay múltiples domicilios
-  var extras = document.querySelectorAll('.dom-extra-wrap-item');
-  if (extras.length > 0) {
-    var prods = _getProductosActuales();
-    prods.forEach(function(p) {
-      var total = 0;
-      var eq0 = document.getElementById('equipos-dir-0');
-      if (eq0) { var i0 = eq0.querySelector('[data-modelo="' + p.modelo + '"]'); total += i0 ? (parseInt(i0.value)||0) : 0; }
-      extras.forEach(function(item) {
-        var eqC = document.getElementById('equipos-dir-' + item.dataset.domid);
-        if (eqC) { var inp = eqC.querySelector('[data-modelo="' + p.modelo + '"]'); total += inp ? (parseInt(inp.value)||0) : 0; }
-      });
-      if (total !== p.cantidad && p.cantidad > 0) {
-        errores.push('Distribución de ' + p.modelo + ': asignados ' + total + ' de ' + p.cantidad);
-      }
-    });
-  }
-  return errores;
+  // Ningún campo es obligatorio
+  return [];
 }
 
 function mostrarErrores(errores) {
@@ -1051,6 +1058,140 @@ function quitarDireccion(btn) {
     if (warn) warn.remove();
   }
   renumerarDirecciones();
+}
+
+// ══════════════════════════════════════════
+//  CLIENTE — PASO 0
+// ══════════════════════════════════════════
+function clienteSi() {
+  document.getElementById('cliente-btns-main').style.display = 'none';
+  document.getElementById('cliente-search-section').style.display = 'block';
+  document.getElementById('cliente-search-input').focus();
+}
+
+function clienteVolver() {
+  document.getElementById('cliente-btns-main').style.display = 'flex';
+  document.getElementById('cliente-search-section').style.display = 'none';
+  document.getElementById('cliente-results-wrap').innerHTML = '';
+  document.getElementById('cliente-search-input').value = '';
+}
+
+function clienteNo() {
+  document.getElementById('cliente-overlay').style.display = 'none';
+  // Mostrar BCRA overlay
+  document.getElementById('bcra-overlay').style.display = 'flex';
+}
+
+async function buscarCliente() {
+  var q = document.getElementById('cliente-search-input').value.trim();
+  if (!q) return;
+  var wrap = document.getElementById('cliente-results-wrap');
+  wrap.innerHTML = '<div class="cliente-loading">Buscando...</div>';
+
+  try {
+    // Determinar si es CUIT (solo dígitos y guiones)
+    var esCuit = /^[\d\-]+$/.test(q) && q.replace(/\D/g, '').length >= 5;
+    var query;
+    if (esCuit) {
+      // Buscar por CUIT (con o sin guiones)
+      var cuitLimpio = q.replace(/\D/g, '');
+      var cuitFormateado = '';
+      if (cuitLimpio.length >= 11) {
+        cuitFormateado = cuitLimpio.slice(0,2) + '-' + cuitLimpio.slice(2,10) + '-' + cuitLimpio.slice(10,11);
+      }
+      query = window._sb.from('ordenes')
+        .select('id, numero_completo, razon_social, cuit, telefono, email, metodo_pago, rubro, responsable, responsable_celular, plano, dom_instalacion, localidad, plazo_mantenimiento, aclaraciones, cobrar, productos, fecha_orden')
+        .or('cuit.eq.' + q + ',cuit.eq.' + cuitFormateado + ',cuit.ilike.%' + cuitLimpio + '%')
+        .order('created_at', { ascending: false })
+        .limit(10);
+    } else {
+      // Buscar por razón social
+      query = window._sb.from('ordenes')
+        .select('id, numero_completo, razon_social, cuit, telefono, email, metodo_pago, rubro, responsable, responsable_celular, plano, dom_instalacion, localidad, plazo_mantenimiento, aclaraciones, cobrar, productos, fecha_orden')
+        .ilike('razon_social', '%' + q + '%')
+        .order('created_at', { ascending: false })
+        .limit(10);
+    }
+
+    var { data, error } = await query;
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      wrap.innerHTML = '<div class="cliente-no-results">No se encontraron resultados para "<strong>' + q + '</strong>"</div>';
+      return;
+    }
+
+    wrap.innerHTML = data.map(function(o, i) {
+      return '<div class="cliente-result-item" onclick="seleccionarCliente(' + i + ')">' +
+        '<div class="cr-razon">' + (o.razon_social || 'Sin razón social') + '</div>' +
+        '<div class="cr-cuit">CUIT: ' + (o.cuit || '-') + ' · Tel: ' + (o.telefono || '-') + '</div>' +
+        '<div class="cr-orden">Orden: ' + (o.numero_completo || '-') + ' · ' + (o.fecha_orden || '') + '</div>' +
+        '</div>';
+    }).join('');
+
+    // Guardar resultados para selección
+    window._clienteResultados = data;
+  } catch(err) {
+    wrap.innerHTML = '<div class="cliente-no-results">Error al buscar: ' + err.message + '</div>';
+  }
+}
+
+function seleccionarCliente(idx) {
+  var o = window._clienteResultados[idx];
+  if (!o) return;
+
+  // Autocompletar campos
+  if (o.razon_social) document.getElementById('razon-social').value = o.razon_social;
+  if (o.cuit) {
+    document.getElementById('cuit').value = o.cuit;
+    normalizarCuit(document.getElementById('cuit'));
+  }
+  if (o.telefono) {
+    document.getElementById('telefono').value = o.telefono;
+  }
+  if (o.email) document.getElementById('email').value = o.email;
+  if (o.plano) document.getElementById('plano').value = o.plano;
+
+  // Método de pago
+  if (o.metodo_pago) {
+    var metodoSel = document.getElementById('metodo-pago');
+    for (var i = 0; i < metodoSel.options.length; i++) {
+      if (metodoSel.options[i].value === o.metodo_pago) { metodoSel.selectedIndex = i; break; }
+    }
+  }
+
+  // Rubro
+  if (o.rubro) {
+    var rubroSel = document.getElementById('rubro');
+    for (var i = 0; i < rubroSel.options.length; i++) {
+      if (rubroSel.options[i].value === o.rubro) { rubroSel.selectedIndex = i; break; }
+    }
+    onRubroChange();
+  }
+
+  // Responsable (puede venir como "Nombre Apellido")
+  if (o.responsable) {
+    var parts = o.responsable.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      document.getElementById('responsable-nombre').value = parts.slice(0, -1).join(' ');
+      document.getElementById('responsable-apellido').value = parts[parts.length - 1];
+    } else {
+      document.getElementById('responsable-nombre').value = o.responsable;
+    }
+  }
+  if (o.responsable_celular) document.getElementById('responsable-celular').value = o.responsable_celular;
+
+  // Cerrar overlay cliente y mostrar BCRA
+  document.getElementById('cliente-overlay').style.display = 'none';
+  document.getElementById('bcra-overlay').style.display = 'flex';
+
+  // Pre-llenar CUIT en BCRA si existe
+  if (o.cuit) {
+    var cuitRaw = o.cuit.replace(/\D/g, '');
+    if (cuitRaw.length === 11) {
+      document.getElementById('bcra-cuit-input').value = cuitRaw.slice(0,2) + '-' + cuitRaw.slice(2,10) + '-' + cuitRaw.slice(10);
+    }
+  }
 }
 
 // ══════════════════════════════════════════
