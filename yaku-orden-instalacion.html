@@ -754,6 +754,7 @@ async function guardarOrden() {
     var datos = recolectarDatos();
     // Agregar datos BCRA
     if (bcraData) datos.bcra = bcraData;
+    if (window._esNuevoCliente) datos.es_nuevo_cliente = true;
     if (datos.rubro === 'PARTICULAR') {
       var nroTemp = document.getElementById('nro-orden').value || ('dni-' + Date.now());
       for (var lado of ['dni-frente', 'dni-dorso']) {
@@ -1106,6 +1107,7 @@ function clienteVolver() {
 }
 
 function clienteNo() {
+  window._esNuevoCliente = true;
   document.getElementById('cliente-overlay').style.display = 'none';
   // Mostrar BCRA overlay
   document.getElementById('bcra-overlay').style.display = 'flex';
@@ -1118,27 +1120,9 @@ async function buscarCliente() {
   wrap.innerHTML = '<div class="cliente-loading">Buscando...</div>';
 
   try {
-    var res = await fetch(API_URL + '/api/ordenes');
-    if (!res.ok) throw new Error('Error al consultar órdenes');
-    var todas = await res.json();
-
-    // Filtrar por CUIT o razón social
-    var qLower = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    var qDigits = q.replace(/\D/g, '');
-    var esCuit = /^[\d\-]+$/.test(q) && qDigits.length >= 5;
-
-    var resultados = todas.filter(function(o) {
-      if (esCuit) {
-        var cuitLimpio = (o.cuit || '').replace(/\D/g, '');
-        return cuitLimpio.indexOf(qDigits) !== -1;
-      } else {
-        var rs = (o.razon_social || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-        return rs.indexOf(qLower) !== -1;
-      }
-    });
-
-    // Más recientes primero y limitar a 10
-    resultados = resultados.slice(0, 10);
+    var res = await fetch(API_URL + '/api/clientes/search?q=' + encodeURIComponent(q));
+    if (!res.ok) throw new Error('Error al buscar');
+    var resultados = await res.json();
 
     if (resultados.length === 0) {
       wrap.innerHTML = '<div class="cliente-no-results">No se encontraron resultados para "<strong>' + q + '</strong>"</div>';
@@ -1148,8 +1132,7 @@ async function buscarCliente() {
     wrap.innerHTML = resultados.map(function(o, i) {
       return '<div class="cliente-result-item" onclick="seleccionarCliente(' + i + ')">' +
         '<div class="cr-razon">' + (o.razon_social || 'Sin razón social') + '</div>' +
-        '<div class="cr-cuit">CUIT: ' + (o.cuit || '-') + ' · Tel: ' + (o.telefono || '-') + '</div>' +
-        '<div class="cr-orden">Orden: ' + (o.numero_completo || '-') + ' · ' + (o.fecha_orden || '') + '</div>' +
+        '<div class="cr-cuit">CUIT: ' + (o.cuit || '-') + (o.dni ? ' · DNI: ' + o.dni : '') + '</div>' +
         '</div>';
     }).join('');
 
@@ -1162,6 +1145,7 @@ async function buscarCliente() {
 function seleccionarCliente(idx) {
   var o = window._clienteResultados[idx];
   if (!o) return;
+  window._esNuevoCliente = false;
 
   // Autocompletar campos
   if (o.razon_social) document.getElementById('razon-social').value = o.razon_social;

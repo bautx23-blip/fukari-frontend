@@ -141,7 +141,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       <strong>MV EMPRENDIMIENTOS SRL</strong>
       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#25D366" style="vertical-align:middle;margin-right:2px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> +54 9 341 216-4265<br>
       www.yakuagua.com.ar / www.fukari.net<br>
-      <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c8beada6bca9bb88b1a9a3bda9afbda9e6aba7a5e6a9ba">[email&#160;protected]</a>
+      <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4533202b312436053c242e30242230246b262a286b2437">[email&#160;protected]</a>
     </div>
     <div class="header-right">
       <div class="orden-box">
@@ -164,40 +164,30 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
   <!-- ── BÚSQUEDA DE CLIENTE ── -->
   <div class="busqueda-panel" id="busqueda-panel">
     <h3>&#128270; Buscar cliente</h3>
-    <div class="busqueda-tipo">
-      <label><input type="radio" name="tipo-busqueda" value="cuit" checked onchange="onTipoBusquedaChange()"> Buscar por CUIT</label>
-      <label><input type="radio" name="tipo-busqueda" value="orden" onchange="onTipoBusquedaChange()"> Buscar por N° de Orden</label>
-    </div>
     <div class="busqueda-row">
       <div class="busqueda-input-wrap">
-        <input type="text" id="busqueda-input" placeholder="Ingresá el CUIT (XX-XXXXXXXX-X)" maxlength="20" onkeydown="if(event.key==='Enter')buscarCliente()">
+        <input type="text" id="busqueda-input" placeholder="CUIT, DNI o Razón Social..." maxlength="60" onkeydown="if(event.key==='Enter')buscarCliente()">
       </div>
       <button class="btn-buscar" id="btn-buscar" onclick="buscarCliente()">&#128270; Buscar</button>
     </div>
-    <p class="busqueda-hint" id="busqueda-hint">Ingresá el CUIT con o sin guiones</p>
+    <p class="busqueda-hint" id="busqueda-hint">Buscá en la base de clientes por CUIT, DNI o nombre</p>
     <p class="busqueda-error" id="busqueda-error"></p>
-    <div style="margin-top:10px;border-top:1px solid #bfdbfe;padding-top:10px;">
-      <button class="btn btn-secondary" onclick="cargarManual()" style="font-size:12px;padding:7px 16px;">&#9998; Carga manual (sin búsqueda)</button>
-    </div>
-    <div style="margin-top:10px;border-top:1px solid #bfdbfe;padding-top:10px;">
-      <button class="btn btn-secondary" onclick="cargarManual()" style="font-size:12px;padding:7px 16px;">&#9998; Carga manual (sin búsqueda)</button>
-    </div>
   </div>
 
   <!-- ── DATOS DEL CLIENTE (readonly, se completa solo) ── -->
   <div class="seccion-readonly" id="datos-cliente-section" style="display:none;">
-    <div class="badge-readonly" id="badge-modo">&#128274; Datos del cliente — solo lectura</div>
+    <div class="badge-readonly">&#128274; Datos del cliente — solo lectura</div>
     <div class="datos-grid">
       <div class="datos-row">
-        <div class="dato-cell"><label>Razon Social:</label><input type="text" id="razon-social" placeholder="Nombre o razón social"></div>
+        <div class="dato-cell"><label>Razon Social:</label><input type="text" id="razon-social" readonly></div>
       </div>
       <div class="datos-row">
-        <div class="dato-cell" style="flex:1.4;"><label>C.U.I.T.:</label><input type="text" id="cuit" placeholder="20-12345678-9"></div>
-        <div class="dato-cell" style="flex:0.6;"><label>Tel.:</label><input type="text" id="telefono" placeholder="5493424485582"></div>
+        <div class="dato-cell" style="flex:1.4;"><label>C.U.I.T.:</label><input type="text" id="cuit" readonly></div>
+        <div class="dato-cell" style="flex:0.6;"><label>Tel.:</label><input type="text" id="telefono" readonly></div>
       </div>
       <div class="datos-row">
-        <div class="dato-cell" style="flex:1;"><label>Rubro:</label><input type="text" id="rubro" placeholder="PARTICULAR / EMPRESA / COMERCIO"></div>
-        <div class="dato-cell" style="flex:1;"><label>Orden de referencia:</label><input type="text" id="orden-ref-numero" placeholder="(opcional)"></div>
+        <div class="dato-cell" style="flex:1;"><label>Rubro:</label><input type="text" id="rubro" readonly></div>
+        <div class="dato-cell" style="flex:1;"><label>Orden de referencia:</label><input type="text" id="orden-ref-numero" readonly></div>
       </div>
     </div>
 
@@ -246,7 +236,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
         <select id="vendedor">
           <option value="">-- Seleccionar --</option>
           <option value="René Biagioni">René Biagioni</option>
-          <option value="María María Pía Bologñese">María María Pía Bologñese</option>
+          <option value="María Pía Bologñese">María Pía Bologñese</option>
         </select>
       </div>
       <div class="campo-texto">
@@ -328,7 +318,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       window._currentUserEmail = session.user.email;
       var _map = {
         'renebiagioni@yakuagua.com.ar': 'René Biagioni',
-        'ventas@yakuagua.com.ar': 'María María Pía Bologñese'
+        'ventas@yakuagua.com.ar': 'María Pía Bologñese'
       };
       window._currentUserName = _map[session.user.email] || session.user.email;
       // Preseleccionar vendedor
@@ -368,106 +358,48 @@ document.addEventListener('DOMContentLoaded', function() {
     .catch(function(){ document.getElementById('nro-baja').value = 'BAJA-????????'; });
 });
 
-// ── TIPO BÚSQUEDA ──
-function onTipoBusquedaChange() {
-  var tipo = document.querySelector('input[name="tipo-busqueda"]:checked').value;
-  var input = document.getElementById('busqueda-input');
-  var hint = document.getElementById('busqueda-hint');
-  if (tipo === 'cuit') {
-    input.placeholder = 'Ingresá el CUIT (XX-XXXXXXXX-X)';
-    hint.textContent = 'Ingresá el CUIT con o sin guiones';
-  } else {
-    input.placeholder = 'Ingresá el número de orden (ej: 00002-00000001)';
-    hint.textContent = 'Formato: 00002-00000001 o solo el número';
-  }
-  input.value = '';
-  document.getElementById('busqueda-error').style.display = 'none';
-}
 
 // ── BUSCAR CLIENTE ──
 async function buscarCliente() {
-  var tipo = document.querySelector('input[name="tipo-busqueda"]:checked').value;
   var val = document.getElementById('busqueda-input').value.trim();
   var btn = document.getElementById('btn-buscar');
   var errEl = document.getElementById('busqueda-error');
   errEl.style.display = 'none';
-
-  if (!val) {
-    errEl.textContent = 'Ingresá un ' + (tipo === 'cuit' ? 'CUIT' : 'número de orden') + ' para buscar.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Buscando...';
-
+  if (!val) { errEl.textContent = 'Ingresá un CUIT, DNI o nombre para buscar.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Buscando...';
   try {
-    var url;
-    if (tipo === 'cuit') {
-      var cuitRaw = val.replace(/\D/g,'');
-      if (cuitRaw.length !== 11) {
-        errEl.textContent = 'El CUIT debe tener 11 dígitos.';
-        errEl.style.display = 'block';
-        return;
-      }
-      url = API_URL + '/api/ordenes?cuit=' + cuitRaw + '&limit=1';
-    } else {
-      var nro = val.trim();
-      url = API_URL + '/api/ordenes/' + encodeURIComponent(nro);
-    }
-
-    var res = await fetch(url);
-    if (!res.ok) throw new Error('No se encontró ninguna orden para ese cliente.');
+    var res = await fetch(API_URL + '/api/clientes/search?q=' + encodeURIComponent(val));
+    if (!res.ok) throw new Error('Error al buscar clientes.');
     var data = await res.json();
-
-    // Normalizar: puede venir como array (por cuit) o como objeto (por número)
-    var orden;
-    if (Array.isArray(data)) {
-      if (data.length === 0) throw new Error('No se encontró ninguna orden para ese CUIT.');
-      orden = data[0];
-    } else if (data && data.id) {
-      orden = data;
-    } else {
-      throw new Error('No se encontró ninguna orden.');
+    if (!data || data.length === 0) throw new Error('No se encontró ningún cliente para "' + val + '".');
+    if (data.length === 1) { cargarDatosCliente(data[0]); }
+    else {
+      errEl.style.cssText = 'display:block;color:#1565c0;';
+      errEl.innerHTML = data.length + ' resultados — hacé click para elegir:<br>' +
+        data.slice(0, 10).map(function(c, i) {
+          return '<a href="#" onclick="event.preventDefault();elegirCliente(' + i + ')" style="display:block;padding:4px 0;color:#1565c0;font-weight:600;text-decoration:underline;">' +
+            (c.razon_social || '') + ' — ' + (c.cuit || c.dni || '') + '</a>';
+        }).join('');
+      window._clienteResultados = data;
     }
-
-    cargarDatosCliente(orden);
-  } catch(err) {
-    errEl.textContent = err.message || 'Error al buscar el cliente.';
-    errEl.style.display = 'block';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '🔍 Buscar';
-  }
+  } catch(err) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = '🔍 Buscar'; }
 }
+function elegirCliente(idx) { var c = window._clienteResultados[idx]; if (c) cargarDatosCliente(c); }
 
-function cargarDatosCliente(orden) {
-  ordenRef = orden;
+function cargarDatosCliente(cliente) {
+  ordenRef = cliente;
 
-  // Rellenar campos y ponerlos readonly
-  document.getElementById('razon-social').value = orden.razon_social || '';
-  document.getElementById('cuit').value = orden.cuit || '';
-  document.getElementById('telefono').value = orden.telefono || '';
-  document.getElementById('rubro').value = orden.rubro || '';
-  document.getElementById('orden-ref-numero').value = orden.numero_completo || '';
-  ['razon-social','cuit','telefono','rubro','orden-ref-numero'].forEach(function(id) {
-    document.getElementById(id).readOnly = true;
-  });
-  document.getElementById('badge-modo').innerHTML = '&#128274; Datos del cliente — solo lectura';
-  document.getElementById('badge-modo').style.background = '';
-  document.getElementById('badge-modo').style.color = '';
+  // Rellenar campos readonly
+  document.getElementById('razon-social').value = cliente.razon_social || '';
+  document.getElementById('cuit').value = cliente.cuit || cliente.dni || '';
+  document.getElementById('telefono').value = cliente.telefono || '';
+  document.getElementById('rubro').value = cliente.rubro || '';
+  document.getElementById('orden-ref-numero').value = '';
 
   // Tabla de productos
   var tbody = document.getElementById('productos-ref-body');
-  var productos = orden.productos || [];
-  if (productos.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" class="estado-vacio">Sin productos registrados</td></tr>';
-  } else {
-    tbody.innerHTML = productos.map(function(p) {
-      return '<tr><td>' + (p.modelo || '') + '</td><td style="text-align:center;">' + (p.cantidad || '') +
-        '</td><td>' + (p.domicilio || '') + '</td><td>' + (p.localidad || '') + '</td></tr>';
-    }).join('');
-  }
+  tbody.innerHTML = '<tr><td colspan="4" class="estado-vacio">Datos cargados desde ficha de cliente</td></tr>';
 
   // Mostrar secciones
   document.getElementById('datos-cliente-section').style.display = 'block';
@@ -478,44 +410,9 @@ function cargarDatosCliente(orden) {
   // Feedback visual
   var errEl = document.getElementById('busqueda-error');
   errEl.style.cssText = 'display:block;color:#16a34a;';
-  errEl.textContent = '✓ Cliente encontrado: ' + (orden.razon_social || '') + ' — Orden ' + (orden.numero_completo || '');
+  errEl.textContent = '✓ Cliente encontrado: ' + (cliente.razon_social || '') + ' — Orden ' + ('');
 }
 
-// ── CARGA MANUAL (sin búsqueda) ──
-function cargarManual() {
-  ordenRef = null;
-  ['razon-social','cuit','telefono','rubro','orden-ref-numero'].forEach(function(id) {
-    var el = document.getElementById(id);
-    el.value = '';
-    el.readOnly = false;
-  });
-  document.getElementById('badge-modo').innerHTML = '&#9998; Carga manual — completá los datos del cliente';
-  document.getElementById('badge-modo').style.background = '#fef3c7';
-  document.getElementById('badge-modo').style.color = '#92400e';
-  document.getElementById('productos-ref-body').innerHTML = '<tr><td colspan="4" class="estado-vacio">Carga manual — sin orden de referencia</td></tr>';
-  document.getElementById('datos-cliente-section').style.display = 'block';
-  document.getElementById('datos-baja-section').style.display = 'block';
-  document.getElementById('footer-firmas').style.display = 'flex';
-  document.getElementById('btn-guardar').disabled = false;
-  document.getElementById('busqueda-error').style.display = 'none';
-}
-
-// ── CARGA MANUAL ──
-function cargarManual() {
-  ordenRef = null;
-  ["razon-social","cuit","telefono","rubro","orden-ref-numero"].forEach(function(id) {
-    var el = document.getElementById(id); el.value = ""; el.readOnly = false;
-  });
-  document.getElementById("badge-modo").innerHTML = "\&#9998; Carga manual";
-  document.getElementById("badge-modo").style.background = "#fef3c7";
-  document.getElementById("badge-modo").style.color = "#92400e";
-  document.getElementById("productos-ref-body").innerHTML = "<tr><td colspan=4 style=text-align:center;color:#9ca3af;padding:20px>Carga manual</td></tr>";
-  document.getElementById("datos-cliente-section").style.display = "block";
-  document.getElementById("datos-baja-section").style.display = "block";
-  document.getElementById("footer-firmas").style.display = "flex";
-  document.getElementById("btn-guardar").disabled = false;
-  document.getElementById("busqueda-error").style.display = "none";
-}
 // ── RETIRO DE EQUIPO ──
 function onRetiraChange() {
   var val = document.getElementById('retira-equipo').value;
@@ -602,6 +499,7 @@ function setFile(id, file) {
 // ── VALIDACIÓN ──
 function validarCampos() {
   var errores = [];
+  if (!ordenRef) errores.push('Buscá un cliente antes de guardar');
   if (!document.getElementById('motivo-baja').value) errores.push('Motivo de baja');
   if (!document.getElementById('vendedor').value) errores.push('Vendedor');
   if (!document.getElementById('responsable-nombre').value.trim()) errores.push('Nombre del responsable');
@@ -656,7 +554,7 @@ async function guardarBaja() {
   try {
     // Asegurar vendedor cargado
     if (!window._currentUserName) {
-      var _map = { 'renebiagioni@yakuagua.com.ar': 'René Biagioni', 'ventas@yakuagua.com.ar': 'María María Pía Bologñese' };
+      var _map = { 'renebiagioni@yakuagua.com.ar': 'René Biagioni', 'ventas@yakuagua.com.ar': 'María Pía Bologñese' };
       var { data: { session } } = await window._sb.auth.getSession();
       if (session) window._currentUserName = _map[session.user.email] || session.user.email;
     }
@@ -689,13 +587,13 @@ async function guardarBaja() {
     var responsable = apellido ? nombre + ' ' + apellido : nombre;
 
     var payload = {
-      orden_ref_id: ordenRef ? ordenRef.id : null,
-      orden_ref_numero: ordenRef ? ordenRef.numero_completo : document.getElementById('orden-ref-numero').value.trim(),
-      razon_social: ordenRef ? ordenRef.razon_social : document.getElementById('razon-social').value.trim(),
-      cuit: ordenRef ? ordenRef.cuit : document.getElementById('cuit').value.trim(),
-      telefono: ordenRef ? ordenRef.telefono : document.getElementById('telefono').value.trim(),
-      rubro: ordenRef ? ordenRef.rubro : document.getElementById('rubro').value.trim(),
-      productos_ref: ordenRef ? (ordenRef.productos || []) : [],
+      orden_ref_id: null,
+      orden_ref_numero: document.getElementById('orden-ref-numero').value.trim() || '',
+      razon_social: ordenRef.razon_social || '',
+      cuit: ordenRef.cuit || ordenRef.dni || '',
+      telefono: ordenRef.telefono || '',
+      rubro: ordenRef.rubro || '',
+      productos_ref: [],
       fecha_baja: document.getElementById('fecha-baja').value,
       motivo: document.getElementById('motivo-baja').value,
       observaciones: document.getElementById('observaciones').value,
@@ -750,7 +648,7 @@ function limpiarForm() {
 
 // ── LOCALIDADES ──
 const MODELOS = ['11B', '54B', '103M', '103S', '103 S REFRIGERADOR', 'ICE', '152 PREMIUM', '102 S', '102 OSMOSIS INVERSA', 'BAJO MESADA FUKARI C/CANILLA COMUN', 'BAJO MESADA FUKARI C/CANILLA PREMIUM', 'INSTALACION', 'CAMBIO TRIPACK FUKARI', 'SERVICIO MANTENIMIENTO'];
-const LOCALIDADES = [{"nombre":"Acebal","departamento":"Rosario"},{"nombre":"Aguará Grande","departamento":"San Cristóbal"},{"nombre":"Albarellos","departamento":"Rosario"},{"nombre":"Alcorta","departamento":"Constitución"},{"nombre":"Aldao","departamento":"San Lorenzo"},{"nombre":"Alejandra","departamento":"San Javier"},{"nombre":"Álvarez","departamento":"Rosario"},{"nombre":"Alvear","departamento":"Rosario"},{"nombre":"Ambrosetti","departamento":"San Cristóbal"},{"nombre":"Amenábar","departamento":"General López"},{"nombre":"Angélica","departamento":"Castellanos"},{"nombre":"Angeloni","departamento":"San Justo"},{"nombre":"Arequito","departamento":"Caseros"},{"nombre":"Arminda","departamento":"Rosario"},{"nombre":"Armstrong","departamento":"Belgrano"},{"nombre":"Arocena","departamento":"San Jerónimo"},{"nombre":"Arroyo Aguiar","departamento":"La Capital"},{"nombre":"Arroyo Ceibal","departamento":"General Obligado"},{"nombre":"Arroyo Leyes","departamento":"La Capital"},{"nombre":"Arroyo Seco","departamento":"Rosario"},{"nombre":"Arrufó","departamento":"San Cristóbal"},{"nombre":"Arteaga","departamento":"Caseros"},{"nombre":"Ataliva","departamento":"Castellanos"},{"nombre":"Aurelia","departamento":"Castellanos"},{"nombre":"Avellaneda","departamento":"General Obligado"},{"nombre":"Barrancas","departamento":"San Jerónimo"},{"nombre":"Bauer y Sigel","departamento":"Castellanos"},{"nombre":"Bella Italia","departamento":"Castellanos"},{"nombre":"Berabevú","departamento":"Caseros"},{"nombre":"Berna","departamento":"General Obligado"},{"nombre":"Bernardo de Irigoyen","departamento":"San Jerónimo"},{"nombre":"Bigand","departamento":"Caseros"},{"nombre":"Bombal","departamento":"Constitución"},{"nombre":"Bouquet","departamento":"Belgrano"},{"nombre":"Bustinza","departamento":"Iriondo"},{"nombre":"Cabal","departamento":"La Capital"},{"nombre":"Cacique Ariacaiquín","departamento":"San Javier"},{"nombre":"Cafferata","departamento":"General López"},{"nombre":"Calchaquí","departamento":"Vera"},{"nombre":"Campo Andino","departamento":"La Capital"},{"nombre":"Campo Piaggio","departamento":"San Jerónimo"},{"nombre":"Cañada de Gómez","departamento":"Iriondo"},{"nombre":"Cañada del Ucle","departamento":"General López"},{"nombre":"Cañada Rica","departamento":"Constitución"},{"nombre":"Candioti","departamento":"La Capital"},{"nombre":"Cañada Rosquín","departamento":"San Martín"},{"nombre":"Capitán Bermúdez","departamento":"San Lorenzo"},{"nombre":"Capivara","departamento":"San Cristóbal"},{"nombre":"Carcarañá","departamento":"San Lorenzo"},{"nombre":"Carlos Pellegrini","departamento":"San Martín"},{"nombre":"Carmen","departamento":"General López"},{"nombre":"Carmen del Sauce","departamento":"Rosario"},{"nombre":"Carreras","departamento":"General López"},{"nombre":"Carrizales","departamento":"Iriondo"},{"nombre":"Casalegno","departamento":"San Jerónimo"},{"nombre":"Casas","departamento":"San Martín"},{"nombre":"Casilda","departamento":"Caseros"},{"nombre":"Castelar","departamento":"San Martín"},{"nombre":"Castellanos","departamento":"Castellanos"},{"nombre":"Catamarca","departamento":"General López"},{"nombre":"Cayastá","departamento":"Garay"},{"nombre":"Cayastancito","departamento":"San Justo"},{"nombre":"Centeno","departamento":"San Jerónimo"},{"nombre":"Cepeda","departamento":"Constitución"},{"nombre":"Ceres","departamento":"San Cristóbal"},{"nombre":"Chabás","departamento":"Caseros"},{"nombre":"Chañar Ladeado","departamento":"Caseros"},{"nombre":"Chovet","departamento":"General López"},{"nombre":"Christophersen","departamento":"General López"},{"nombre":"Classon","departamento":"Iriondo"},{"nombre":"Colonia Aldao","departamento":"Castellanos"},{"nombre":"Colonia Ana","departamento":"San Cristóbal"},{"nombre":"Colonia Belgrano","departamento":"San Martín"},{"nombre":"Colonia Bicha","departamento":"Castellanos"},{"nombre":"Colonia Bigand","departamento":"Castellanos"},{"nombre":"Colonia Bossi","departamento":"San Cristóbal"},{"nombre":"Colonia Cello","departamento":"Castellanos"},{"nombre":"Colonia Dolores","departamento":"San Justo"},{"nombre":"Colonia Dos Rosas y La Legua","departamento":"San Cristóbal"},{"nombre":"Colonia Durán","departamento":"San Javier"},{"nombre":"Colonia Iturraspe","departamento":"Castellanos"},{"nombre":"Colonia Margarita","departamento":"Castellanos"},{"nombre":"Colonia Mascías","departamento":"Garay"},{"nombre":"Colonia Raquel","departamento":"Castellanos"},{"nombre":"Colonia Rosa","departamento":"San Cristóbal"},{"nombre":"Colonia San José","departamento":"Las Colonias"},{"nombre":"Constanza","departamento":"San Cristóbal"},{"nombre":"Coronda","departamento":"San Jerónimo"},{"nombre":"Correa","departamento":"Iriondo"},{"nombre":"Crispi","departamento":"San Martín"},{"nombre":"Cululú","departamento":"Las Colonias"},{"nombre":"Curupaytí","departamento":"San Cristóbal"},{"nombre":"Desvío Arijón","departamento":"San Jerónimo"},{"nombre":"Díaz","departamento":"San Jerónimo"},{"nombre":"Diego de Alvear","departamento":"General López"},{"nombre":"Egusquiza","departamento":"Castellanos"},{"nombre":"El Arazá","departamento":"General Obligado"},{"nombre":"El Trébol","departamento":"San Martín"},{"nombre":"Elortondo","departamento":"General López"},{"nombre":"Emilia","departamento":"La Capital"},{"nombre":"Empalme San Carlos","departamento":"Las Colonias"},{"nombre":"Empalme Villa Constitución","departamento":"Constitución"},{"nombre":"Esmeralda","departamento":"Castellanos"},{"nombre":"Esperanza","departamento":"Las Colonias"},{"nombre":"Estación Alvear","departamento":"Rosario"},{"nombre":"Estación Clucellas","departamento":"Castellanos"},{"nombre":"Eusebia y Carolina","departamento":"Castellanos"},{"nombre":"Eustolia","departamento":"Castellanos"},{"nombre":"Felicia","departamento":"Las Colonias"},{"nombre":"Fidela","departamento":"Castellanos"},{"nombre":"Fighiera","departamento":"Rosario"},{"nombre":"Firmat","departamento":"General López"},{"nombre":"Florencia","departamento":"General Obligado"},{"nombre":"Fortín Olmos","departamento":"Vera"},{"nombre":"Franck","departamento":"Las Colonias"},{"nombre":"Fray Luis Beltrán","departamento":"San Lorenzo"},{"nombre":"Fuentes","departamento":"Caseros"},{"nombre":"Funes","departamento":"Rosario"},{"nombre":"Gaboto","departamento":"San Jerónimo"},{"nombre":"Galisteo","departamento":"Castellanos"},{"nombre":"Gálvez","departamento":"San Jerónimo"},{"nombre":"Garabaldi","departamento":"Castellanos"},{"nombre":"Garabato","departamento":"Vera"},{"nombre":"Gato Colorado","departamento":"Nueve de Julio"},{"nombre":"Gessler","departamento":"San Jerónimo"},{"nombre":"Gobernador Crespo","departamento":"San Justo"},{"nombre":"Godeken","departamento":"Caseros"},{"nombre":"Godoy","departamento":"Constitución"},{"nombre":"Golondrina","departamento":"Vera"},{"nombre":"Granadero Baigorria","departamento":"Rosario"},{"nombre":"Gregoria Pérez de Denis","departamento":"Nueve de Julio"},{"nombre":"Grutly","departamento":"Las Colonias"},{"nombre":"Guadalupe Norte","departamento":"General Obligado"},{"nombre":"Helvecia","departamento":"Garay"},{"nombre":"Hersilia","departamento":"San Cristóbal"},{"nombre":"Hipatía","departamento":"Las Colonias"},{"nombre":"Huanqueros","departamento":"San Cristóbal"},{"nombre":"Hugues","departamento":"General López"},{"nombre":"Humberto Primo","departamento":"Castellanos"},{"nombre":"Humboldt","departamento":"Las Colonias"},{"nombre":"Ibarlucea","departamento":"Rosario"},{"nombre":"Ingeniero Chanourdie","departamento":"General Obligado"},{"nombre":"Intiyaco","departamento":"Vera"},{"nombre":"Ituzaingó","departamento":"Castellanos"},{"nombre":"Jacinto L. Aráuz","departamento":"Las Colonias"},{"nombre":"Josefina","departamento":"Castellanos"},{"nombre":"Juan B. Molina","departamento":"Constitución"},{"nombre":"Juan de Garay","departamento":"Constitución"},{"nombre":"Juncal","departamento":"Constitución"},{"nombre":"La Brava","departamento":"San Javier"},{"nombre":"La Cabral","departamento":"San Cristóbal"},{"nombre":"La Camila","departamento":"San Justo"},{"nombre":"La Chispa","departamento":"General López"},{"nombre":"La Criolla","departamento":"San Justo"},{"nombre":"La Gallareta","departamento":"Vera"},{"nombre":"La Lucila","departamento":"San Cristóbal"},{"nombre":"La Pelada","departamento":"Las Colonias"},{"nombre":"La Penca y Caraguatá","departamento":"San Justo"},{"nombre":"La Rubia","departamento":"San Cristóbal"},{"nombre":"La Sarita","departamento":"General Obligado"},{"nombre":"Labordeboy","departamento":"General López"},{"nombre":"Laguna Paiva","departamento":"La Capital"},{"nombre":"Landeta","departamento":"San Martín"},{"nombre":"Lanteri","departamento":"General Obligado"},{"nombre":"Larrechea","departamento":"San Jerónimo"},{"nombre":"Las Avispas","departamento":"San Cristóbal"},{"nombre":"Las Bandurrias","departamento":"San Martín"},{"nombre":"Las Garzas","departamento":"General Obligado"},{"nombre":"Las Palmeras","departamento":"San Cristóbal"},{"nombre":"Las Parejas","departamento":"Belgrano"},{"nombre":"Las Petacas","departamento":"San Martín"},{"nombre":"Las Rosas","departamento":"Belgrano"},{"nombre":"Las Toscas","departamento":"General Obligado"},{"nombre":"Lazzarino","departamento":"General López"},{"nombre":"Lehmann","departamento":"Castellanos"},{"nombre":"Llambi Campbell","departamento":"La Capital"},{"nombre":"Logroño","departamento":"9 de Julio"},{"nombre":"Loma Alta","departamento":"San Jerónimo"},{"nombre":"López","departamento":"San Jerónimo"},{"nombre":"Los Cardos","departamento":"San Martín"},{"nombre":"Los Laureles","departamento":"General Obligado"},{"nombre":"Los Molinos","departamento":"Caseros"},{"nombre":"Los Quirquinchos","departamento":"Caseros"},{"nombre":"Lucio V. López","departamento":"Iriondo"},{"nombre":"Luis Palacios","departamento":"San Lorenzo"},{"nombre":"Maggiolo","departamento":"General López"},{"nombre":"Malabrigo","departamento":"General Obligado"},{"nombre":"Marcelino Escalada","departamento":"San Justo"},{"nombre":"Margarita","departamento":"Vera"},{"nombre":"María Juana","departamento":"San Martín"},{"nombre":"María Luisa","departamento":"Las Colonias"},{"nombre":"María Susana","departamento":"San Martín"},{"nombre":"María Teresa","departamento":"General López"},{"nombre":"Matilde","departamento":"Las Colonias"},{"nombre":"Mauá","departamento":"Castellanos"},{"nombre":"Máximo Paz","departamento":"Constitución"},{"nombre":"Melincué","departamento":"General López"},{"nombre":"Miguel Torres","departamento":"General López"},{"nombre":"Moises Ville","departamento":"San Cristóbal"},{"nombre":"Monigotes","departamento":"San Cristóbal"},{"nombre":"Monje","departamento":"San Jerónimo"},{"nombre":"Monte Flores","departamento":"Rosario"},{"nombre":"Monte Vera","departamento":"La Capital"},{"nombre":"Montes de Oca","departamento":"Belgrano"},{"nombre":"Murphy","departamento":"General López"},{"nombre":"Naré","departamento":"San Justo"},{"nombre":"Nelson","departamento":"La Capital"},{"nombre":"Nicanor Molinas","departamento":"General Obligado"},{"nombre":"Nuevo Torino","departamento":"Las Colonias"},{"nombre":"Oliveros","departamento":"Iriondo"},{"nombre":"Palacios","departamento":"San Cristóbal"},{"nombre":"Pavón","departamento":"Constitución"},{"nombre":"Pavón Arriba","departamento":"Constitución"},{"nombre":"Pérez","departamento":"Rosario"},{"nombre":"Peyrano","departamento":"Constitución"},{"nombre":"Piamonte","departamento":"San Martín"},{"nombre":"Pilar","departamento":"Las Colonias"},{"nombre":"Piñero","departamento":"Rosario"},{"nombre":"Plaza Clucellas","departamento":"Castellanos"},{"nombre":"Portugalete","departamento":"San Cristóbal"},{"nombre":"Pozo Borrado","departamento":"9 de Julio"},{"nombre":"Presidente Roca","departamento":"Castellanos"},{"nombre":"Progreso","departamento":"Las Colonias"},{"nombre":"Providencia","departamento":"Las Colonias"},{"nombre":"Pueblo Andino","departamento":"Iriondo"},{"nombre":"Pueblo Esther","departamento":"Rosario"},{"nombre":"Pueblo Irigoyen","departamento":"San Jerónimo"},{"nombre":"Pueblo Marini","departamento":"Castellanos"},{"nombre":"Pueblo Muñoz","departamento":"Rosario"},{"nombre":"Puerto Gaboto","departamento":"San Jerónimo"},{"nombre":"Puerto General San Martín","departamento":"San Lorenzo"},{"nombre":"Pujato","departamento":"San Lorenzo"},{"nombre":"Pujato Norte","departamento":"Las Colonias"},{"nombre":"Pyñeiro","departamento":"Rosario"},{"nombre":"Rafaela","departamento":"Castellanos"},{"nombre":"Ramayón","departamento":"San Justo"},{"nombre":"Ramona","departamento":"Castellanos"},{"nombre":"Reconquista","departamento":"General Obligado"},{"nombre":"Recreo","departamento":"La Capital"},{"nombre":"Ricardone","departamento":"San Lorenzo"},{"nombre":"Rivadavia","departamento":"Castellanos"},{"nombre":"Roldán","departamento":"San Lorenzo"},{"nombre":"Romang","departamento":"San Javier"},{"nombre":"Rosario","departamento":"Rosario"},{"nombre":"Rueda","departamento":"Constitución"},{"nombre":"Rufino","departamento":"General López"},{"nombre":"Sa Pereira","departamento":"Las Colonias"},{"nombre":"Saguier","departamento":"Castellanos"},{"nombre":"Saladero Mariano Cabal","departamento":"Garay"},{"nombre":"Salto Grande","departamento":"Iriondo"},{"nombre":"San Agustín","departamento":"Las Colonias"},{"nombre":"San Antonio","departamento":"Castellanos"},{"nombre":"San Antonio de Obligado","departamento":"General Obligado"},{"nombre":"San Bernardo (9 de Julio)","departamento":"9 de Julio"},{"nombre":"San Bernardo (San Justo)","departamento":"San Justo"},{"nombre":"San Carlos Centro","departamento":"Las Colonias"},{"nombre":"San Carlos Norte","departamento":"Las Colonias"},{"nombre":"San Carlos Sud","departamento":"Las Colonias"},{"nombre":"San Cristóbal","departamento":"San Cristóbal"},{"nombre":"San Eugenio","departamento":"San Jerónimo"},{"nombre":"San Fabián","departamento":"San Jerónimo"},{"nombre":"San Francisco de Santa Fe","departamento":"General López"},{"nombre":"San Genaro","departamento":"San Jerónimo"},{"nombre":"San Gregorio","departamento":"General López"},{"nombre":"San Guillermo","departamento":"San Cristóbal"},{"nombre":"San Javier","departamento":"San Javier"},{"nombre":"San Jerónimo del Sauce","departamento":"Las Colonias"},{"nombre":"San Jerónimo Norte","departamento":"Las Colonias"},{"nombre":"San Jerónimo Sud","departamento":"San Lorenzo"},{"nombre":"San Jorge","departamento":"San Martín"},{"nombre":"San José de la Esquina","departamento":"Caseros"},{"nombre":"San José del Rincón","departamento":"La Capital"},{"nombre":"San Justo","departamento":"San Justo"},{"nombre":"San Lorenzo","departamento":"San Lorenzo"},{"nombre":"San Mariano","departamento":"Las Colonias"},{"nombre":"San Martín de las Escobas","departamento":"San Martín"},{"nombre":"San Martín Norte","departamento":"San Justo"},{"nombre":"San Vicente","departamento":"Castellanos"},{"nombre":"Sancti Spiritu","departamento":"General López"},{"nombre":"Santa Clara de Buena Vista","departamento":"Las Colonias"},{"nombre":"Santa Clara de Saguier","departamento":"Castellanos"},{"nombre":"Santa Fe","departamento":"La Capital"},{"nombre":"Santa Isabel","departamento":"General López"},{"nombre":"Santa Margarita","departamento":"9 de Julio"},{"nombre":"Santa Maria Centro","departamento":"Las Colonias"},{"nombre":"Santa Maria Norte","departamento":"Las Colonias"},{"nombre":"Santa Rosa de Calchines","departamento":"Garay"},{"nombre":"Santa Teresa","departamento":"Constitución"},{"nombre":"Santo Domingo","departamento":"Las Colonias"},{"nombre":"Santo Tomé","departamento":"La Capital"},{"nombre":"Santurce","depaCapital"},{"nombre":"Serodino","departamento":"Iriondo"},{"nombre":"Silva","departamento":"San Justo"},{"nombre":"Soldini","departamento":"Rosario"},{"nombre":"Soledad","departamento":"San Cristóbal"},{"nombre":"Soutomayor","departamento":"Las Colonias"},{"nombre":"Suardi","departamento":"San Cristóbal"},{"nombre":"Susana","departamento":"Castellanos"},{"nombre":"Tacuarendí","departamento":"General Obligado"},{"nombre":"Tacural","departamento":"Castellanos"},{"nombre":"Tacurales","departamento":"Castellanos"},{"nombre":"Tartagal","departamento":"Vera"},{"nombre":"Teodelina","departamento":"General López"},{"nombre":"Theobald","departamento":"Constitución"},{"nombre":"Timbúes","departamento":"San Lorenzo"},{"nombre":"Tostado","departamento":"9 de Julio"},{"nombre":"Totoras","departamento":"Iriondo"},{"nombre":"Traill","departamento":"San Martín"},{"nombre":"Tunas","departamento":"Las Colonias"},{"nombre":"Tupungato","departamento":"Castellanos"},{"nombre":"Uruguay","departamento":"San Cristóbal"},{"nombre":"Venado Tuerto","departamento":"General López"},{"nombre":"Vera","departamento":"Vera"},{"nombre":"Vera y Pintado","departamento":"San Justo"},{"nombre":"Vicente Echeverría","departamento":"San Lorenzo"},{"nombre":"Vila","departamento":"Castellanos"},{"nombre":"Villa Amelia","departamento":"Rosario"},{"nombre":"Villa Ana","departamento":"General Obligado"},{"nombre":"Villa Cañás","departamento":"General López"},{"nombre":"Villa Cassini","departamento":"San Lorenzo"},{"nombre":"Villa Constitución","departamento":"Constitución"},{"nombre":"Villa Eloísa","departamento":"Iriondo"},{"nombre":"Villa Gobernador Gálvez","departamento":"Rosario"},{"nombre":"Villa Guillermina","departamento":"General Obligado"},{"nombre":"Villa Minetti","departamento":"9 de Julio"},{"nombre":"Villa Mugueta","departamento":"Caseros"},{"nombre":"Villa Muzio","departamento":"Rosario"},{"nombre":"Villa Ocampo","departamento":"General Obligado"},{"nombre":"Villa San José","departamento":"Castellanos"},{"nombre":"Villa Saralegui","departamento":"San Justo"},{"nombre":"Villa Trinidad","departamento":"San Cristóbal"},{"nombre":"Villada","departamento":"Caseros"},{"nombre":"Virginia","departamento":"Castellanos"},{"nombre":"Wheelwright","departamento":"General López"},{"nombre":"Zavalla","departamento":"Rosario"},{"nombre":"Zenón Pereyra","departamento":"Castellanos"}];
+const LOCALIDADES = [{"nombre":"Acebal","departamento":"Rosario"},{"nombre":"Aguará Grande","departamento":"San Cristóbal"},{"nombre":"Albarellos","departamento":"Rosario"},{"nombre":"Alcorta","departamento":"Constitución"},{"nombre":"Aldao","departamento":"San Lorenzo"},{"nombre":"Alejandra","departamento":"San Javier"},{"nombre":"Álvarez","departamento":"Rosario"},{"nombre":"Alvear","departamento":"Rosario"},{"nombre":"Ambrosetti","departamento":"San Cristóbal"},{"nombre":"Amenábar","departamento":"General López"},{"nombre":"Angélica","departamento":"Castellanos"},{"nombre":"Angeloni","departamento":"San Justo"},{"nombre":"Arequito","departamento":"Caseros"},{"nombre":"Arminda","departamento":"Rosario"},{"nombre":"Armstrong","departamento":"Belgrano"},{"nombre":"Arocena","departamento":"San Jerónimo"},{"nombre":"Arroyo Aguiar","departamento":"La Capital"},{"nombre":"Arroyo Ceibal","departamento":"General Obligado"},{"nombre":"Arroyo Leyes","departamento":"La Capital"},{"nombre":"Arroyo Seco","departamento":"Rosario"},{"nombre":"Arrufó","departamento":"San Cristóbal"},{"nombre":"Arteaga","departamento":"Caseros"},{"nombre":"Ataliva","departamento":"Castellanos"},{"nombre":"Aurelia","departamento":"Castellanos"},{"nombre":"Avellaneda","departamento":"General Obligado"},{"nombre":"Barrancas","departamento":"San Jerónimo"},{"nombre":"Bauer y Sigel","departamento":"Castellanos"},{"nombre":"Bella Italia","departamento":"Castellanos"},{"nombre":"Berabevú","departamento":"Caseros"},{"nombre":"Berna","departamento":"General Obligado"},{"nombre":"Bernardo de Irigoyen","departamento":"San Jerónimo"},{"nombre":"Bigand","departamento":"Caseros"},{"nombre":"Bombal","departamento":"Constitución"},{"nombre":"Bouquet","departamento":"Belgrano"},{"nombre":"Bustinza","departamento":"Iriondo"},{"nombre":"Cabal","departamento":"La Capital"},{"nombre":"Cacique Ariacaiquín","departamento":"San Javier"},{"nombre":"Cafferata","departamento":"General López"},{"nombre":"Calchaquí","departamento":"Vera"},{"nombre":"Campo Andino","departamento":"La Capital"},{"nombre":"Campo Piaggio","departamento":"San Jerónimo"},{"nombre":"Cañada de Gómez","departamento":"Iriondo"},{"nombre":"Cañada del Ucle","departamento":"General López"},{"nombre":"Cañada Rica","departamento":"Constitución"},{"nombre":"Candioti","departamento":"La Capital"},{"nombre":"Cañada Rosquín","departamento":"San Martín"},{"nombre":"Capitán Bermúdez","departamento":"San Lorenzo"},{"nombre":"Capivara","departamento":"San Cristóbal"},{"nombre":"Carcarañá","departamento":"San Lorenzo"},{"nombre":"Carlos Pellegrini","departamento":"San Martín"},{"nombre":"Carmen","departamento":"General López"},{"nombre":"Carmen del Sauce","departamento":"Rosario"},{"nombre":"Carreras","departamento":"General López"},{"nombre":"Carrizales","departamento":"Iriondo"},{"nombre":"Casalegno","departamento":"San Jerónimo"},{"nombre":"Casas","departamento":"San Martín"},{"nombre":"Casilda","departamento":"Caseros"},{"nombre":"Castelar","departamento":"San Martín"},{"nombre":"Castellanos","departamento":"Castellanos"},{"nombre":"Catamarca","departamento":"General López"},{"nombre":"Cayastá","departamento":"Garay"},{"nombre":"Cayastancito","departamento":"San Justo"},{"nombre":"Centeno","departamento":"San Jerónimo"},{"nombre":"Cepeda","departamento":"Constitución"},{"nombre":"Ceres","departamento":"San Cristóbal"},{"nombre":"Chabás","departamento":"Caseros"},{"nombre":"Chañar Ladeado","departamento":"Caseros"},{"nombre":"Chovet","departamento":"General López"},{"nombre":"Christophersen","departamento":"General López"},{"nombre":"Classon","departamento":"Iriondo"},{"nombre":"Colonia Aldao","departamento":"Castellanos"},{"nombre":"Colonia Ana","departamento":"San Cristóbal"},{"nombre":"Colonia Belgrano","departamento":"San Martín"},{"nombre":"Colonia Bicha","departamento":"Castellanos"},{"nombre":"Colonia Bigand","departamento":"Castellanos"},{"nombre":"Colonia Bossi","departamento":"San Cristóbal"},{"nombre":"Colonia Cello","departamento":"Castellanos"},{"nombre":"Colonia Dolores","departamento":"San Justo"},{"nombre":"Colonia Dos Rosas y La Legua","departamento":"San Cristóbal"},{"nombre":"Colonia Durán","departamento":"San Javier"},{"nombre":"Colonia Iturraspe","departamento":"Castellanos"},{"nombre":"Colonia Margarita","departamento":"Castellanos"},{"nombre":"Colonia Mascías","departamento":"Garay"},{"nombre":"Colonia Raquel","departamento":"Castellanos"},{"nombre":"Colonia Rosa","departamento":"San Cristóbal"},{"nombre":"Colonia San José","departamento":"Las Colonias"},{"nombre":"Constanza","departamento":"San Cristóbal"},{"nombre":"Coronda","departamento":"San Jerónimo"},{"nombre":"Correa","departamento":"Iriondo"},{"nombre":"Crispi","departamento":"San Martín"},{"nombre":"Cululú","departamento":"Las Colonias"},{"nombre":"Curupaytí","departamento":"San Cristóbal"},{"nombre":"Desvío Arijón","departamento":"San Jerónimo"},{"nombre":"Díaz","departamento":"San Jerónimo"},{"nombre":"Diego de Alvear","departamento":"General López"},{"nombre":"Egusquiza","departamento":"Castellanos"},{"nombre":"El Arazá","departamento":"General Obligado"},{"nombre":"El Trébol","departamento":"San Martín"},{"nombre":"Elortondo","departamento":"General López"},{"nombre":"Emilia","departamento":"La Capital"},{"nombre":"Empalme San Carlos","departamento":"Las Colonias"},{"nombre":"Empalme Villa Constitución","departamento":"Constitución"},{"nombre":"Esmeralda","departamento":"Castellanos"},{"nombre":"Esperanza","departamento":"Las Colonias"},{"nombre":"Estación Alvear","departamento":"Rosario"},{"nombre":"Estación Clucellas","departamento":"Castellanos"},{"nombre":"Eusebia y Carolina","departamento":"Castellanos"},{"nombre":"Eustolia","departamento":"Castellanos"},{"nombre":"Felicia","departamento":"Las Colonias"},{"nombre":"Fidela","departamento":"Castellanos"},{"nombre":"Fighiera","departamento":"Rosario"},{"nombre":"Firmat","departamento":"General López"},{"nombre":"Florencia","departamento":"General Obligado"},{"nombre":"Fortín Olmos","departamento":"Vera"},{"nombre":"Franck","departamento":"Las Colonias"},{"nombre":"Fray Luis Beltrán","departamento":"San Lorenzo"},{"nombre":"Fuentes","departamento":"Caseros"},{"nombre":"Funes","departamento":"Rosario"},{"nombre":"Gaboto","departamento":"San Jerónimo"},{"nombre":"Galisteo","departamento":"Castellanos"},{"nombre":"Gálvez","departamento":"San Jerónimo"},{"nombre":"Garabaldi","departamento":"Castellanos"},{"nombre":"Garabato","departamento":"Vera"},{"nombre":"Gato Colorado","departamento":"Nueve de Julio"},{"nombre":"Gessler","departamento":"San Jerónimo"},{"nombre":"Gobernador Crespo","departamento":"San Justo"},{"nombre":"Godeken","departamento":"Caseros"},{"nombre":"Godoy","departamento":"Constitución"},{"nombre":"Golondrina","departamento":"Vera"},{"nombre":"Granadero Baigorria","departamento":"Rosario"},{"nombre":"Gregoria Pérez de Denis","departamento":"Nueve de Julio"},{"nombre":"Grutly","departamento":"Las Colonias"},{"nombre":"Guadalupe Norte","departamento":"General Obligado"},{"nombre":"Helvecia","departamento":"Garay"},{"nombre":"Hersilia","departamento":"San Cristóbal"},{"nombre":"Hipatía","departamento":"Las Colonias"},{"nombre":"Huanqueros","departamento":"San Cristóbal"},{"nombre":"Hugues","departamento":"General López"},{"nombre":"Humberto Primo","departamento":"Castellanos"},{"nombre":"Humboldt","departamento":"Las Colonias"},{"nombre":"Ibarlucea","departamento":"Rosario"},{"nombre":"Ingeniero Chanourdie","departamento":"General Obligado"},{"nombre":"Intiyaco","departamento":"Vera"},{"nombre":"Ituzaingó","departamento":"Castellanos"},{"nombre":"Jacinto L. Aráuz","departamento":"Las Colonias"},{"nombre":"Josefina","departamento":"Castellanos"},{"nombre":"Juan B. Molina","departamento":"Constitución"},{"nombre":"Juan de Garay","departamento":"Constitución"},{"nombre":"Juncal","departamento":"Constitución"},{"nombre":"La Brava","departamento":"San Javier"},{"nombre":"La Cabral","departamento":"San Cristóbal"},{"nombre":"La Camila","departamento":"San Justo"},{"nombre":"La Chispa","departamento":"General López"},{"nombre":"La Criolla","departamento":"San Justo"},{"nombre":"La Gallareta","departamento":"Vera"},{"nombre":"La Lucila","departamento":"San Cristóbal"},{"nombre":"La Pelada","departamento":"Las Colonias"},{"nombre":"La Penca y Caraguatá","departamento":"San Justo"},{"nombre":"La Rubia","departamento":"San Cristóbal"},{"nombre":"La Sarita","departamento":"General Obligado"},{"nombre":"Labordeboy","departamento":"General López"},{"nombre":"Laguna Paiva","departamento":"La Capital"},{"nombre":"Landeta","departamento":"San Martín"},{"nombre":"Lanteri","departamento":"General Obligado"},{"nombre":"Larrechea","departamento":"San Jerónimo"},{"nombre":"Las Avispas","departamento":"San Cristóbal"},{"nombre":"Las Bandurrias","departamento":"San Martín"},{"nombre":"Las Garzas","departamento":"General Obligado"},{"nombre":"Las Palmeras","departamento":"San Cristóbal"},{"nombre":"Las Parejas","departamento":"Belgrano"},{"nombre":"Las Petacas","departamento":"San Martín"},{"nombre":"Las Rosas","departamento":"Belgrano"},{"nombre":"Las Toscas","departamento":"General Obligado"},{"nombre":"Lazzarino","departamento":"General López"},{"nombre":"Lehmann","departamento":"Castellanos"},{"nombre":"Llambi Campbell","departamento":"La Capital"},{"nombre":"Logroño","departamento":"9 de Julio"},{"nombre":"Loma Alta","departamento":"San Jerónimo"},{"nombre":"López","departamento":"San Jerónimo"},{"nombre":"Los Cardos","departamento":"San Martín"},{"nombre":"Los Laureles","departamento":"General Obligado"},{"nombre":"Los Molinos","departamento":"Caseros"},{"nombre":"Los Quirquinchos","departamento":"Caseros"},{"nombre":"Lucio V. López","departamento":"Iriondo"},{"nombre":"Luis Palacios","departamento":"San Lorenzo"},{"nombre":"Maggiolo","departamento":"General López"},{"nombre":"Malabrigo","departamento":"General Obligado"},{"nombre":"Marcelino Escalada","departamento":"San Justo"},{"nombre":"Margarita","departamento":"Vera"},{"nombre":"María Juana","departamento":"San Martín"},{"nombre":"María Luisa","departamento":"Las Colonias"},{"nombre":"María Susana","departamento":"San Martín"},{"nombre":"María Teresa","departamento":"General López"},{"nombre":"Matilde","departamento":"Las Colonias"},{"nombre":"Mauá","departamento":"Castellanos"},{"nombre":"Máximo Paz","departamento":"Constitución"},{"nombre":"Melincué","departamento":"General López"},{"nombre":"Miguel Torres","departamento":"General López"},{"nombre":"Moises Ville","departamento":"San Cristóbal"},{"nombre":"Monigotes","departamento":"San Cristóbal"},{"nombre":"Monje","departamento":"San Jerónimo"},{"nombre":"Monte Flores","departamento":"Rosario"},{"nombre":"Monte Vera","departamento":"La Capital"},{"nombre":"Montes de Oca","departamento":"Belgrano"},{"nombre":"Murphy","departamento":"General López"},{"nombre":"Naré","departamento":"San Justo"},{"nombre":"Nelson","departamento":"La Capital"},{"nombre":"Nicanor Molinas","departamento":"General Obligado"},{"nombre":"Nuevo Torino","departamento":"Las Colonias"},{"nombre":"Oliveros","departamento":"Iriondo"},{"nombre":"Palacios","departamento":"San Cristóbal"},{"nombre":"Pavón","departamento":"Constitución"},{"nombre":"Pavón Arriba","departamento":"Constitución"},{"nombre":"Pérez","departamento":"Rosario"},{"nombre":"Peyrano","departamento":"Constitución"},{"nombre":"Piamonte","departamento":"San Martín"},{"nombre":"Pilar","departamento":"Las Colonias"},{"nombre":"Piñero","departamento":"Rosario"},{"nombre":"Plaza Clucellas","departamento":"Castellanos"},{"nombre":"Portugalete","departamento":"San Cristóbal"},{"nombre":"Pozo Borrado","departamento":"9 de Julio"},{"nombre":"Presidente Roca","departamento":"Castellanos"},{"nombre":"Progreso","departamento":"Las Colonias"},{"nombre":"Providencia","departamento":"Las Colonias"},{"nombre":"Pueblo Andino","departamento":"Iriondo"},{"nombre":"Pueblo Esther","departamento":"Rosario"},{"nombre":"Pueblo Irigoyen","departamento":"San Jerónimo"},{"nombre":"Pueblo Marini","departamento":"Castellanos"},{"nombre":"Pueblo Muñoz","departamento":"Rosario"},{"nombre":"Puerto Gaboto","departamento":"San Jerónimo"},{"nombre":"Puerto General San Martín","departamento":"San Lorenzo"},{"nombre":"Pujato","departamento":"San Lorenzo"},{"nombre":"Pujato Norte","departamento":"Las Colonias"},{"nombre":"Pyñeiro","departamento":"Rosario"},{"nombre":"Rafaela","departamento":"Castellanos"},{"nombre":"Ramayón","departamento":"San Justo"},{"nombre":"Ramona","departamento":"Castellanos"},{"nombre":"Reconquista","departamento":"General Obligado"},{"nombre":"Recreo","departamento":"La Capital"},{"nombre":"Ricardone","departamento":"San Lorenzo"},{"nombre":"Rivadavia","departamento":"Castellanos"},{"nombre":"Roldán","departamento":"San Lorenzo"},{"nombre":"Romang","departamento":"San Javier"},{"nombre":"Rosario","departamento":"Rosario"},{"nombre":"Rueda","departamento":"Constitución"},{"nombre":"Rufino","departamento":"General López"},{"nombre":"Sa Pereira","departamento":"Las Colonias"},{"nombre":"Saguier","departamento":"Castellanos"},{"nombre":"Saladero Mariano Cabal","departamento":"Garay"},{"nombre":"Salto Grande","departamento":"Iriondo"},{"nombre":"San Agustín","departamento":"Las Colonias"},{"nombre":"San Antonio","departamento":"Castellanos"},{"nombre":"San Antonio de Obligado","departamento":"General Obligado"},{"nombre":"San Bernardo (9 de Julio)","departamento":"9 de Julio"},{"nombre":"San Bernardo (San Justo)","departamento":"San Justo"},{"nombre":"San Carlos Centro","departamento":"Las Colonias"},{"nombre":"San Carlos Norte","departamento":"Las Colonias"},{"nombre":"San Carlos Sud","departamento":"Las Colonias"},{"nombre":"San Cristóbal","departamento":"San Cristóbal"},{"nombre":"San Eugenio","departamento":"San Jerónimo"},{"nombre":"San Fabián","departamento":"San Jerónimo"},{"nombre":"San Francisco de Santa Fe","departamento":"General López"},{"nombre":"San Genaro","departamento":"San Jerónimo"},{"nombre":"San Gregorio","departamento":"General López"},{"nombre":"San Guillermo","departamento":"San Cristóbal"},{"nombre":"San Javier","departamento":"San Javier"},{"nombre":"San Jerónimo del Sauce","departamento":"Las Colonias"},{"nombre":"San Jerónimo Norte","departamento":"Las Colonias"},{"nombre":"San Jerónimo Sud","departamento":"San Lorenzo"},{"nombre":"San Jorge","departamento":"San Martín"},{"nombre":"San José de la Esquina","departamento":"Caseros"},{"nombre":"San José del Rincón","departamento":"La Capital"},{"nombre":"San Justo","departamento":"San Justo"},{"nombre":"San Lorenzo","departamento":"San Lorenzo"},{"nombre":"San Mariano","departamento":"Las Colonias"},{"nombre":"San Martín de las Escobas","departamento":"San Martín"},{"nombre":"San Martín Norte","departamento":"San Justo"},{"nombre":"San Vicente","departamento":"Castellanos"},{"nombre":"Sancti Spiritu","departamento":"General López"},{"nombre":"Santa Clara de Buena Vista","departamento":"Las Colonias"},{"nombre":"Santa Clara de Saguier","departamento":"Castellanos"},{"nombre":"Santa Fe","departamento":"La Capital"},{"nombre":"Santa Isabel","departamento":"General López"},{"nombre":"Santa Margarita","departamento":"9 de Julio"},{"nombre":"Santa Maria Centro","departamento":"Las Colonias"},{"nombre":"Santa Maria Norte","departamento":"Las Colonias"},{"nombre":"Santa Rosa de Calchines","departamento":"Garay"},{"nombre":"Santa Teresa","departamento":"Constitución"},{"nombre":"Santo Domingo","departamento":"Las Colonias"},{"nombre":"Santo Tomé","departamento":"La Capital"},{"nombre":"Santurce","departamento":"San Cristóbal"},{"nombre":"Sargento Cabral","departamento":"Constitución"},{"nombre":"Sarmiento","departamento":"Las Colonias"},{"nombre":"Sastre","departamento":"San Martín"},{"nombre":"Sauce Viejo","departamento":"La Capital"},{"nombre":"Serodino","departamento":"Iriondo"},{"nombre":"Silva","departamento":"San Justo"},{"nombre":"Soldini","departamento":"Rosario"},{"nombre":"Soledad","departamento":"San Cristóbal"},{"nombre":"Soutomayor","departamento":"Las Colonias"},{"nombre":"Suardi","departamento":"San Cristóbal"},{"nombre":"Susana","departamento":"Castellanos"},{"nombre":"Tacuarendí","departamento":"General Obligado"},{"nombre":"Tacural","departamento":"Castellanos"},{"nombre":"Tacurales","departamento":"Castellanos"},{"nombre":"Tartagal","departamento":"Vera"},{"nombre":"Teodelina","departamento":"General López"},{"nombre":"Theobald","departamento":"Constitución"},{"nombre":"Timbúes","departamento":"San Lorenzo"},{"nombre":"Tostado","departamento":"9 de Julio"},{"nombre":"Totoras","departamento":"Iriondo"},{"nombre":"Traill","departamento":"San Martín"},{"nombre":"Tunas","departamento":"Las Colonias"},{"nombre":"Tupungato","departamento":"Castellanos"},{"nombre":"Uruguay","departamento":"San Cristóbal"},{"nombre":"Venado Tuerto","departamento":"General López"},{"nombre":"Vera","departamento":"Vera"},{"nombre":"Vera y Pintado","departamento":"San Justo"},{"nombre":"Vicente Echeverría","departamento":"San Lorenzo"},{"nombre":"Vila","departamento":"Castellanos"},{"nombre":"Villa Amelia","departamento":"Rosario"},{"nombre":"Villa Ana","departamento":"General Obligado"},{"nombre":"Villa Cañás","departamento":"General López"},{"nombre":"Villa Cassini","departamento":"San Lorenzo"},{"nombre":"Villa Constitución","departamento":"Constitución"},{"nombre":"Villa Eloísa","departamento":"Iriondo"},{"nombre":"Villa Gobernador Gálvez","departamento":"Rosario"},{"nombre":"Villa Guillermina","departamento":"General Obligado"},{"nombre":"Villa Minetti","departamento":"9 de Julio"},{"nombre":"Villa Mugueta","departamento":"Caseros"},{"nombre":"Villa Muzio","departamento":"Rosario"},{"nombre":"Villa Ocampo","departamento":"General Obligado"},{"nombre":"Villa San José","departamento":"Castellanos"},{"nombre":"Villa Saralegui","departamento":"San Justo"},{"nombre":"Villa Trinidad","departamento":"San Cristóbal"},{"nombre":"Villada","departamento":"Caseros"},{"nombre":"Virginia","departamento":"Castellanos"},{"nombre":"Wheelwright","departamento":"General López"},{"nombre":"Zavalla","departamento":"Rosario"},{"nombre":"Zenón Pereyra","departamento":"Castellanos"}];
 </script>
 </body>
 </html>
