@@ -179,6 +179,9 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
     <div style="margin-top:10px;border-top:1px solid #bfdbfe;padding-top:10px;">
       <button class="btn btn-secondary" onclick="cargarManual()" style="font-size:12px;padding:7px 16px;">&#9998; Carga manual (sin búsqueda)</button>
     </div>
+    <div style="margin-top:10px;border-top:1px solid #bfdbfe;padding-top:10px;">
+      <button class="btn btn-secondary" onclick="cargarManual()" style="font-size:12px;padding:7px 16px;">&#9998; Carga manual (sin búsqueda)</button>
+    </div>
   </div>
 
   <!-- ── DATOS DEL CLIENTE (readonly, se completa solo) ── -->
@@ -243,7 +246,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
         <select id="vendedor">
           <option value="">-- Seleccionar --</option>
           <option value="René Biagioni">René Biagioni</option>
-          <option value="María Pía Bologñese">María Pía Bologñese</option>
+          <option value="María María Pía Bologñese">María María Pía Bologñese</option>
         </select>
       </div>
       <div class="campo-texto">
@@ -325,7 +328,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       window._currentUserEmail = session.user.email;
       var _map = {
         'renebiagioni@yakuagua.com.ar': 'René Biagioni',
-        'ventas@yakuagua.com.ar': 'María Pía Bologñese'
+        'ventas@yakuagua.com.ar': 'María María Pía Bologñese'
       };
       window._currentUserName = _map[session.user.email] || session.user.email;
       // Preseleccionar vendedor
@@ -497,6 +500,22 @@ function cargarManual() {
   document.getElementById('busqueda-error').style.display = 'none';
 }
 
+// ── CARGA MANUAL ──
+function cargarManual() {
+  ordenRef = null;
+  ["razon-social","cuit","telefono","rubro","orden-ref-numero"].forEach(function(id) {
+    var el = document.getElementById(id); el.value = ""; el.readOnly = false;
+  });
+  document.getElementById("badge-modo").innerHTML = "\&#9998; Carga manual";
+  document.getElementById("badge-modo").style.background = "#fef3c7";
+  document.getElementById("badge-modo").style.color = "#92400e";
+  document.getElementById("productos-ref-body").innerHTML = "<tr><td colspan=4 style=text-align:center;color:#9ca3af;padding:20px>Carga manual</td></tr>";
+  document.getElementById("datos-cliente-section").style.display = "block";
+  document.getElementById("datos-baja-section").style.display = "block";
+  document.getElementById("footer-firmas").style.display = "flex";
+  document.getElementById("btn-guardar").disabled = false;
+  document.getElementById("busqueda-error").style.display = "none";
+}
 // ── RETIRO DE EQUIPO ──
 function onRetiraChange() {
   var val = document.getElementById('retira-equipo').value;
@@ -637,7 +656,7 @@ async function guardarBaja() {
   try {
     // Asegurar vendedor cargado
     if (!window._currentUserName) {
-      var _map = { 'renebiagioni@yakuagua.com.ar': 'René Biagioni', 'ventas@yakuagua.com.ar': 'María Pía Bologñese' };
+      var _map = { 'renebiagioni@yakuagua.com.ar': 'René Biagioni', 'ventas@yakuagua.com.ar': 'María María Pía Bologñese' };
       var { data: { session } } = await window._sb.auth.getSession();
       if (session) window._currentUserName = _map[session.user.email] || session.user.email;
     }
