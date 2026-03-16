@@ -788,7 +788,8 @@ async function guardarBaja() {
 
     document.getElementById('nro-baja').value = json.numero_completo;
     // Update client status
-    if (ordenRef && ordenRef.id) {
+    if (ordenRef && ordenRef.id && _tipoBaja) {
+      console.log('Actualizando cliente:', ordenRef.id, 'tipo:', _tipoBaja);
       try {
         await fetch(API_URL + '/api/clientes/' + ordenRef.id + '/baja', {
           method: 'PATCH',

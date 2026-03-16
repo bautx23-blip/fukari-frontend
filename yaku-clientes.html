@@ -180,6 +180,15 @@ async function cargarClientes() {
     var res = await fetch(API_URL + '/api/clientes');
     if (!res.ok) throw new Error('Error ' + res.status);
     todosLosClientes = await res.json();
+    try {
+      var resBajas = await fetch(API_URL + '/api/bajas?limit=500');
+      if (resBajas.ok) {
+        var bajasResp = await resBajas.json();
+        var bajasData = bajasResp.data || bajasResp || [];
+        window._bajasMap = {};
+        bajasData.forEach(function(b) { if (b.cuit) window._bajasMap[b.cuit] = b; });
+      }
+    } catch(e) { console.log('Bajas error:', e); }
     calcularStats();
     filtrar();
   } catch(err) {
@@ -299,6 +308,24 @@ function verDetalle(c) {
     '<div class="detail-item"><label>Estado</label><span style="font-weight:600;color:' + (c.activo === false ? '#dc2626' : '#16a34a') + ';">' + (c.activo === false ? 'Inactivo' : 'Activo') + '</span></div>' +
     '<div class="detail-item"><label>Fecha de alta</label><span>' + fecha + '</span></div>' +
     '</div>';
+  // Add baja info if inactive
+  if (c.activo === false) {
+    var baja = (window._bajasMap || {})[c.cuit];
+    if (baja) {
+      var bajaHtml = '<div style="margin-top:14px;padding-top:14px;border-top:2px solid #fee2e2;">' +
+        '<label style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;display:block;margin-bottom:8px;">Datos de la baja</label>' +
+        '<div class="detail-grid">' +
+        '<div class="detail-item"><label>Motivo</label><span style="color:#dc2626;font-weight:600;">' + (baja.motivo || '\u2014') + '</span></div>' +
+        '<div class="detail-item"><label>Fecha de baja</label><span>' + (baja.fecha_baja ? new Date(baja.fecha_baja + "T12:00:00").toLocaleDateString("es-AR") : '\u2014') + '</span></div>' +
+        '<div class="detail-item"><label>Vendedor</label><span>' + (baja.vendedor || '\u2014') + '</span></div>' +
+        '<div class="detail-item detail-full"><label>Observaciones</label><span>' + (baja.observaciones || '\u2014') + '</span></div>' +
+        '</div>' +
+        (baja.pdf_url ? '<a href="' + baja.pdf_url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#dc2626;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;margin-top:8px;">\uD83D\uDCC4 PDF de Baja</a>' : '') +
+        '</div>';
+      document.getElementById('modal-body').innerHTML += bajaHtml;
+    }
+  }
+
   // Add equipos section
   var equipos = c.equipos_activos || [];
   var equiposHtml = '';
