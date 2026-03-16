@@ -295,105 +295,105 @@ function cambiarTab(tab) {
 
 function verDetalle(c) {
   document.getElementById('modal-titulo').textContent = c.razon_social || 'Cliente';
-  var fecha = c.created_at ? new Date(c.created_at).toLocaleDateString('es-AR') : '—';
-  document.getElementById('modal-body').innerHTML =
-    '<div class="detail-grid">' +
-    '<div class="detail-item detail-full"><label>Razón Social</label><span>' + (c.razon_social || '—') + '</span></div>' +
-    '<div class="detail-item"><label>CUIT</label><span>' + (c.cuit || '—') + '</span></div>' +
-    '<div class="detail-item"><label>DNI</label><span>' + (c.dni || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Código Cliente</label><span>' + (c.cod_cliente || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Teléfono</label><span>' + (c.telefono || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Email</label><span>' + (c.email || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Rubro</label><span>' + (c.rubro || '—') + '</span></div>' +
-    '<div class="detail-item detail-full"><label>Domicilio</label><span>' + (c.dom_instalacion || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Localidad</label><span>' + (c.localidad || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Método de Pago</label><span>' + (c.metodo_pago || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Responsable</label><span>' + (c.responsable || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Celular Responsable</label><span>' + (c.responsable_celular || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Plano</label><span>' + (c.plano || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Origen</label><span>' + (c.origen || '—') + '</span></div>' +
-    '<div class="detail-item"><label>Estado</label><span style="font-weight:600;color:' + (c.activo === false ? '#dc2626' : '#16a34a') + ';">' + (c.activo === false ? 'Inactivo' : 'Activo') + '</span></div>' +
+  var fecha = c.created_at ? new Date(c.created_at).toLocaleDateString('es-AR') : '\u2014';
+  var estadoColor = c.activo === false ? '#dc2626' : '#16a34a';
+  var estadoText = c.activo === false ? 'Inactivo' : 'Activo';
+
+  // ── DATOS PRINCIPALES ──
+  var html = '<div class="detail-grid">' +
+    '<div class="detail-item detail-full"><label>Raz\u00f3n Social</label><span style="font-size:15px;font-weight:700;">' + (c.razon_social || '\u2014') + ' <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:' + (c.activo === false ? '#fee2e2' : '#dcfce7') + ';color:' + estadoColor + ';font-weight:700;">' + estadoText + '</span></span></div>' +
+    '<div class="detail-item"><label>CUIT</label><span style="font-family:monospace;">' + (c.cuit || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>DNI</label><span>' + (c.dni || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>Tel\u00e9fono</label><span>' + (c.telefono || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>Email</label><span>' + (c.email || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>Rubro</label><span>' + (c.rubro || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>M\u00e9todo de Pago</label><span>' + (c.metodo_pago || '\u2014') + '</span></div>' +
+    '<div class="detail-item detail-full"><label>Domicilio</label><span>' + (c.dom_instalacion || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>Localidad</label><span>' + (c.localidad || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>Plano</label><span>' + (c.plano || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>Responsable</label><span>' + (c.responsable || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>Celular Responsable</label><span>' + (c.responsable_celular || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>C\u00f3digo Cliente</label><span>' + (c.cod_cliente || '\u2014') + '</span></div>' +
+    '<div class="detail-item"><label>Origen</label><span>' + (c.origen || '\u2014') + '</span></div>' +
     '<div class="detail-item"><label>Fecha de alta</label><span>' + fecha + '</span></div>' +
     '</div>';
-  // Add baja info if inactive
-  if (c.activo === false) {
-    var baja = (window._bajasMap || {})[c.cuit];
-    if (baja) {
-      var bajaHtml = '<div style="margin-top:14px;padding-top:14px;border-top:2px solid #fee2e2;">' +
-        '<label style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;display:block;margin-bottom:8px;">Datos de la baja</label>' +
-        '<div class="detail-grid">' +
-        '<div class="detail-item"><label>Motivo</label><span style="color:#dc2626;font-weight:600;">' + (baja.motivo || '\u2014') + '</span></div>' +
-        '<div class="detail-item"><label>Fecha de baja</label><span>' + (baja.fecha_baja ? new Date(baja.fecha_baja + "T12:00:00").toLocaleDateString("es-AR") : '\u2014') + '</span></div>' +
-        '<div class="detail-item"><label>Vendedor</label><span>' + (baja.vendedor || '\u2014') + '</span></div>' +
-        '<div class="detail-item detail-full"><label>Observaciones</label><span>' + (baja.observaciones || '\u2014') + '</span></div>' +
-        '</div>' +
-        (baja.pdf_url ? '<a href="' + baja.pdf_url + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#dc2626;color:#fff;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;margin-top:8px;">\uD83D\uDCC4 PDF de Baja</a>' : '') +
-        '</div>';
-      document.getElementById('modal-body').innerHTML += bajaHtml;
+
+  // ── DOCUMENTACIÓN (from orders) ──
+  var ordenesCliente = (window._ordenesList || []).filter(function(o) {
+    return o.cuit && c.cuit && o.cuit.replace(/\D/g,'') === c.cuit.replace(/\D/g,'') && !o.anulada;
+  });
+  var docs = [];
+  ordenesCliente.forEach(function(o) {
+    if (o.rubro === 'PARTICULAR') {
+      if (o.dni_frente_url) docs.push({label: 'DNI Frente', url: o.dni_frente_url});
+      if (o.dni_dorso_url) docs.push({label: 'DNI Dorso', url: o.dni_dorso_url});
     }
+    if ((o.rubro === 'EMPRESA' || o.rubro === 'COMERCIO') && o.constancia_url) {
+      docs.push({label: o.rubro === 'COMERCIO' ? 'Constancia CUIT/Monotributo' : 'Constancia AFIP/IIBB', url: o.constancia_url});
+    }
+  });
+  if (docs.length > 0) {
+    var btnStyle = 'display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;font-size:12px;color:#374151;text-decoration:none;font-weight:600;margin-right:8px;margin-bottom:4px;';
+    html += '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Documentaci\u00f3n</label><div style="display:flex;flex-wrap:wrap;">';
+    docs.forEach(function(d) { html += '<a href="' + d.url + '" target="_blank" style="' + btnStyle + '">\uD83D\uDCC4 ' + d.label + '</a>'; });
+    html += '</div></div>';
   }
 
-  // Add equipos section
+  // ── EQUIPOS ACTIVOS ──
   var equipos = c.equipos_activos || [];
-  var equiposHtml = '';
   if (equipos.length > 0) {
-    equiposHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Equipos activos</label>' +
-      '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr><th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Modelo</th><th style="background:#f9fafb;padding:6px 10px;text-align:center;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Cant.</th><th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Domicilio</th><th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Localidad</th></tr></thead><tbody>' +
+    html += '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Equipos ' + (c.activo === false ? '' : 'activos') + '</label>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>' +
+      '<th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Modelo</th>' +
+      '<th style="background:#f9fafb;padding:6px 10px;text-align:center;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Cant.</th>' +
+      '<th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Domicilio</th>' +
+      '<th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Localidad</th></tr></thead><tbody>' +
       equipos.map(function(e) {
-        return '<tr><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-weight:600;">' + (e.modelo || '') + '</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:center;">' + (e.cantidad || 1) + '</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">' + (e.domicilio || '—') + '</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">' + (e.localidad || '—') + '</td></tr>';
+        return '<tr><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-weight:600;">' + (e.modelo||'') + '</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:center;">' + (e.cantidad||1) + '</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">' + (e.domicilio||'\u2014') + '</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">' + (e.localidad||'\u2014') + '</td></tr>';
       }).join('') + '</tbody></table></div>';
   }
-  document.getElementById('modal-body').innerHTML += equiposHtml;
 
-  // Add ordenes de instalación for this client
-  var ordenesCliente = (window._ordenesList || []).filter(function(o) {
-    return o.cuit && c.cuit && o.cuit.replace(/\D/g,'') === c.cuit.replace(/\D/g,'');
-  });
+  // ── ÓRDENES DE INSTALACIÓN ──
   if (ordenesCliente.length > 0) {
-    var ordHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Órdenes de instalación</label>' +
+    html += '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#1565c0;text-transform:uppercase;display:block;margin-bottom:8px;">\u00d3rdenes de instalaci\u00f3n</label>' +
       '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>' +
-      '<th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">N° Orden</th>' +
-      '<th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Fecha</th>' +
-      '<th style="background:#f9fafb;padding:6px 10px;text-align:right;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Total</th>' +
-      '<th style="background:#f9fafb;padding:6px 10px;text-align:center;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Estado</th>' +
-      '<th style="background:#f9fafb;padding:6px 10px;text-align:center;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">PDF</th>' +
+      '<th style="background:#eff6ff;padding:6px 10px;text-align:left;font-weight:700;color:#1e40af;border-bottom:1px solid #bfdbfe;">N\u00b0 Orden</th>' +
+      '<th style="background:#eff6ff;padding:6px 10px;text-align:left;font-weight:700;color:#1e40af;border-bottom:1px solid #bfdbfe;">Fecha</th>' +
+      '<th style="background:#eff6ff;padding:6px 10px;text-align:right;font-weight:700;color:#1e40af;border-bottom:1px solid #bfdbfe;">Total</th>' +
+      '<th style="background:#eff6ff;padding:6px 10px;text-align:center;font-weight:700;color:#1e40af;border-bottom:1px solid #bfdbfe;">PDF</th>' +
       '</tr></thead><tbody>' +
       ordenesCliente.map(function(o) {
-        var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '';
-        var estado = o.anulada ? '<span style="color:#dc2626;font-weight:600;font-size:10px;">ANULADA</span>' : '<span style="color:#16a34a;font-weight:600;font-size:10px;">Activa</span>';
-        var pdf = o.pdf_url ? '<a href="' + o.pdf_url + '" target="_blank" style="color:#1565c0;font-weight:600;font-size:11px;">PDF</a>' : '';
-        return '<tr><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-weight:600;font-family:monospace;font-size:11px;">' + (o.numero_completo || '') + '</td>' +
-          '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">' + fecha + '</td>' +
-          '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:right;color:#16a34a;font-weight:600;">$' + (parseFloat(o.total_general)||0).toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td>' +
-          '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:center;">' + estado + '</td>' +
-          '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:center;">' + pdf + '</td></tr>';
+        var f2 = o.fecha_orden ? new Date(o.fecha_orden+'T12:00:00').toLocaleDateString('es-AR') : '';
+        var pdf = o.pdf_url ? '<a href="'+o.pdf_url+'" target="_blank" style="color:#1565c0;font-weight:600;font-size:11px;">Ver PDF</a>' : '';
+        return '<tr><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-weight:600;font-family:monospace;font-size:11px;">'+(o.numero_completo||'')+'</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">'+f2+'</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:right;color:#16a34a;font-weight:600;">$'+(parseFloat(o.total_general)||0).toLocaleString("es-AR",{minimumFractionDigits:2})+'</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:center;">'+pdf+'</td></tr>';
       }).join('') + '</tbody></table></div>';
-    document.getElementById('modal-body').innerHTML += ordHtml;
   }
 
-  // Add ordenes de baja for this client
+  // ── ÓRDENES DE BAJA ──
   var bajasCliente = (window._bajasList || []).filter(function(b) {
     return b.cuit && c.cuit && b.cuit.replace(/\D/g,'') === c.cuit.replace(/\D/g,'');
   });
   if (bajasCliente.length > 0) {
-    var bajHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;display:block;margin-bottom:8px;">Órdenes de baja</label>' +
+    html += '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;display:block;margin-bottom:8px;">\u00d3rdenes de baja</label>' +
       '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>' +
-      '<th style="background:#fef2f2;padding:6px 10px;text-align:left;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">N° Baja</th>' +
+      '<th style="background:#fef2f2;padding:6px 10px;text-align:left;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">N\u00b0 Baja</th>' +
       '<th style="background:#fef2f2;padding:6px 10px;text-align:left;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">Fecha</th>' +
       '<th style="background:#fef2f2;padding:6px 10px;text-align:left;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">Motivo</th>' +
+      '<th style="background:#fef2f2;padding:6px 10px;text-align:left;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">Tipo</th>' +
       '<th style="background:#fef2f2;padding:6px 10px;text-align:center;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">PDF</th>' +
       '</tr></thead><tbody>' +
       bajasCliente.map(function(b) {
-        var fecha = b.fecha_baja ? new Date(b.fecha_baja + 'T12:00:00').toLocaleDateString('es-AR') : '';
-        var pdf = b.pdf_url ? '<a href="' + b.pdf_url + '" target="_blank" style="color:#dc2626;font-weight:600;font-size:11px;">PDF</a>' : '';
-        return '<tr><td style="padding:6px 10px;border-bottom:1px solid #fef2f2;font-weight:600;font-family:monospace;font-size:11px;">' + (b.numero_completo || '') + '</td>' +
-          '<td style="padding:6px 10px;border-bottom:1px solid #fef2f2;">' + fecha + '</td>' +
-          '<td style="padding:6px 10px;border-bottom:1px solid #fef2f2;color:#dc2626;font-weight:600;">' + (b.motivo || '') + '</td>' +
-          '<td style="padding:6px 10px;border-bottom:1px solid #fef2f2;text-align:center;">' + pdf + '</td></tr>';
+        var f3 = b.fecha_baja ? new Date(b.fecha_baja+'T12:00:00').toLocaleDateString('es-AR') : '';
+        var tipo = (b.tipo_baja === 'parcial') ? '<span style="color:#d97706;font-weight:600;">Parcial</span>' : '<span style="color:#dc2626;font-weight:600;">Total</span>';
+        var pdf = b.pdf_url ? '<a href="'+b.pdf_url+'" target="_blank" style="color:#dc2626;font-weight:600;font-size:11px;">Ver PDF</a>' : '';
+        return '<tr><td style="padding:6px 10px;border-bottom:1px solid #fef2f2;font-weight:600;font-family:monospace;font-size:11px;">'+(b.numero_completo||'')+'</td><td style="padding:6px 10px;border-bottom:1px solid #fef2f2;">'+f3+'</td><td style="padding:6px 10px;border-bottom:1px solid #fef2f2;color:#dc2626;font-weight:600;">'+(b.motivo||'')+'</td><td style="padding:6px 10px;border-bottom:1px solid #fef2f2;">'+tipo+'</td><td style="padding:6px 10px;border-bottom:1px solid #fef2f2;text-align:center;">'+pdf+'</td></tr>';
       }).join('') + '</tbody></table></div>';
-    document.getElementById('modal-body').innerHTML += bajHtml;
   }
 
+  document.getElementById('modal-body').innerHTML = html;
+
+  var pdfBtn = document.getElementById('modal-pdf-btn');
+  if (pdfBtn) pdfBtn.style.display = 'none';
   document.getElementById('modal-overlay').classList.add('open');
 }
 
