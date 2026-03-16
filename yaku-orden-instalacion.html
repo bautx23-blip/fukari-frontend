@@ -375,6 +375,13 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
         <option value="No">No</option>
       </select>
     </div>
+    <div class="campo-texto">
+      <label>Vendedor:</label>
+      <select id="vendedor-select" style="border:none;border-bottom:1px dotted #bbb;font-size:10.5px;font-family:inherit;outline:none;background:transparent;padding:1px 2px;max-width:220px;">
+        <option value="René Biagioni">René Biagioni</option>
+        <option value="María Pía Bologñese">María Pía Bologñese</option>
+      </select>
+    </div>
   </div>
 
   <div class="footer-area">
@@ -398,7 +405,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       window._currentUserEmail = session.user.email;
       var _map = {
         'renebiagioni@yakuagua.com.ar': 'René Biagioni',
-        'ventas@yakuagua.com.ar': 'Pía Bologñese'
+        'ventas@yakuagua.com.ar': 'María Pía Bologñese'
       };
       window._currentUserName = _map[session.user.email] || session.user.email;
     }
@@ -429,6 +436,21 @@ document.addEventListener('DOMContentLoaded', function() {
     .catch(function(){ document.getElementById('nro-orden').value = '00002 - ????????'; });
 
   for (var i = 0; i < 5; i++) agregarFila();
+
+  // Preseleccionar vendedor según usuario logueado
+  setTimeout(function() {
+    var sel = document.getElementById('vendedor-select');
+    if (window._currentUserName) {
+      for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === window._currentUserName) { sel.selectedIndex = i; break; }
+      }
+    }
+    // Solo René puede cambiar vendedor
+    if (window._currentUserEmail && window._currentUserEmail !== 'renebiagioni@yakuagua.com.ar') {
+      sel.disabled = true;
+      sel.style.opacity = '0.7';
+    }
+  }, 500);
 });
 
 // ── TELÉFONO ──
@@ -661,7 +683,7 @@ function recolectarDatos() {
     cobrar: document.getElementById('cobrar').value,
     fecha_orden: fecha,
     productos: productos,
-    vendedor: (window._currentUserName || '')
+    vendedor: document.getElementById('vendedor-select').value || (window._currentUserName || '')
   };
 }
 
@@ -717,7 +739,7 @@ async function guardarOrden() {
     if (!window._currentUserName) {
       var _map = {
         'renebiagioni@yakuagua.com.ar': 'René Biagioni',
-        'ventas@yakuagua.com.ar': 'Pía Bologñese'
+        'ventas@yakuagua.com.ar': 'María Pía Bologñese'
       };
       var { data: { session } } = await window._sb.auth.getSession();
       if (session) window._currentUserName = _map[session.user.email] || session.user.email;
@@ -883,6 +905,13 @@ function limpiarForm() {
   var warn = document.getElementById('dist-warning');
   if (warn) warn.remove();
   recalcularTotal();
+  // Re-setear vendedor al usuario actual
+  var vSel = document.getElementById('vendedor-select');
+  if (window._currentUserName) {
+    for (var vi = 0; vi < vSel.options.length; vi++) {
+      if (vSel.options[vi].value === window._currentUserName) { vSel.selectedIndex = vi; break; }
+    }
+  }
 }
 
 // ── MÚLTIPLES DOMICILIOS ──

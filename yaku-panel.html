@@ -94,6 +94,10 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 /* Borrar orden */
 .btn-del-orden{background:transparent;border:1.5px solid #fca5a5;border-radius:5px;color:#dc2626;font-size:14px;padding:4px 8px;cursor:pointer;transition:all 0.15s;line-height:1;}
 .btn-del-orden:hover{background:#fee2e2;border-color:#dc2626;}
+/* Anulada */
+.badge-anulada{background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:0.3px;}
+tr.fila-anulada td{opacity:0.5;text-decoration:line-through;}
+tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;text-decoration:none;}
 /* Modal borrar */
 #modal-borrar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center;}
 .modal-borrar{background:#fff;border-radius:10px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;}
@@ -134,7 +138,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 
   <div class="filtros">
     <input type="text" id="filtro-buscar" placeholder="Buscar por razón social, CUIT o localidad..." oninput="filtrar()">
-    <select id="filtro-vendedor" onchange="filtrar()"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="Pía Bologñese">Pía Bologñese</option></select>
+    <select id="filtro-vendedor" onchange="filtrar()"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="María Pía Bologñese">María Pía Bologñese</option></select>
     <select id="filtro-mes" onchange="filtrar()"><option value="">Todos los meses</option></select>
     <button class="btn-refresh" onclick="cargarOrdenes()">&#8635; Actualizar</button>
     <a href="/yaku-orden-instalacion.html" class="btn-refresh" style="background:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Crear orden nueva</a>
@@ -172,17 +176,17 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 
 <div id="modal-borrar-overlay">
   <div class="modal-borrar">
-    <div class="modal-borrar-header">
-      <span style="font-size:20px;">&#128465;</span>
-      <h3>Confirmar eliminación</h3>
+    <div class="modal-borrar-header" style="background:#d97706;">
+      <span style="font-size:20px;">&#9888;</span>
+      <h3>Confirmar anulación</h3>
     </div>
     <div class="modal-borrar-body">
-      ¿Estás seguro que querés borrar la orden <strong id="modal-borrar-num"></strong>?<br>
-      <span style="font-size:12px;color:#9ca3af;margin-top:6px;display:block;">Esta acción no se puede deshacer. La orden se eliminará permanentemente de la base de datos.</span>
+      ¿Estás seguro que querés anular la orden <strong id="modal-borrar-num"></strong>?<br>
+      <span style="font-size:12px;color:#9ca3af;margin-top:6px;display:block;">La orden quedará marcada como ANULADA. No se elimina de la base de datos y se puede identificar en el panel.</span>
     </div>
     <div class="modal-borrar-footer">
       <button class="btn-cancelar-borrar" onclick="cerrarModalBorrar()">Cancelar</button>
-      <button class="btn-confirmar-borrar" id="btn-confirmar-borrar" onclick="ejecutarBorrar()">Sí, borrar</button>
+      <button class="btn-confirmar-borrar" id="btn-confirmar-borrar" onclick="ejecutarBorrar()" style="background:#d97706;">Sí, anular</button>
     </div>
   </div>
 </div>
@@ -278,13 +282,14 @@ function localidadesUnicas(o) {
 function calcularStats() {
   const ahora = new Date();
   const mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
-  const delMes = todasLasOrdenes.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
+  const activas = todasLasOrdenes.filter(function(o){ return !o.anulada; });
+  const delMes = activas.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
   const totalMes = delMes.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
   const totalMesSinIVA = totalMes / 1.21;
-  document.getElementById('stat-total').textContent = todasLasOrdenes.length;
+  document.getElementById('stat-total').textContent = activas.length;
   document.getElementById('stat-mes').textContent = delMes.length;
   document.getElementById('stat-mes-label').textContent = ahora.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
-  document.getElementById('stat-ultima').textContent = todasLasOrdenes.length > 0 ? todasLasOrdenes[0].numero_completo : '—';
+  document.getElementById('stat-ultima').textContent = activas.length > 0 ? activas[0].numero_completo : '—';
   document.getElementById('stat-monto').textContent = totalMesSinIVA > 0 ? '$' + totalMesSinIVA.toLocaleString('es-AR', {minimumFractionDigits:0}) : '$0';
 }
 
@@ -326,8 +331,10 @@ function renderTabla() {
     var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
     var tot = o.total_general ? '$' + parseFloat(o.total_general).toLocaleString('es-AR', {minimumFractionDigits:2}) : '—';
     var pdfBtn = o.pdf_url ? '<a class="btn-ver" href="' + o.pdf_url + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
-    var deleteBtn = esAdmin ? '<td><button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')">&#128465;</button></td>' : '';
-    html += '<tr><td><span class="badge-num">' + (o.numero_completo||'—') + '</span></td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td>' + deleteBtn + '</tr>';
+    var deleteBtn = (esAdmin && !o.anulada) ? '<td><button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Anular orden">&#9888;</button></td>' : (esAdmin ? '<td></td>' : '');
+    var anuladaBadge = o.anulada ? '<span class="badge-anulada">ANULADA</span>' : '';
+    var filaClass = o.anulada ? ' class="fila-anulada"' : '';
+    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td>' + deleteBtn + '</tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
@@ -358,22 +365,25 @@ async function ejecutarBorrar() {
   var id = overlay.dataset.borrarId;
   var btn = document.getElementById('btn-confirmar-borrar');
   btn.disabled = true;
-  btn.textContent = 'Borrando...';
+  btn.textContent = 'Anulando...';
   try {
     var res = await fetch(API_URL + '/api/ordenes/' + id, { method: 'DELETE' });
     if (!res.ok) {
       var j = await res.json();
-      throw new Error(j.error || 'Error al borrar');
+      throw new Error(j.error || 'Error al anular');
     }
     cerrarModalBorrar();
-    todasLasOrdenes = todasLasOrdenes.filter(function(o){ return String(o.id) !== String(id); });
+    // Marcar como anulada en local (no quitar del array)
+    todasLasOrdenes.forEach(function(o) {
+      if (String(o.id) === String(id)) o.anulada = true;
+    });
     filtrar();
     calcularStats();
   } catch(err) {
     alert('Error: ' + err.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Sí, borrar';
+    btn.textContent = 'Sí, anular';
   }
 }
 
