@@ -105,6 +105,15 @@
     .task-card.baja:hover .task-icon { background: #c0392b; }
     .task-card.baja:hover .task-arrow { color: #c0392b; }
 
+    /* Card de clientes: acento azul */
+    .task-card.clientes:hover {
+      border-color: #2563eb;
+      box-shadow: 0 6px 20px rgba(37,99,235,0.12);
+    }
+    .task-card.clientes::after { background: #2563eb; }
+    .task-card.clientes:hover .task-icon { background: #2563eb; }
+    .task-card.clientes:hover .task-arrow { color: #2563eb; }
+
     .task-card.disabled {
       opacity: 0.45;
       cursor: not-allowed;
@@ -194,20 +203,23 @@
       </div>
     </a>
 
-  </div>
-
-  <div class="section-label">Próximamente</div>
-
-  <div class="tasks-grid">
-    <div class="task-card disabled">
+    <a href="/yaku-clientes.html" class="task-card clientes">
       <div class="task-icon">👥</div>
       <div class="task-body">
         <div class="task-title">Clientes</div>
         <div class="task-desc">Gestión de clientes, historial de órdenes y datos de contacto.</div>
       </div>
-      <div class="task-footer"><span class="task-badge soon">Próximamente</span></div>
-    </div>
+      <div class="task-footer">
+        <span class="task-badge">Activo</span>
+        <span class="task-arrow">→</span>
+      </div>
+    </a>
 
+  </div>
+
+  <div class="section-label">Próximamente</div>
+
+  <div class="tasks-grid">
     <div class="task-card disabled">
       <div class="task-icon">📦</div>
       <div class="task-body">
