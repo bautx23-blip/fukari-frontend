@@ -305,12 +305,18 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       <div class="seccion-inferior">
         <div class="campo-texto">
           <label>Domicilio de retiro:</label>
-          <input type="text" id="dom-retiro" placeholder="Calle, número, piso/dpto...">
+          <div id="dom-retiro-options" style="flex:1;"></div>
+          <input type="hidden" id="dom-retiro" value="">
+          <input type="hidden" id="localidad-retiro" value="">
         </div>
-        <div class="campo-texto">
+        <div class="campo-texto" id="dom-retiro-manual-wrap" style="display:none;">
+          <label>Domicilio (manual):</label>
+          <input type="text" id="dom-retiro-manual" placeholder="Calle, número, piso/dpto...">
+        </div>
+        <div class="campo-texto" id="loc-retiro-manual-wrap" style="display:none;">
           <label>Localidad:</label>
           <div class="localidad-wrap" style="flex:1;">
-            <input type="text" id="localidad-retiro" placeholder="Buscar localidad..." autocomplete="off"
+            <input type="text" id="localidad-retiro-manual" placeholder="Buscar localidad..." autocomplete="off"
               oninput="filtrarLocalidadesRetiro(this.value)"
               onfocus="filtrarLocalidadesRetiro(this.value)"
               onkeydown="navLocalidadRetiro(event)">
@@ -440,9 +446,31 @@ function cargarDatosCliente(cliente) {
   document.getElementById('rubro').value = cliente.rubro || '';
   document.getElementById('orden-ref-numero').value = '';
 
-  // Tabla de productos
+  // Auto-fill responsable if available
+  if (cliente.responsable) {
+    var parts = cliente.responsable.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      document.getElementById('responsable-nombre').value = parts.slice(0, -1).join(' ');
+      document.getElementById('responsable-apellido').value = parts[parts.length - 1];
+    } else {
+      document.getElementById('responsable-nombre').value = cliente.responsable;
+    }
+  }
+  if (cliente.responsable_celular) {
+    document.getElementById('responsable-celular').value = cliente.responsable_celular;
+  }
+
+  // Tabla de productos / equipos
   var tbody = document.getElementById('productos-ref-body');
-  tbody.innerHTML = '<tr><td colspan="4" class="estado-vacio">Datos cargados desde ficha de cliente</td></tr>';
+  var equipos = cliente.equipos_activos || [];
+  if (equipos.length > 0) {
+    tbody.innerHTML = equipos.map(function(e) {
+      return '<tr><td>' + (e.modelo || '') + '</td><td style="text-align:center;">' + (e.cantidad || 1) +
+        '</td><td>' + (e.domicilio || '—') + '</td><td>' + (e.localidad || '—') + '</td></tr>';
+    }).join('');
+  } else {
+    tbody.innerHTML = '<tr><td colspan="4" class="estado-vacio">Sin equipos registrados</td></tr>';
+  }
 
   // Mostrar secciones
   document.getElementById('datos-cliente-section').style.display = 'block';
@@ -502,6 +530,60 @@ function actualizarEquiposBaja() {
 function onRetiraChange() {
   var val = document.getElementById('retira-equipo').value;
   document.getElementById('retiro-section').style.display = val === 'si' ? 'block' : 'none';
+  if (val === 'si') buildDomRetiroOptions();
+}
+
+function buildDomRetiroOptions() {
+  var wrap = document.getElementById('dom-retiro-options');
+  var equipos = (ordenRef && ordenRef.equipos_activos) || [];
+  
+  // Get unique domicilios from equipos
+  var domicilios = [];
+  equipos.forEach(function(e) {
+    if (e.domicilio) {
+      var key = e.domicilio + '|' + (e.localidad || '');
+      var exists = domicilios.some(function(d) { return d.key === key; });
+      if (!exists) domicilios.push({ key: key, domicilio: e.domicilio, localidad: e.localidad || '' });
+    }
+  });
+
+  if (domicilios.length > 0) {
+    // Show checkboxes for each domicilio
+    wrap.innerHTML = domicilios.map(function(d, i) {
+      return '<label style="display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer;font-size:11px;">' +
+        '<input type="checkbox" class="dom-retiro-check" value="' + i + '" data-dom="' + d.domicilio.replace(/"/g,'&quot;') + '" data-loc="' + d.localidad.replace(/"/g,'&quot;') + '" onchange="updateDomRetiro()">' +
+        '<span style="color:#374151;">' + d.domicilio + '</span>' +
+        (d.localidad ? '<span style="color:#9ca3af;font-size:10px;">(' + d.localidad + ')</span>' : '') +
+        '</label>';
+    }).join('') +
+    '<label style="display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer;font-size:11px;margin-top:4px;color:#1565c0;">' +
+      '<input type="checkbox" id="dom-retiro-otro" onchange="toggleDomManual()"> Otro domicilio (manual)' +
+    '</label>';
+    document.getElementById('dom-retiro-manual-wrap').style.display = 'none';
+    document.getElementById('loc-retiro-manual-wrap').style.display = 'none';
+  } else {
+    // No equipos with addresses, show manual input
+    wrap.innerHTML = '<span style="font-size:11px;color:#9ca3af;">Sin domicilios registrados</span>';
+    document.getElementById('dom-retiro-manual-wrap').style.display = 'flex';
+    document.getElementById('loc-retiro-manual-wrap').style.display = 'flex';
+  }
+}
+
+function updateDomRetiro() {
+  var doms = [];
+  var locs = [];
+  document.querySelectorAll('.dom-retiro-check:checked').forEach(function(cb) {
+    doms.push(cb.dataset.dom);
+    if (cb.dataset.loc) locs.push(cb.dataset.loc);
+  });
+  document.getElementById('dom-retiro').value = doms.join(' | ');
+  document.getElementById('localidad-retiro').value = locs.join(' | ');
+}
+
+function toggleDomManual() {
+  var checked = document.getElementById('dom-retiro-otro').checked;
+  document.getElementById('dom-retiro-manual-wrap').style.display = checked ? 'flex' : 'none';
+  document.getElementById('loc-retiro-manual-wrap').style.display = checked ? 'flex' : 'none';
 }
 
 // ── LOCALIDADES (reutilizado del formulario de instalación) ──
@@ -593,8 +675,9 @@ function validarCampos() {
   if (!document.getElementById('fecha-baja').value) errores.push('Fecha de baja');
   var retira = document.getElementById('retira-equipo').value;
   if (retira === 'si') {
-    if (!document.getElementById('dom-retiro').value.trim()) errores.push('Domicilio de retiro');
-    if (!document.getElementById('localidad-retiro').value.trim()) errores.push('Localidad de retiro');
+    var domVal = document.getElementById('dom-retiro').value.trim();
+    var domManual = document.getElementById('dom-retiro-manual') ? document.getElementById('dom-retiro-manual').value.trim() : '';
+    if (!domVal && !domManual) errores.push('Domicilio de retiro');
   }
   return errores;
 }
@@ -690,8 +773,8 @@ async function guardarBaja() {
       tipo_baja: _tipoBaja || 'total',
       equipos_baja: _equiposBaja,
       retira_equipo: document.getElementById('retira-equipo').value === 'si',
-      dom_retiro: document.getElementById('dom-retiro').value.trim(),
-      localidad_retiro: document.getElementById('localidad-retiro').value.trim(),
+      dom_retiro: document.getElementById('dom-retiro').value.trim() || (document.getElementById('dom-retiro-manual') ? document.getElementById('dom-retiro-manual').value.trim() : ''),
+      localidad_retiro: document.getElementById('localidad-retiro').value.trim() || (document.getElementById('localidad-retiro-manual') ? document.getElementById('localidad-retiro-manual').value.trim() : ''),
       foto_equipo_url: foto_equipo_url
     };
 
