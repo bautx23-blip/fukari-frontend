@@ -46,6 +46,14 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .badge-orden{background:#dcfce7;color:#16a34a;}
 .btn-ver{padding:5px 12px;background:#1a1a2e;color:#fff;border:none;border-radius:5px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
 .btn-ver:hover{background:#2a2a45;}
+.tabs{display:flex;gap:0;margin-bottom:20px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.tab-btn{flex:1;padding:12px 20px;border:none;background:transparent;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:#6b7280;border-bottom:2px solid transparent;transition:all 0.15s;}
+.tab-btn.active{color:#1a1a2e;border-bottom-color:#1a1a2e;background:#f9fafb;}
+.tab-btn:hover:not(.active){background:#f3f4f6;}
+.tab-count{font-size:11px;font-weight:400;color:#9ca3af;margin-left:4px;}
+.equipo-chip{display:inline-block;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;margin:1px;}
+.equipo-chip.inactive{background:#f3f4f6;color:#9ca3af;}
+.badge-inactivo{background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;}
 .loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
 .empty-msg{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
 .pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid #f3f4f6;font-size:13px;color:#6b7280;}
@@ -90,7 +98,13 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
     <div class="stat-card"><div class="label">Total clientes</div><div class="value" id="stat-total">—</div><div class="sub">en la base</div></div>
     <div class="stat-card"><div class="label">Con CUIT</div><div class="value" id="stat-cuit">—</div><div class="sub">identificados</div></div>
     <div class="stat-card"><div class="label">Solo DNI</div><div class="value" id="stat-dni">—</div><div class="sub">sin CUIT completo</div></div>
-    <div class="stat-card"><div class="label">Desde órdenes</div><div class="value" id="stat-ordenes">—</div><div class="sub">enriquecidos</div></div>
+    <div class="stat-card"><div class="label">Inactivos</div><div class="value" id="stat-ordenes">—</div><div class="sub">dados de baja</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-activos" onclick="cambiarTab('activos')">Activos <span class="tab-count" id="count-activos">—</span></button>
+    <button class="tab-btn" id="tab-inactivos" onclick="cambiarTab('inactivos')">Inactivos <span class="tab-count" id="count-inactivos">—</span></button>
+    <button class="tab-btn" id="tab-todos" onclick="cambiarTab('todos')">Todos <span class="tab-count" id="count-todos">—</span></button>
   </div>
 
   <div class="filtros">
@@ -142,6 +156,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const POR_PAGINA = 25;
 var todosLosClientes = [];
+var tabActual = 'activos';
 var clientesFiltrados = [];
 var paginaActual = 1;
 
@@ -173,14 +188,17 @@ async function cargarClientes() {
 }
 
 function calcularStats() {
-  var total = todosLosClientes.length;
+  var activos = todosLosClientes.filter(function(c) { return c.activo !== false; });
+  var inactivos = todosLosClientes.filter(function(c) { return c.activo === false; });
   var conCuit = todosLosClientes.filter(function(c) { return c.cuit && c.cuit.length > 0; }).length;
   var conDni = todosLosClientes.filter(function(c) { return c.dni && c.dni.length > 0 && (!c.cuit || c.cuit.length === 0); }).length;
-  var desdeOrdenes = todosLosClientes.filter(function(c) { return c.origen === 'orden_instalacion'; }).length;
-  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-total').textContent = activos.length;
   document.getElementById('stat-cuit').textContent = conCuit;
   document.getElementById('stat-dni').textContent = conDni;
-  document.getElementById('stat-ordenes').textContent = desdeOrdenes;
+  document.getElementById('stat-ordenes').textContent = inactivos.length;
+  document.getElementById('count-activos').textContent = activos.length;
+  document.getElementById('count-inactivos').textContent = inactivos.length;
+  document.getElementById('count-todos').textContent = todosLosClientes.length;
 }
 
 function normStr(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
@@ -189,6 +207,8 @@ function filtrar() {
   var q = normStr(document.getElementById('filtro-buscar').value);
   var origen = document.getElementById('filtro-origen').value;
   clientesFiltrados = todosLosClientes.filter(function(c) {
+    if (tabActual === 'activos' && c.activo === false) return false;
+    if (tabActual === 'inactivos' && c.activo !== false) return false;
     if (origen && (c.origen || '') !== origen) return false;
     if (q) {
       var rs = normStr(c.razon_social);
@@ -215,14 +235,14 @@ function renderTabla() {
   var pagina = clientesFiltrados.slice(inicio, inicio + POR_PAGINA);
   var totalPags = Math.ceil(total / POR_PAGINA);
 
-  var html = '<table><thead><tr><th>Razón Social</th><th>CUIT / DNI</th><th>Teléfono</th><th>Localidad</th><th>Rubro</th><th>Origen</th><th></th></tr></thead><tbody>';
+  var html = '<table><thead><tr><th>Razón Social</th><th>CUIT / DNI</th><th>Teléfono</th><th>Localidad</th><th>Equipos</th><th>Rubro</th><th>Origen</th><th></th></tr></thead><tbody>';
   pagina.forEach(function(c) {
     var identif = c.cuit || (c.dni ? 'DNI: ' + c.dni : '—');
     var origenBadge = c.origen === 'orden_instalacion'
       ? '<span class="badge-origen badge-orden">Orden</span>'
       : '<span class="badge-origen badge-importacion">Import</span>';
     html += '<tr>' +
-      '<td style="font-weight:600;">' + (c.razon_social || '—') + '</td>' +
+      '<td style="font-weight:600;">' + (c.razon_social || '—') + (c.activo === false ? '<span class="badge-inactivo">INACTIVO</span>' : '') + '</td>' +
       '<td style="font-size:12px;font-family:monospace;">' + identif + '</td>' +
       '<td style="font-size:12px;color:#6b7280;">' + (c.telefono || '—') + '</td>' +
       '<td style="font-size:12px;color:#6b7280;">' + (c.localidad || '—') + '</td>' +
@@ -250,6 +270,13 @@ function cambiarPagina(dir) {
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
+function cambiarTab(tab) {
+  tabActual = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
+  filtrar();
+}
+
 function verDetalle(c) {
   document.getElementById('modal-titulo').textContent = c.razon_social || 'Cliente';
   var fecha = c.created_at ? new Date(c.created_at).toLocaleDateString('es-AR') : '—';
@@ -269,8 +296,21 @@ function verDetalle(c) {
     '<div class="detail-item"><label>Celular Responsable</label><span>' + (c.responsable_celular || '—') + '</span></div>' +
     '<div class="detail-item"><label>Plano</label><span>' + (c.plano || '—') + '</span></div>' +
     '<div class="detail-item"><label>Origen</label><span>' + (c.origen || '—') + '</span></div>' +
+    '<div class="detail-item"><label>Estado</label><span style="font-weight:600;color:' + (c.activo === false ? '#dc2626' : '#16a34a') + ';">' + (c.activo === false ? 'Inactivo' : 'Activo') + '</span></div>' +
     '<div class="detail-item"><label>Fecha de alta</label><span>' + fecha + '</span></div>' +
     '</div>';
+  // Add equipos section
+  var equipos = c.equipos_activos || [];
+  var equiposHtml = '';
+  if (equipos.length > 0) {
+    equiposHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Equipos activos</label>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr><th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Modelo</th><th style="background:#f9fafb;padding:6px 10px;text-align:center;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Cant.</th><th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Domicilio</th><th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Localidad</th></tr></thead><tbody>' +
+      equipos.map(function(e) {
+        return '<tr><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-weight:600;">' + (e.modelo || '') + '</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:center;">' + (e.cantidad || 1) + '</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">' + (e.domicilio || '—') + '</td><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">' + (e.localidad || '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+  document.getElementById('modal-body').innerHTML += equiposHtml;
+
   document.getElementById('modal-overlay').classList.add('open');
 }
 

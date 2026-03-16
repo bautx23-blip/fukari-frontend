@@ -80,6 +80,24 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 .campo-texto input,.campo-texto textarea,.campo-texto select{flex:1;border:none;border-bottom:1px dotted #bbb;font-family:inherit;font-size:10.5px;outline:none;background:transparent;resize:none;padding:1px 2px;}
 .campo-texto textarea{min-height:30px;}
 .campo-texto input:focus,.campo-texto textarea:focus,.campo-texto select:focus{background:#eff6ff;}
+/* ── Tipo de baja ── */
+.tipo-baja-panel{background:#fff8f0;border:1.5px solid #fed7aa;border-radius:8px;padding:14px 18px;margin-bottom:14px;display:none;}
+.tipo-baja-panel h3{font-size:11px;font-weight:700;color:#c2410c;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+.tipo-baja-btns{display:flex;gap:12px;}
+.tipo-baja-btn{flex:1;padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer;text-align:center;transition:all 0.15s;font-family:inherit;}
+.tipo-baja-btn:hover{border-color:#c2410c;background:#fff7ed;}
+.tipo-baja-btn.selected{border-color:#c2410c;background:#fff7ed;box-shadow:0 0 0 2px rgba(194,65,12,0.2);}
+.tipo-baja-btn .tb-icon{font-size:24px;display:block;margin-bottom:6px;}
+.tipo-baja-btn .tb-title{font-size:13px;font-weight:700;color:#1a1a2e;display:block;}
+.tipo-baja-btn .tb-desc{font-size:11px;color:#6b7280;display:block;margin-top:3px;}
+/* ── Equipos selector ── */
+.equipos-selector{display:none;margin-bottom:14px;}
+.equipos-selector h4{font-size:10px;font-weight:700;color:#c2410c;text-transform:uppercase;margin-bottom:8px;}
+.equipo-check{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:4px;cursor:pointer;transition:background 0.1s;}
+.equipo-check:hover{background:#f9fafb;}
+.equipo-check input{accent-color:#c2410c;}
+.equipo-check .eq-info{font-size:12px;color:#374151;}
+.equipo-check .eq-loc{font-size:10px;color:#6b7280;}
 /* ── Retiro condicional ── */
 #retiro-section{display:none;}
 /* ── DNI drop zone ── */
@@ -172,6 +190,29 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
     </div>
     <p class="busqueda-hint" id="busqueda-hint">Buscá en la base de clientes por CUIT, DNI o nombre</p>
     <p class="busqueda-error" id="busqueda-error"></p>
+  </div>
+
+  <!-- ── TIPO DE BAJA ── -->
+  <div class="tipo-baja-panel" id="tipo-baja-panel">
+    <h3>&#9888; Tipo de baja</h3>
+    <div class="tipo-baja-btns">
+      <div class="tipo-baja-btn" onclick="seleccionarTipoBaja('total')">
+        <span class="tb-icon">🔴</span>
+        <span class="tb-title">Baja total</span>
+        <span class="tb-desc">Se da de baja todo el servicio. El cliente queda inactivo.</span>
+      </div>
+      <div class="tipo-baja-btn" onclick="seleccionarTipoBaja('parcial')">
+        <span class="tb-icon">🟡</span>
+        <span class="tb-title">Baja parcial</span>
+        <span class="tb-desc">Se dan de baja algunos equipos. El cliente sigue activo.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SELECTOR DE EQUIPOS (parcial) ── -->
+  <div class="equipos-selector" id="equipos-selector">
+    <h4>Seleccioná los equipos a dar de baja</h4>
+    <div id="equipos-check-list"></div>
   </div>
 
   <!-- ── DATOS DEL CLIENTE (readonly, se completa solo) ── -->
@@ -341,8 +382,10 @@ if (!window._sb) {
 }
 
 // ── ESTADO GLOBAL ──
-var ordenRef = null;  // objeto con la orden original encontrada
+var ordenRef = null;
 var _fotoFile = null;
+var _tipoBaja = null;  // 'total' | 'parcial'
+var _equiposBaja = []; // equipos seleccionados para baja parcial
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', function() {
@@ -407,10 +450,52 @@ function cargarDatosCliente(cliente) {
   document.getElementById('footer-firmas').style.display = 'flex';
   document.getElementById('btn-guardar').disabled = false;
 
+  // Show tipo baja panel
+  document.getElementById('tipo-baja-panel').style.display = 'block';
+  _tipoBaja = null;
+  _equiposBaja = [];
+  document.querySelectorAll('.tipo-baja-btn').forEach(function(b) { b.classList.remove('selected'); });
+  document.getElementById('equipos-selector').style.display = 'none';
+
   // Feedback visual
   var errEl = document.getElementById('busqueda-error');
   errEl.style.cssText = 'display:block;color:#16a34a;';
   errEl.textContent = '✓ Cliente encontrado: ' + (cliente.razon_social || '') + ' — Orden ' + ('');
+}
+
+// ── TIPO DE BAJA ──
+function seleccionarTipoBaja(tipo) {
+  _tipoBaja = tipo;
+  document.querySelectorAll('.tipo-baja-btn').forEach(function(b) { b.classList.remove('selected'); });
+  event.currentTarget.classList.add('selected');
+
+  if (tipo === 'parcial') {
+    // Show equipos selector
+    var equipos = (ordenRef && ordenRef.equipos_activos) || [];
+    var list = document.getElementById('equipos-check-list');
+    if (equipos.length === 0) {
+      list.innerHTML = '<p style="font-size:12px;color:#9ca3af;">Este cliente no tiene equipos registrados.</p>';
+    } else {
+      list.innerHTML = equipos.map(function(e, i) {
+        return '<label class="equipo-check"><input type="checkbox" value="' + i + '" onchange="actualizarEquiposBaja()">' +
+          '<div><div class="eq-info">' + (e.modelo || '—') + ' x' + (e.cantidad || 1) + '</div>' +
+          '<div class="eq-loc">' + (e.domicilio || '') + (e.localidad ? ' — ' + e.localidad : '') + '</div></div></label>';
+      }).join('');
+    }
+    document.getElementById('equipos-selector').style.display = 'block';
+  } else {
+    document.getElementById('equipos-selector').style.display = 'none';
+    _equiposBaja = [];
+  }
+}
+
+function actualizarEquiposBaja() {
+  var equipos = (ordenRef && ordenRef.equipos_activos) || [];
+  _equiposBaja = [];
+  document.querySelectorAll('#equipos-check-list input:checked').forEach(function(cb) {
+    var idx = parseInt(cb.value);
+    if (equipos[idx]) _equiposBaja.push(equipos[idx]);
+  });
 }
 
 // ── RETIRO DE EQUIPO ──
@@ -500,6 +585,8 @@ function setFile(id, file) {
 function validarCampos() {
   var errores = [];
   if (!ordenRef) errores.push('Buscá un cliente antes de guardar');
+  if (!_tipoBaja) errores.push('Tipo de baja (total o parcial)');
+  if (_tipoBaja === 'parcial' && _equiposBaja.length === 0) errores.push('Seleccioná al menos un equipo para baja parcial');
   if (!document.getElementById('motivo-baja').value) errores.push('Motivo de baja');
   if (!document.getElementById('vendedor').value) errores.push('Vendedor');
   if (!document.getElementById('responsable-nombre').value.trim()) errores.push('Nombre del responsable');
@@ -600,6 +687,8 @@ async function guardarBaja() {
       vendedor: document.getElementById('vendedor').value || window._currentUserName || '',
       responsable: responsable,
       responsable_celular: document.getElementById('responsable-celular').value,
+      tipo_baja: _tipoBaja || 'total',
+      equipos_baja: _equiposBaja,
       retira_equipo: document.getElementById('retira-equipo').value === 'si',
       dom_retiro: document.getElementById('dom-retiro').value.trim(),
       localidad_retiro: document.getElementById('localidad-retiro').value.trim(),
@@ -615,6 +704,17 @@ async function guardarBaja() {
     if (!res.ok) throw new Error(json.error || 'Error al guardar la baja');
 
     document.getElementById('nro-baja').value = json.numero_completo;
+    // Update client status
+    if (ordenRef && ordenRef.id) {
+      try {
+        await fetch(API_URL + '/api/clientes/' + ordenRef.id + '/baja', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo: _tipoBaja || 'total', equipos_a_dar_baja: _equiposBaja })
+        });
+      } catch(e) { console.error('Error actualizando cliente:', e); }
+    }
+
     mostrarToast('Baja ' + json.numero_completo + ' registrada', json.pdf_url);
     if (json.pdf_url) window.open(json.pdf_url, '_blank');
     setTimeout(function() { window.location.href = 'yaku-panel.html'; }, 1500);
@@ -642,6 +742,10 @@ function limpiarForm() {
   document.querySelectorAll('#datos-baja-section select').forEach(function(el){ el.selectedIndex = 0; });
   document.getElementById('fecha-baja').value = new Date().toISOString().split('T')[0];
   document.getElementById('retiro-section').style.display = 'none';
+  document.getElementById('tipo-baja-panel').style.display = 'none';
+  document.getElementById('equipos-selector').style.display = 'none';
+  _tipoBaja = null;
+  _equiposBaja = [];
   document.getElementById('foto-equipo-drop').classList.remove('ok');
   document.getElementById('foto-equipo-label').textContent = 'Arrastrá o hacé click para subir una imagen';
 }
