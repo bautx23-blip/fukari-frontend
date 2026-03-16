@@ -780,7 +780,7 @@ async function guardarBaja() {
       cuit: ordenRef.cuit || ordenRef.dni || '',
       telefono: ordenRef.telefono || '',
       rubro: ordenRef.rubro || '',
-      productos_ref: [],
+      productos_ref: (ordenRef && ordenRef.equipos_activos) || [],
       fecha_baja: document.getElementById('fecha-baja').value,
       motivo: document.getElementById('motivo-baja').value,
       observaciones: document.getElementById('observaciones').value,
