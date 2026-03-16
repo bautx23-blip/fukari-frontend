@@ -1101,14 +1101,14 @@ async function buscarCliente() {
       }
       query = window._sb.from('ordenes')
         .select('id, numero_completo, razon_social, cuit, telefono, email, metodo_pago, rubro, responsable, responsable_celular, plano, dom_instalacion, localidad, plazo_mantenimiento, aclaraciones, cobrar, productos, fecha_orden')
-        .or('cuit.eq.' + q + ',cuit.eq.' + cuitFormateado + ',cuit.ilike.%' + cuitLimpio + '%')
+        .or('cuit.eq.' + q + ',cuit.eq.' + cuitFormateado + ',cuit.ilike.*' + cuitLimpio + '*')
         .order('created_at', { ascending: false })
         .limit(10);
     } else {
       // Buscar por razón social
       query = window._sb.from('ordenes')
         .select('id, numero_completo, razon_social, cuit, telefono, email, metodo_pago, rubro, responsable, responsable_celular, plano, dom_instalacion, localidad, plazo_mantenimiento, aclaraciones, cobrar, productos, fecha_orden')
-        .ilike('razon_social', '%' + q + '%')
+        .ilike('razon_social', '*' + q + '*')
         .order('created_at', { ascending: false })
         .limit(10);
     }
