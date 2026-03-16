@@ -141,7 +141,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       <strong>MV EMPRENDIMIENTOS SRL</strong>
       <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="#25D366" style="vertical-align:middle;margin-right:2px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> +54 9 341 216-4265<br>
       www.yakuagua.com.ar / www.fukari.net<br>
-      <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6a1c0f041e0b192a130b011f0b0d1f0b44090507440b18">[email&#160;protected]</a>
+      <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c8beada6bca9bb88b1a9a3bda9afbda9e6aba7a5e6a9ba">[email&#160;protected]</a>
     </div>
     <div class="header-right">
       <div class="orden-box">
@@ -441,18 +441,18 @@ async function buscarCliente() {
 function cargarDatosCliente(orden) {
   ordenRef = orden;
 
-  // Rellenar campos readonly
+  // Rellenar campos y ponerlos readonly
   document.getElementById('razon-social').value = orden.razon_social || '';
   document.getElementById('cuit').value = orden.cuit || '';
   document.getElementById('telefono').value = orden.telefono || '';
   document.getElementById('rubro').value = orden.rubro || '';
   document.getElementById('orden-ref-numero').value = orden.numero_completo || '';
-
-  // Poner campos como readonly
   ['razon-social','cuit','telefono','rubro','orden-ref-numero'].forEach(function(id) {
     document.getElementById(id).readOnly = true;
   });
   document.getElementById('badge-modo').innerHTML = '&#128274; Datos del cliente — solo lectura';
+  document.getElementById('badge-modo').style.background = '';
+  document.getElementById('badge-modo').style.color = '';
 
   // Tabla de productos
   var tbody = document.getElementById('productos-ref-body');
@@ -481,8 +481,6 @@ function cargarDatosCliente(orden) {
 // ── CARGA MANUAL (sin búsqueda) ──
 function cargarManual() {
   ordenRef = null;
-
-  // Limpiar y hacer editables los campos del cliente
   ['razon-social','cuit','telefono','rubro','orden-ref-numero'].forEach(function(id) {
     var el = document.getElementById(id);
     el.value = '';
@@ -491,17 +489,11 @@ function cargarManual() {
   document.getElementById('badge-modo').innerHTML = '&#9998; Carga manual — completá los datos del cliente';
   document.getElementById('badge-modo').style.background = '#fef3c7';
   document.getElementById('badge-modo').style.color = '#92400e';
-
-  // Limpiar tabla productos
   document.getElementById('productos-ref-body').innerHTML = '<tr><td colspan="4" class="estado-vacio">Carga manual — sin orden de referencia</td></tr>';
-
-  // Mostrar secciones
   document.getElementById('datos-cliente-section').style.display = 'block';
   document.getElementById('datos-baja-section').style.display = 'block';
   document.getElementById('footer-firmas').style.display = 'flex';
   document.getElementById('btn-guardar').disabled = false;
-
-  // Ocultar búsqueda panel feedback
   document.getElementById('busqueda-error').style.display = 'none';
 }
 
@@ -728,15 +720,6 @@ function limpiarForm() {
   document.getElementById('datos-baja-section').style.display = 'none';
   document.getElementById('footer-firmas').style.display = 'none';
   document.getElementById('btn-guardar').disabled = true;
-  // Reset badge y campos cliente
-  document.getElementById('badge-modo').innerHTML = '&#128274; Datos del cliente — solo lectura';
-  document.getElementById('badge-modo').style.background = '';
-  document.getElementById('badge-modo').style.color = '';
-  ['razon-social','cuit','telefono','rubro','orden-ref-numero'].forEach(function(id) {
-    var el = document.getElementById(id);
-    el.value = '';
-    el.readOnly = false;
-  });
   document.getElementById('productos-ref-body').innerHTML = '<tr><td colspan="4" class="estado-vacio">Buscá un cliente para ver sus equipos</td></tr>';
   document.querySelectorAll('#datos-baja-section input:not([type=date]), #datos-baja-section textarea').forEach(function(el){ el.value = ''; });
   document.querySelectorAll('#datos-baja-section select').forEach(function(el){ el.selectedIndex = 0; });
