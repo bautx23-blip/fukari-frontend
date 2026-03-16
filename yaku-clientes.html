@@ -186,9 +186,16 @@ async function cargarClientes() {
         var bajasResp = await resBajas.json();
         var bajasData = bajasResp.data || bajasResp || [];
         window._bajasMap = {};
+        window._bajasList = bajasData;
         bajasData.forEach(function(b) { if (b.cuit) window._bajasMap[b.cuit] = b; });
       }
     } catch(e) { console.log('Bajas error:', e); }
+    try {
+      var resOrdenes = await fetch(API_URL + '/api/ordenes');
+      if (resOrdenes.ok) {
+        window._ordenesList = await resOrdenes.json();
+      }
+    } catch(e) { console.log('Ordenes error:', e); }
     calcularStats();
     filtrar();
   } catch(err) {
@@ -337,6 +344,55 @@ function verDetalle(c) {
       }).join('') + '</tbody></table></div>';
   }
   document.getElementById('modal-body').innerHTML += equiposHtml;
+
+  // Add ordenes de instalación for this client
+  var ordenesCliente = (window._ordenesList || []).filter(function(o) {
+    return o.cuit && c.cuit && o.cuit.replace(/\D/g,'') === c.cuit.replace(/\D/g,'');
+  });
+  if (ordenesCliente.length > 0) {
+    var ordHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Órdenes de instalación</label>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>' +
+      '<th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">N° Orden</th>' +
+      '<th style="background:#f9fafb;padding:6px 10px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Fecha</th>' +
+      '<th style="background:#f9fafb;padding:6px 10px;text-align:right;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Total</th>' +
+      '<th style="background:#f9fafb;padding:6px 10px;text-align:center;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">Estado</th>' +
+      '<th style="background:#f9fafb;padding:6px 10px;text-align:center;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;">PDF</th>' +
+      '</tr></thead><tbody>' +
+      ordenesCliente.map(function(o) {
+        var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '';
+        var estado = o.anulada ? '<span style="color:#dc2626;font-weight:600;font-size:10px;">ANULADA</span>' : '<span style="color:#16a34a;font-weight:600;font-size:10px;">Activa</span>';
+        var pdf = o.pdf_url ? '<a href="' + o.pdf_url + '" target="_blank" style="color:#1565c0;font-weight:600;font-size:11px;">PDF</a>' : '';
+        return '<tr><td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;font-weight:600;font-family:monospace;font-size:11px;">' + (o.numero_completo || '') + '</td>' +
+          '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">' + fecha + '</td>' +
+          '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:right;color:#16a34a;font-weight:600;">$' + (parseFloat(o.total_general)||0).toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td>' +
+          '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:center;">' + estado + '</td>' +
+          '<td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;text-align:center;">' + pdf + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    document.getElementById('modal-body').innerHTML += ordHtml;
+  }
+
+  // Add ordenes de baja for this client
+  var bajasCliente = (window._bajasList || []).filter(function(b) {
+    return b.cuit && c.cuit && b.cuit.replace(/\D/g,'') === c.cuit.replace(/\D/g,'');
+  });
+  if (bajasCliente.length > 0) {
+    var bajHtml = '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;display:block;margin-bottom:8px;">Órdenes de baja</label>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr>' +
+      '<th style="background:#fef2f2;padding:6px 10px;text-align:left;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">N° Baja</th>' +
+      '<th style="background:#fef2f2;padding:6px 10px;text-align:left;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">Fecha</th>' +
+      '<th style="background:#fef2f2;padding:6px 10px;text-align:left;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">Motivo</th>' +
+      '<th style="background:#fef2f2;padding:6px 10px;text-align:center;font-weight:700;color:#991b1b;border-bottom:1px solid #fecaca;">PDF</th>' +
+      '</tr></thead><tbody>' +
+      bajasCliente.map(function(b) {
+        var fecha = b.fecha_baja ? new Date(b.fecha_baja + 'T12:00:00').toLocaleDateString('es-AR') : '';
+        var pdf = b.pdf_url ? '<a href="' + b.pdf_url + '" target="_blank" style="color:#dc2626;font-weight:600;font-size:11px;">PDF</a>' : '';
+        return '<tr><td style="padding:6px 10px;border-bottom:1px solid #fef2f2;font-weight:600;font-family:monospace;font-size:11px;">' + (b.numero_completo || '') + '</td>' +
+          '<td style="padding:6px 10px;border-bottom:1px solid #fef2f2;">' + fecha + '</td>' +
+          '<td style="padding:6px 10px;border-bottom:1px solid #fef2f2;color:#dc2626;font-weight:600;">' + (b.motivo || '') + '</td>' +
+          '<td style="padding:6px 10px;border-bottom:1px solid #fef2f2;text-align:center;">' + pdf + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    document.getElementById('modal-body').innerHTML += bajHtml;
+  }
 
   document.getElementById('modal-overlay').classList.add('open');
 }

@@ -804,21 +804,24 @@ async function guardarBaja() {
     if (!res.ok) throw new Error(json.error || 'Error al guardar la baja');
 
     document.getElementById('nro-baja').value = json.numero_completo;
-    // Update client status
+    mostrarToast('Baja ' + json.numero_completo + ' registrada', json.pdf_url);
+    if (json.pdf_url) window.open(json.pdf_url, '_blank');
+
+    // Update client status BEFORE redirect
     if (ordenRef && ordenRef.id && _tipoBaja) {
-      console.log('Actualizando cliente:', ordenRef.id, 'tipo:', _tipoBaja);
       try {
-        await fetch(API_URL + '/api/clientes/' + ordenRef.id + '/baja', {
+        console.log('Actualizando cliente:', ordenRef.id, 'tipo:', _tipoBaja, 'equipos:', JSON.stringify(_equiposBaja));
+        var patchRes = await fetch(API_URL + '/api/clientes/' + ordenRef.id + '/baja', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tipo: _tipoBaja || 'total', equipos_a_dar_baja: _equiposBaja })
+          body: JSON.stringify({ tipo: _tipoBaja, equipos_a_dar_baja: _equiposBaja })
         });
+        var patchData = await patchRes.json();
+        console.log('PATCH resultado:', JSON.stringify(patchData));
       } catch(e) { console.error('Error actualizando cliente:', e); }
     }
 
-    mostrarToast('Baja ' + json.numero_completo + ' registrada', json.pdf_url);
-    if (json.pdf_url) window.open(json.pdf_url, '_blank');
-    setTimeout(function() { window.location.href = 'yaku-panel.html'; }, 1500);
+    setTimeout(function() { window.location.href = 'yaku-panel.html'; }, 2000);
   } catch(err) {
     mostrarToast('Error: ' + err.message);
   } finally {
