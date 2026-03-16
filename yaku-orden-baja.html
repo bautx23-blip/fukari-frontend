@@ -520,9 +520,25 @@ function seleccionarTipoBaja(tipo) {
 function actualizarEquiposBaja() {
   var equipos = (ordenRef && ordenRef.equipos_activos) || [];
   _equiposBaja = [];
-  document.querySelectorAll('#equipos-check-list input:checked').forEach(function(cb) {
+  // Show/hide quantity selectors
+  document.querySelectorAll('#equipos-check-list input[type=checkbox]').forEach(function(cb) {
+    var idx = cb.value;
+    var cantWrap = document.querySelector('.eq-cant-wrap[data-idx="' + idx + '"]');
+    if (cantWrap) cantWrap.style.display = cb.checked ? 'flex' : 'none';
+  });
+  // Build baja list with quantities
+  document.querySelectorAll('#equipos-check-list input[type=checkbox]:checked').forEach(function(cb) {
     var idx = parseInt(cb.value);
-    if (equipos[idx]) _equiposBaja.push(equipos[idx]);
+    if (equipos[idx]) {
+      var cantSelect = document.querySelector('.eq-cant-select[data-idx="' + idx + '"]');
+      var cantBaja = cantSelect ? parseInt(cantSelect.value) : (parseInt(equipos[idx].cantidad) || 1);
+      _equiposBaja.push({
+        modelo: equipos[idx].modelo,
+        cantidad: cantBaja,
+        domicilio: equipos[idx].domicilio,
+        localidad: equipos[idx].localidad
+      });
+    }
   });
 }
 
