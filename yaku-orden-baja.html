@@ -505,9 +505,11 @@ function seleccionarTipoBaja(tipo) {
       list.innerHTML = '<p style="font-size:12px;color:#9ca3af;">Este cliente no tiene equipos registrados.</p>';
     } else {
       list.innerHTML = equipos.map(function(e, i) {
-        return '<label class="equipo-check"><input type="checkbox" value="' + i + '" onchange="actualizarEquiposBaja()">' +
-          '<div><div class="eq-info">' + (e.modelo || '—') + ' x' + (e.cantidad || 1) + '</div>' +
-          '<div class="eq-loc">' + (e.domicilio || '') + (e.localidad ? ' — ' + e.localidad : '') + '</div></div></label>';
+        var cant = parseInt(e.cantidad) || 1;
+        var cantHtml = cant > 1 ? '<div class="eq-cant-wrap" data-idx="' + i + '" style="display:none;align-items:center;gap:4px;margin-left:8px;"><label style="font-size:10px;color:#6b7280;">Cant:</label><select class="eq-cant-select" data-idx="' + i + '" style="border:1px solid #d1d5db;border-radius:4px;padding:2px 6px;font-size:11px;" onchange="actualizarEquiposBaja()">' + Array.from({length:cant},function(_,n){return '<option value="'+(n+1)+'"'+(n+1===cant?' selected':'')+'>'+(n+1)+' de '+cant+'</option>';}).join('') + '</select></div>' : '';
+        return '<div class="equipo-check" style="flex-wrap:wrap;"><input type="checkbox" value="' + i + '" onchange="toggleCantBaja(this,'+i+','+cant+')">' +
+          '<div style="flex:1;"><div class="eq-info">' + (e.modelo || '') + ' — Total: ' + cant + '</div>' +
+          '<div class="eq-loc">' + (e.domicilio || '') + (e.localidad ? ' — ' + e.localidad : '') + '</div></div>' + cantHtml + '</div>';
       }).join('');
     }
     document.getElementById('equipos-selector').style.display = 'block';
@@ -517,16 +519,15 @@ function seleccionarTipoBaja(tipo) {
   }
 }
 
+function toggleCantBaja(cb, idx, cant) {
+  var wrap = document.querySelector('.eq-cant-wrap[data-idx="' + idx + '"]');
+  if (wrap) wrap.style.display = cb.checked ? 'flex' : 'none';
+  actualizarEquiposBaja();
+}
+
 function actualizarEquiposBaja() {
   var equipos = (ordenRef && ordenRef.equipos_activos) || [];
   _equiposBaja = [];
-  // Show/hide quantity selectors
-  document.querySelectorAll('#equipos-check-list input[type=checkbox]').forEach(function(cb) {
-    var idx = cb.value;
-    var cantWrap = document.querySelector('.eq-cant-wrap[data-idx="' + idx + '"]');
-    if (cantWrap) cantWrap.style.display = cb.checked ? 'flex' : 'none';
-  });
-  // Build baja list with quantities
   document.querySelectorAll('#equipos-check-list input[type=checkbox]:checked').forEach(function(cb) {
     var idx = parseInt(cb.value);
     if (equipos[idx]) {
