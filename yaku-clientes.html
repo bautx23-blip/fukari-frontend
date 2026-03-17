@@ -254,6 +254,8 @@ function renderTabla() {
   var html = '<table><thead><tr><th>Razón Social</th><th>CUIT / DNI</th><th>Teléfono</th><th>Localidad</th><th>Equipos</th><th>Rubro</th><th>Origen</th><th></th></tr></thead><tbody>';
   pagina.forEach(function(c) {
     var identif = c.cuit || (c.dni ? 'DNI: ' + c.dni : '—');
+    var equiposCount = Array.isArray(c.equipos_activos) ? c.equipos_activos.reduce(function(acc,e){ return acc + (parseInt(e.cantidad)||1); },0) : 0;
+    var equiposBadge = equiposCount > 0 ? '<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;">' + equiposCount + '</span>' : '<span style="color:#9ca3af;font-size:11px;">0</span>';
     var origenBadge = c.origen === 'orden_instalacion'
       ? '<span class="badge-origen badge-orden">Orden</span>'
       : '<span class="badge-origen badge-importacion">Import</span>';
@@ -262,6 +264,7 @@ function renderTabla() {
       '<td style="font-size:12px;font-family:monospace;">' + identif + '</td>' +
       '<td style="font-size:12px;color:#6b7280;">' + (c.telefono || '—') + '</td>' +
       '<td style="font-size:12px;color:#6b7280;">' + (c.localidad || '—') + '</td>' +
+      '<td style="text-align:center;">' + equiposBadge + '</td>' +
       '<td style="font-size:12px;color:#6b7280;">' + (c.rubro || '—') + '</td>' +
       '<td>' + origenBadge + '</td>' +
       '<td><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(c).replace(/'/g,"&#39;") + ')\'>Ver</button></td>' +

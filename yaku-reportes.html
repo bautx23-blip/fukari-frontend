@@ -98,12 +98,16 @@ tbody td.money{font-weight:600;color:#16a34a;}
 
 <div class="contenido" id="contenido">
   <div style="background:#fff;border-radius:8px;padding:14px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
-    <label style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Origen de datos:</label>
+    <label style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Origen:</label>
     <select id="filtro-origen" onchange="reRender()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;">
       <option value="">Todas las fuentes</option>
       <option value="app">Creadas desde app</option>
       <option value="importadas">Históricas (importadas)</option>
     </select>
+    <label style="font-size:12px;font-weight:600;color:#6b7280;">Desde</label>
+    <input type="date" id="filtro-desde" onchange="reRender()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;max-width:160px;">
+    <label style="font-size:12px;font-weight:600;color:#6b7280;">Hasta</label>
+    <input type="date" id="filtro-hasta" onchange="reRender()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;max-width:160px;">
   </div>
   <div class="loading-overlay" id="loading">
     <div class="spinner"></div>
@@ -156,16 +160,31 @@ function cargarDatos() {
   });
 }
 
-function filtrarOrigenReportes(lista) {
+function filtrarReportes(lista) {
   var origen = document.getElementById('filtro-origen').value;
-  if (origen === 'app') return lista.filter(function(o){ return !o.origen_importacion; });
-  if (origen === 'importadas') return lista.filter(function(o){ return o.origen_importacion === true; });
-  return lista;
+  var desde = document.getElementById('filtro-desde').value;
+  var hasta = document.getElementById('filtro-hasta').value;
+  return lista.filter(function(o) {
+    if (origen === 'app' && o.origen_importacion) return false;
+    if (origen === 'importadas' && !o.origen_importacion) return false;
+    var fecha = o.fecha_orden || o.fecha_baja || '';
+    if (desde && fecha < desde) return false;
+    if (hasta && fecha > hasta) return false;
+    return true;
+  });
 }
 
 function reRender() {
-  var ordenes = filtrarOrigenReportes(_allOrdenes);
-  renderAll(ordenes, _allBajas, _allClientes);
+  var ordenes = filtrarReportes(_allOrdenes);
+  var bajas = _allBajas.filter(function(b) {
+    var desde = document.getElementById('filtro-desde').value;
+    var hasta = document.getElementById('filtro-hasta').value;
+    var fecha = b.fecha_baja || '';
+    if (desde && fecha < desde) return false;
+    if (hasta && fecha > hasta) return false;
+    return true;
+  });
+  renderAll(ordenes, bajas, _allClientes);
 }
 
 /* ── HELPERS ── */
