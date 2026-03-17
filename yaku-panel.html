@@ -47,6 +47,8 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .btn-ver:hover{background:#2a2a45;}
 .btn-dl{padding:5px 10px;background:#f3f4f6;color:#374151;border:none;border-radius:5px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;}
 .btn-dl:hover{background:#e5e7eb;}
+.btn-mail{padding:5px 10px;background:#f3f4f6;color:#374151;border:1.5px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;line-height:1;}
+.btn-mail:hover{background:#e5e7eb;border-color:#d1d5db;}
 .sin-pdf{color:#9ca3af;font-size:12px;font-style:italic;}
 .loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
 .error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
@@ -342,7 +344,14 @@ function renderTabla() {
     var deleteBtn = (esAdmin && !o.anulada) ? '<td><button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Anular orden">&#9888;</button></td>' : (esAdmin ? '<td></td>' : '');
     var anuladaBadge = o.anulada ? '<span class="badge-anulada">ANULADA</span>' : '';
     var filaClass = o.anulada ? ' class="fila-anulada"' : '';
-    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button></td>' + deleteBtn + '</tr>';
+    var mailBtn = '';
+    if (o.pdf_url) {
+      var loc = (o.localidad||'').trim();
+      var subj = encodeURIComponent('Nueva orden de instalación — ' + loc + ' — ' + (o.razon_social||''));
+      var body = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva orden de instalación, para la localidad de ' + loc + '; el equipo será para ' + (o.responsable||'') + ' y su celular es ' + (o.responsable_celular||'') + '.\n\nLink de orden de instalación: ' + o.pdf_url);
+      mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subj + '&body=' + body + '" title="Enviar por mail">&#9993;</a>';
+    }
+    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button> ' + mailBtn + '</td>' + deleteBtn + '</tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
