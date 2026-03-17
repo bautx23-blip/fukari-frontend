@@ -292,9 +292,13 @@ function calcularStats() {
   if (estado === 'anuladas') base = todasLasOrdenes.filter(function(o){ return o.anulada; });
   else if (estado === 'todas') base = todasLasOrdenes;
   else base = todasLasOrdenes.filter(function(o){ return !o.anulada; });
-  var delMes = base.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
-  var totalMes = delMes.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
+  // Facturado siempre excluye anuladas (incluso en vista "Todas")
+  var noAnuladas = todasLasOrdenes.filter(function(o){ return !o.anulada; });
+  var delMesNoAnuladas = noAnuladas.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
+  var totalMes = delMesNoAnuladas.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
   var totalMesSinIVA = totalMes / 1.21;
+  // Conteos según filtro
+  var delMes = base.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
   document.getElementById('stat-total').textContent = base.length;
   document.getElementById('stat-mes').textContent = delMes.length;
   document.getElementById('stat-mes-label').textContent = ahora.toLocaleDateString('es-AR', {month:'long', year:'numeric'});

@@ -51,7 +51,24 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .btn-dl:hover{background:#e5e7eb;}
 .btn-mail{padding:6px 10px;background:#f3f4f6;color:#374151;border:1.5px solid #d1d5db;border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;line-height:1;white-space:nowrap;}
 .btn-mail:hover{background:#e5e7eb;border-color:#9ca3af;}
-@media(max-width:768px){.acciones-wrap{gap:4px;}.btn-ver,.btn-mail,.btn-dl{padding:5px 8px;font-size:10px;}}
+.btn-del-orden{background:#fee2e2;border:1.5px solid #fecaca;border-radius:6px;color:#dc2626;font-size:11px;padding:6px 10px;cursor:pointer;transition:all 0.15s;line-height:1;display:inline-flex;align-items:center;white-space:nowrap;}
+.btn-del-orden:hover{background:#fecaca;border-color:#f87171;}
+.badge-anulada{background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:0.3px;}
+tr.fila-anulada td{opacity:0.5;text-decoration:line-through;}
+tr.fila-anulada td:last-child{opacity:1;text-decoration:none;}
+#modal-anular-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center;}
+.modal-anular{background:#fff;border-radius:10px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;}
+.modal-anular-header{background:#d97706;color:#fff;padding:16px 22px;display:flex;align-items:center;gap:10px;}
+.modal-anular-header h3{font-size:15px;font-weight:700;margin:0;}
+.modal-anular-body{padding:22px 24px;font-size:14px;color:#374151;line-height:1.6;}
+.modal-anular-body strong{color:#dc2626;}
+.modal-anular-footer{padding:14px 22px;border-top:1px solid #f3f4f6;display:flex;gap:10px;justify-content:flex-end;}
+.btn-confirmar-anular{padding:9px 20px;background:#d97706;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-confirmar-anular:hover{background:#b45309;}
+.btn-confirmar-anular:disabled{opacity:0.6;cursor:not-allowed;}
+.btn-cancelar-anular{padding:9px 20px;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;}
+.btn-cancelar-anular:hover{background:#e5e7eb;}
+@media(max-width:768px){.acciones-wrap{gap:4px;}.btn-ver,.btn-mail,.btn-dl,.btn-del-orden{padding:5px 8px;font-size:10px;}}
 .sin-pdf{color:#9ca3af;font-size:12px;font-style:italic;}
 .loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
 .error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
@@ -146,6 +163,23 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
   </div>
 </div>
 
+<div id="modal-anular-overlay">
+  <div class="modal-anular">
+    <div class="modal-anular-header">
+      <span style="font-size:20px;">&#9888;</span>
+      <h3>Confirmar anulación</h3>
+    </div>
+    <div class="modal-anular-body">
+      ¿Estás seguro que querés anular la baja <strong id="modal-anular-num"></strong>?<br>
+      <span style="font-size:12px;color:#9ca3af;margin-top:6px;display:block;">La baja quedará marcada como ANULADA. No se elimina de la base de datos.</span>
+    </div>
+    <div class="modal-anular-footer">
+      <button class="btn-cancelar-anular" onclick="cerrarModalAnular()">Cancelar</button>
+      <button class="btn-confirmar-anular" id="btn-confirmar-anular" onclick="ejecutarAnular()">Sí, anular</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var API_URL = 'https://fukari-backend-production.up.railway.app';
@@ -158,10 +192,13 @@ var POR_PAGINA = 20;
 var todasLasBajas = [];
 var bajasFiltradas = [];
 var paginaActual = 1;
+var _currentUserEmail = null;
+var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
 
 sb.auth.getSession().then(function(result) {
   var session = result.data.session;
   if (!session) { window.location.href = '/index.html'; return; }
+  _currentUserEmail = session.user.email;
   document.body.classList.add('ready');
   iniciarPanel();
 });
@@ -215,14 +252,15 @@ function poblarFiltroMes() {
 function calcularStats() {
   var ahora = new Date();
   var mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
-  var delMes = todasLasBajas.filter(function(b){ return b.fecha_baja && b.fecha_baja.startsWith(mesActual); });
-  var parciales = todasLasBajas.filter(function(b){ return (b.tipo_baja||'').toLowerCase() === 'parcial'; }).length;
-  var totales = todasLasBajas.filter(function(b){ return (b.tipo_baja||'').toLowerCase() === 'total'; }).length;
+  var activas = todasLasBajas.filter(function(b){ return !b.anulada; });
+  var delMes = activas.filter(function(b){ return b.fecha_baja && b.fecha_baja.startsWith(mesActual); });
+  var parciales = activas.filter(function(b){ return (b.tipo_baja||'').toLowerCase() === 'parcial'; }).length;
+  var totales = activas.filter(function(b){ return (b.tipo_baja||'').toLowerCase() === 'total'; }).length;
 
-  document.getElementById('stat-total').textContent = todasLasBajas.length;
+  document.getElementById('stat-total').textContent = activas.length;
   document.getElementById('stat-mes').textContent = delMes.length;
   document.getElementById('stat-mes-label').textContent = ahora.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
-  document.getElementById('stat-ultima').textContent = todasLasBajas.length > 0 ? (todasLasBajas[0].numero_completo || '—') : '—';
+  document.getElementById('stat-ultima').textContent = activas.length > 0 ? (activas[0].numero_completo || '—') : '—';
   document.getElementById('stat-tipo').textContent = parciales + ' / ' + totales;
   document.getElementById('stat-tipo').closest('.stat-card').querySelector('.sub').textContent = parciales + ' parciales / ' + totales + ' totales';
 }
@@ -277,8 +315,11 @@ function renderTabla() {
     if (motivo.length > 40) motivo = motivo.substring(0,40) + '...';
     var pdfBtn = b.pdf_url ? '<a class="btn-dl" href="' + b.pdf_url + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
 
-    html += '<tr>';
-    html += '<td><span class="badge-num">' + (b.numero_completo||'—') + '</span></td>';
+    var anuladaBadge = b.anulada ? '<span class="badge-anulada">ANULADA</span>' : '';
+    var filaClass = b.anulada ? ' class="fila-anulada"' : '';
+    var esAdmin = _currentUserEmail === ADMIN_EMAIL;
+    html += '<tr' + filaClass + '>';
+    html += '<td><span class="badge-num">' + (b.numero_completo||'—') + '</span>' + anuladaBadge + '</td>';
     html += '<td>' + (b.razon_social||'—') + '</td>';
     html += '<td style="font-family:monospace;font-size:12px;">' + (b.cuit||'—') + '</td>';
     html += '<td>' + fecha + '</td>';
@@ -293,7 +334,8 @@ function renderTabla() {
       var bodyB = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva orden de baja de servicio, para ' + (b.razon_social||'') + '. El responsable es ' + (b.responsable||'') + ' y su celular es ' + (b.responsable_celular||'') + '.\n\nLink de orden de baja: ' + b.pdf_url);
       mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subjB + '&body=' + bodyB + '" title="Enviar por mail">&#9993;</a>';
     }
-    html += '<td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(b).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + '</div></td>';
+    var deleteBtn = (esAdmin && !b.anulada) ? '<button class="btn-del-orden" onclick="confirmarAnular(\'' + b.id + '\',\'' + (b.numero_completo||'').replace(/'/g,'') + '\')" title="Anular baja">&#9888;</button>' : '';
+    html += '<td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(b).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + deleteBtn + '</div></td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -383,6 +425,46 @@ function cerrarModal(e) {
   if (e.target === document.getElementById('modal-overlay')) {
     document.getElementById('modal-overlay').classList.remove('open');
   }
+}
+
+// ── ANULAR BAJA ──
+function confirmarAnular(id, numero) {
+  var overlay = document.getElementById('modal-anular-overlay');
+  document.getElementById('modal-anular-num').textContent = numero;
+  overlay.dataset.anularId = id;
+  overlay.style.display = 'flex';
+}
+
+function cerrarModalAnular() {
+  document.getElementById('modal-anular-overlay').style.display = 'none';
+}
+
+function ejecutarAnular() {
+  var overlay = document.getElementById('modal-anular-overlay');
+  var id = overlay.dataset.anularId;
+  var btn = document.getElementById('btn-confirmar-anular');
+  btn.disabled = true;
+  btn.textContent = 'Anulando...';
+  fetch(API_URL + '/api/bajas/' + id, { method: 'DELETE' })
+    .then(function(res) {
+      if (!res.ok) return res.json().then(function(j){ throw new Error(j.error || 'Error al anular'); });
+      return res.json();
+    })
+    .then(function() {
+      cerrarModalAnular();
+      todasLasBajas.forEach(function(b) {
+        if (String(b.id) === String(id)) b.anulada = true;
+      });
+      filtrar();
+      calcularStats();
+    })
+    .catch(function(err) {
+      alert('Error: ' + err.message);
+    })
+    .finally(function() {
+      btn.disabled = false;
+      btn.textContent = 'Sí, anular';
+    });
 }
 </script>
 </body>
