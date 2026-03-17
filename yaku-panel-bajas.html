@@ -44,12 +44,14 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .badge-num{background:#fef2f2;color:#c0392b;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;font-family:monospace;}
 .badge-total{background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;}
 .badge-parcial{background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;}
-.btn-ver{padding:5px 12px;background:#c0392b;color:#fff;border:none;border-radius:5px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.acciones-wrap{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.btn-ver{padding:6px 10px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
 .btn-ver:hover{background:#a93226;}
-.btn-dl{padding:5px 10px;background:#f3f4f6;color:#374151;border:none;border-radius:5px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;}
+.btn-dl{padding:6px 10px;background:#f3f4f6;color:#374151;border:none;border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap;}
 .btn-dl:hover{background:#e5e7eb;}
-.btn-mail{padding:5px 10px;background:#f3f4f6;color:#374151;border:1.5px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;line-height:1;}
-.btn-mail:hover{background:#e5e7eb;border-color:#d1d5db;}
+.btn-mail{padding:6px 10px;background:#f3f4f6;color:#374151;border:1.5px solid #d1d5db;border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;line-height:1;white-space:nowrap;}
+.btn-mail:hover{background:#e5e7eb;border-color:#9ca3af;}
+@media(max-width:768px){.acciones-wrap{gap:4px;}.btn-ver,.btn-mail,.btn-dl{padding:5px 8px;font-size:10px;}}
 .sin-pdf{color:#9ca3af;font-size:12px;font-style:italic;}
 .loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
 .error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
@@ -259,7 +261,7 @@ function renderTabla() {
   var pagina = bajasFiltradas.slice(inicio, inicio + POR_PAGINA);
   var totalPags = Math.ceil(total / POR_PAGINA);
 
-  var html = '<table><thead><tr><th>N° Baja</th><th>Razón Social</th><th>CUIT</th><th>Fecha</th><th>Motivo</th><th>Tipo</th><th>Vendedor</th><th>PDF</th><th></th></tr></thead><tbody>';
+  var html = '<table><thead><tr><th>N° Baja</th><th>Razón Social</th><th>CUIT</th><th>Fecha</th><th>Motivo</th><th>Tipo</th><th>Vendedor</th><th>PDF</th><th>Acciones</th></tr></thead><tbody>';
   pagina.forEach(function(b) {
     var fecha = b.fecha_baja ? new Date(b.fecha_baja + 'T12:00:00').toLocaleDateString('es-AR') : '—';
     var tipoBadge = '';
@@ -289,9 +291,9 @@ function renderTabla() {
       var locBaja = (b.localidad_retiro || b.localidad || '').trim();
       var subjB = encodeURIComponent('Nueva orden de baja de servicio — ' + locBaja + ' — ' + (b.razon_social||''));
       var bodyB = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva orden de baja de servicio, para ' + (b.razon_social||'') + '. El responsable es ' + (b.responsable||'') + ' y su celular es ' + (b.responsable_celular||'') + '.\n\nLink de orden de baja: ' + b.pdf_url);
-      mailBtn = ' <a class="btn-mail" href="mailto:?subject=' + subjB + '&body=' + bodyB + '" title="Enviar por mail">&#9993;</a>';
+      mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subjB + '&body=' + bodyB + '" title="Enviar por mail">&#9993;</a>';
     }
-    html += '<td><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(b).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + '</td>';
+    html += '<td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(b).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + '</div></td>';
     html += '</tr>';
   });
   html += '</tbody></table>';

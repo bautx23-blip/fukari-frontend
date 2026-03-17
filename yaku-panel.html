@@ -43,12 +43,16 @@ tbody tr:hover{background:#f9fafb;}
 tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .badge-num{background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;font-family:monospace;}
 .total-cell{font-weight:600;color:#16a34a;}
-.btn-ver{padding:5px 12px;background:#1a1a2e;color:#fff;border:none;border-radius:5px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.acciones-wrap{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.btn-ver{padding:6px 10px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
 .btn-ver:hover{background:#2a2a45;}
-.btn-dl{padding:5px 10px;background:#f3f4f6;color:#374151;border:none;border-radius:5px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;}
+.btn-dl{padding:6px 10px;background:#f3f4f6;color:#374151;border:none;border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap;}
 .btn-dl:hover{background:#e5e7eb;}
-.btn-mail{padding:5px 10px;background:#f3f4f6;color:#374151;border:1.5px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;line-height:1;}
-.btn-mail:hover{background:#e5e7eb;border-color:#d1d5db;}
+.btn-mail{padding:6px 10px;background:#f3f4f6;color:#374151;border:1.5px solid #d1d5db;border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;line-height:1;white-space:nowrap;}
+.btn-mail:hover{background:#e5e7eb;border-color:#9ca3af;}
+.btn-del-orden{background:#fee2e2;border:1.5px solid #fecaca;border-radius:6px;color:#dc2626;font-size:11px;padding:6px 10px;cursor:pointer;transition:all 0.15s;line-height:1;display:inline-flex;align-items:center;white-space:nowrap;}
+.btn-del-orden:hover{background:#fecaca;border-color:#f87171;}
+@media(max-width:768px){.acciones-wrap{gap:4px;}.btn-ver,.btn-mail,.btn-del-orden,.btn-dl{padding:5px 8px;font-size:10px;}}
 .sin-pdf{color:#9ca3af;font-size:12px;font-style:italic;}
 .loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
 .error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
@@ -93,9 +97,7 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .bcra-panel-tabla{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:6px;}
 .bcra-panel-tabla th{background:#f9fafb;padding:5px 8px;text-align:left;font-weight:700;color:#6b7280;border-bottom:1px solid #e5e7eb;}
 .bcra-panel-tabla td{padding:5px 8px;border-bottom:1px solid #f9fafb;}
-/* Borrar orden */
-.btn-del-orden{background:transparent;border:1.5px solid #fca5a5;border-radius:5px;color:#dc2626;font-size:14px;padding:4px 8px;cursor:pointer;transition:all 0.15s;line-height:1;}
-.btn-del-orden:hover{background:#fee2e2;border-color:#dc2626;}
+/* Borrar orden — ver .btn-del-orden arriba */
 /* Anulada */
 .badge-anulada{background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:0.3px;}
 tr.fila-anulada td{opacity:0.5;text-decoration:line-through;}
@@ -336,12 +338,11 @@ function renderTabla() {
   const pagina = ordenesFiltradas.slice(inicio, inicio + POR_PAGINA);
   const totalPags = Math.ceil(total / POR_PAGINA);
   const esAdmin = _currentUserEmail === ADMIN_EMAIL;
-  var html = '<table><thead><tr><th>N° Orden</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Vendedor</th><th>Total</th><th>PDF</th><th></th>' + (esAdmin ? '<th></th>' : '') + '</tr></thead><tbody>';
+  var html = '<table><thead><tr><th>N° Orden</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Vendedor</th><th>Total</th><th>PDF</th><th>Acciones</th></tr></thead><tbody>';
   pagina.forEach(function(o) {
     var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
     var tot = o.total_general ? '$' + parseFloat(o.total_general).toLocaleString('es-AR', {minimumFractionDigits:2}) : '—';
     var pdfBtn = o.pdf_url ? '<a class="btn-ver" href="' + o.pdf_url + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
-    var deleteBtn = (esAdmin && !o.anulada) ? '<td><button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Anular orden">&#9888;</button></td>' : (esAdmin ? '<td></td>' : '');
     var anuladaBadge = o.anulada ? '<span class="badge-anulada">ANULADA</span>' : '';
     var filaClass = o.anulada ? ' class="fila-anulada"' : '';
     var mailBtn = '';
@@ -351,7 +352,8 @@ function renderTabla() {
       var body = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva orden de instalación, para la localidad de ' + loc + '; el equipo será para ' + (o.responsable||'') + ' y su celular es ' + (o.responsable_celular||'') + '.\n\nLink de orden de instalación: ' + o.pdf_url);
       mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subj + '&body=' + body + '" title="Enviar por mail">&#9993;</a>';
     }
-    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><button class="btn-dl" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button> ' + mailBtn + '</td>' + deleteBtn + '</tr>';
+    var deleteBtn = (esAdmin && !o.anulada) ? '<button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Anular orden">&#9888;</button>' : '';
+    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + deleteBtn + '</div></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
