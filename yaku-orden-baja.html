@@ -774,7 +774,7 @@ async function guardarBaja() {
       cuit: ordenRef.cuit || ordenRef.dni || '',
       telefono: ordenRef.telefono || '',
       rubro: ordenRef.rubro || '',
-      productos_ref: (ordenRef && ordenRef.equipos_activos) || [],
+      productos_ref: _tipoBaja === 'parcial' ? _equiposBaja : (ordenRef && ordenRef.equipos_activos) || [],
       fecha_baja: document.getElementById('fecha-baja').value,
       motivo: document.getElementById('motivo-baja').value,
       observaciones: document.getElementById('observaciones').value,
@@ -800,17 +800,23 @@ async function guardarBaja() {
     document.getElementById('nro-baja').value = json.numero_completo;
 
     // Update client status BEFORE any navigation/toast (must complete before page unloads)
+    console.log('[BAJA] Pre-PATCH check — ordenRef.id:', ordenRef ? ordenRef.id : 'NULL', '_tipoBaja:', _tipoBaja, '_equiposBaja:', JSON.stringify(_equiposBaja));
     if (ordenRef && ordenRef.id && _tipoBaja) {
       try {
-        console.log('Actualizando cliente:', ordenRef.id, 'tipo:', _tipoBaja, 'equipos:', JSON.stringify(_equiposBaja));
-        var patchRes = await fetch(API_URL + '/api/clientes/' + ordenRef.id + '/baja', {
+        var patchUrl = API_URL + '/api/clientes/' + ordenRef.id + '/baja';
+        var patchBody = { tipo: _tipoBaja, equipos_a_dar_baja: _equiposBaja };
+        console.log('[BAJA] Enviando PATCH a:', patchUrl, 'body:', JSON.stringify(patchBody));
+        var patchRes = await fetch(patchUrl, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tipo: _tipoBaja, equipos_a_dar_baja: _equiposBaja })
+          body: JSON.stringify(patchBody)
         });
         var patchData = await patchRes.json();
-        console.log('PATCH resultado:', JSON.stringify(patchData));
-      } catch(e) { console.error('Error actualizando cliente:', e); }
+        console.log('[BAJA] PATCH status:', patchRes.status, 'resultado:', JSON.stringify(patchData));
+        if (!patchRes.ok) console.error('[BAJA] PATCH falló:', patchData.error);
+      } catch(e) { console.error('[BAJA] Error en fetch PATCH:', e.message, e); }
+    } else {
+      console.warn('[BAJA] PATCH no ejecutado — ordenRef:', !!ordenRef, 'id:', ordenRef ? ordenRef.id : '-', 'tipoBaja:', _tipoBaja);
     }
 
     mostrarToast('Baja ' + json.numero_completo + ' registrada', json.pdf_url);
