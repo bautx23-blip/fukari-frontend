@@ -100,9 +100,9 @@ tbody td.money{font-weight:600;color:#16a34a;}
   <div style="background:#fff;border-radius:8px;padding:14px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
     <label style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Origen:</label>
     <select id="filtro-origen" onchange="reRender()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;">
-      <option value="">Todas las fuentes</option>
-      <option value="app">Creadas desde app</option>
+      <option value="app" selected>Creadas desde app</option>
       <option value="importadas">Históricas (importadas)</option>
+      <option value="todas">Todas las fuentes</option>
     </select>
     <label style="font-size:12px;font-weight:600;color:#6b7280;">Desde</label>
     <input type="date" id="filtro-desde" onchange="reRender()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;max-width:160px;">

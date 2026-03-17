@@ -148,7 +148,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <label style="font-size:11px;color:#6b7280;font-weight:600;">Hasta</label>
     <input type="date" id="filtro-hasta" onchange="cargarOrdenes()" style="max-width:150px;">
     <select id="filtro-estado" onchange="filtrar();calcularStats()"><option value="activas">Órdenes activas</option><option value="todas">Todas las órdenes</option><option value="anuladas">Órdenes anuladas</option></select>
-    <select id="filtro-origen" onchange="cargarOrdenes()"><option value="">Todas las fuentes</option><option value="app">Creadas desde app</option><option value="importadas">Históricas (importadas)</option></select>
+    <select id="filtro-origen" onchange="cargarOrdenes()"><option value="app" selected>Creadas desde app</option><option value="importadas">Históricas (importadas)</option><option value="todas">Todas las fuentes</option></select>
     <button class="btn-refresh" onclick="cargarOrdenes()">&#8635; Actualizar</button>
     <a href="/yaku-orden-instalacion.html" class="btn-refresh" style="background:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Crear orden nueva</a>
   </div>
