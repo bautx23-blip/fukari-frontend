@@ -97,6 +97,14 @@ tbody td.money{font-weight:600;color:#16a34a;}
 </div>
 
 <div class="contenido" id="contenido">
+  <div style="background:#fff;border-radius:8px;padding:14px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+    <label style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Origen de datos:</label>
+    <select id="filtro-origen" onchange="reRender()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;">
+      <option value="">Todas las fuentes</option>
+      <option value="app">Creadas desde app</option>
+      <option value="importadas">Históricas (importadas)</option>
+    </select>
+  </div>
   <div class="loading-overlay" id="loading">
     <div class="spinner"></div>
     <span>Cargando datos...</span>
@@ -127,21 +135,37 @@ function iniciar() {
   cargarDatos();
 }
 
+var _allOrdenes = [];
+var _allBajas = [];
+var _allClientes = [];
+
 function cargarDatos() {
   Promise.all([
     fetch(API_URL + '/api/ordenes').then(function(r){ if(!r.ok) throw new Error('ordenes '+r.status); return r.json(); }),
     fetch(API_URL + '/api/bajas?limit=9999').then(function(r){ if(!r.ok) throw new Error('bajas '+r.status); return r.json(); }),
     fetch(API_URL + '/api/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); })
   ]).then(function(results) {
-    var ordenes = results[0];
+    _allOrdenes = results[0];
     var bajasResp = results[1];
-    var clientes = results[2];
-    var bajas = Array.isArray(bajasResp) ? bajasResp : (bajasResp.data || []);
+    _allClientes = results[2];
+    _allBajas = Array.isArray(bajasResp) ? bajasResp : (bajasResp.data || []);
     document.getElementById('loading').style.display = 'none';
-    renderAll(ordenes, bajas, clientes);
+    reRender();
   }).catch(function(err) {
     document.getElementById('loading').innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
   });
+}
+
+function filtrarOrigenReportes(lista) {
+  var origen = document.getElementById('filtro-origen').value;
+  if (origen === 'app') return lista.filter(function(o){ return !o.origen_importacion; });
+  if (origen === 'importadas') return lista.filter(function(o){ return o.origen_importacion === true; });
+  return lista;
+}
+
+function reRender() {
+  var ordenes = filtrarOrigenReportes(_allOrdenes);
+  renderAll(ordenes, _allBajas, _allClientes);
 }
 
 /* ── HELPERS ── */

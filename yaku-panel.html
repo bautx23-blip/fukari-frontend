@@ -145,6 +145,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <select id="filtro-vendedor" onchange="filtrar()"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="María Pía Bologñese">María Pía Bologñese</option></select>
     <select id="filtro-mes" onchange="filtrar()"><option value="">Todos los meses</option></select>
     <select id="filtro-estado" onchange="filtrar();calcularStats()"><option value="activas">Órdenes activas</option><option value="todas">Todas las órdenes</option><option value="anuladas">Órdenes anuladas</option></select>
+    <select id="filtro-origen" onchange="filtrar();calcularStats()"><option value="">Todas las fuentes</option><option value="app">Creadas desde app</option><option value="importadas">Históricas (importadas)</option></select>
     <button class="btn-refresh" onclick="cargarOrdenes()">&#8635; Actualizar</button>
     <a href="/yaku-orden-instalacion.html" class="btn-refresh" style="background:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Crear orden nueva</a>
   </div>
@@ -284,16 +285,24 @@ function localidadesUnicas(o) {
   return locs.filter(function(v,i,a){ return a.indexOf(v)===i; });
 }
 
+function filtrarOrigen(lista) {
+  var origen = document.getElementById('filtro-origen').value;
+  if (origen === 'app') return lista.filter(function(o){ return !o.origen_importacion; });
+  if (origen === 'importadas') return lista.filter(function(o){ return o.origen_importacion === true; });
+  return lista;
+}
+
 function calcularStats() {
   var ahora = new Date();
   var mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
   var estado = document.getElementById('filtro-estado').value;
+  var porOrigen = filtrarOrigen(todasLasOrdenes);
   var base;
-  if (estado === 'anuladas') base = todasLasOrdenes.filter(function(o){ return o.anulada; });
-  else if (estado === 'todas') base = todasLasOrdenes;
-  else base = todasLasOrdenes.filter(function(o){ return !o.anulada; });
+  if (estado === 'anuladas') base = porOrigen.filter(function(o){ return o.anulada; });
+  else if (estado === 'todas') base = porOrigen;
+  else base = porOrigen.filter(function(o){ return !o.anulada; });
   // Facturado siempre excluye anuladas (incluso en vista "Todas")
-  var noAnuladas = todasLasOrdenes.filter(function(o){ return !o.anulada; });
+  var noAnuladas = porOrigen.filter(function(o){ return !o.anulada; });
   var delMesNoAnuladas = noAnuladas.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
   var totalMes = delMesNoAnuladas.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
   var totalMesSinIVA = totalMes / 1.21;
@@ -311,7 +320,10 @@ function filtrar() {
   var mes = document.getElementById('filtro-mes').value;
   var vendedor = document.getElementById('filtro-vendedor').value;
   var estado = document.getElementById('filtro-estado').value;
+  var origen = document.getElementById('filtro-origen').value;
   ordenesFiltradas = todasLasOrdenes.filter(function(o) {
+    if (origen === 'app' && o.origen_importacion) return false;
+    if (origen === 'importadas' && !o.origen_importacion) return false;
     if (estado === 'activas' && o.anulada) return false;
     if (estado === 'anuladas' && !o.anulada) return false;
     var match = true;
