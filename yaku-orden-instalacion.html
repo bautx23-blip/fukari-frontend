@@ -716,16 +716,11 @@ function mostrarToast(msg, pdfUrl) {
   document.getElementById('toast-msg').textContent = msg;
   var link = document.getElementById('toast-pdf-link');
   if (pdfUrl) {
-  link.href = pdfUrl;
-  link.style.display = 'block';
-  const a = document.createElement('a');
-  a.href = pdfUrl;
-  a.download = '';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-  else { link.style.display = 'none'; }
+    link.href = pdfUrl;
+    link.style.display = 'block';
+  } else {
+    link.style.display = 'none';
+  }
   toast.style.display = 'flex';
   if (!pdfUrl) setTimeout(function(){ toast.style.display = 'none'; }, 4000);
 }

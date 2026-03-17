@@ -506,7 +506,7 @@ function seleccionarTipoBaja(tipo) {
     } else {
       list.innerHTML = equipos.map(function(e, i) {
         var cant = parseInt(e.cantidad) || 1;
-        var cantHtml = cant > 1 ? '<div class="eq-cant-wrap" data-idx="' + i + '" style="display:none;align-items:center;gap:4px;margin-left:8px;"><label style="font-size:10px;color:#6b7280;">Cant:</label><select class="eq-cant-select" data-idx="' + i + '" style="border:1px solid #d1d5db;border-radius:4px;padding:2px 6px;font-size:11px;" onchange="actualizarEquiposBaja()">' + Array.from({length:cant},function(_,n){return '<option value="'+(n+1)+'"'+(n+1===cant?' selected':'')+'>'+(n+1)+' de '+cant+'</option>';}).join('') + '</select></div>' : '';
+        var cantHtml = cant > 1 ? '<div class="eq-cant-wrap" data-idx="' + i + '" style="display:none;flex-basis:100%;align-items:center;gap:6px;margin-top:6px;padding:6px 8px 2px;border-top:1px dashed #e5e7eb;"><label style="font-size:10px;color:#6b7280;white-space:nowrap;">Dar de baja:</label><select class="eq-cant-select" data-idx="' + i + '" style="border:1px solid #d1d5db;border-radius:4px;padding:2px 6px;font-size:11px;" onchange="actualizarEquiposBaja()">' + Array.from({length:cant},function(_,n){return '<option value="'+(n+1)+'"'+(n+1===cant?' selected':'')+'>'+(n+1)+' de '+cant+'</option>';}).join('') + '</select></div>' : '';
         return '<div class="equipo-check" style="flex-wrap:wrap;"><input type="checkbox" value="' + i + '" onchange="toggleCantBaja(this,'+i+','+cant+')">' +
           '<div style="flex:1;"><div class="eq-info">' + (e.modelo || '') + ' — Total: ' + cant + '</div>' +
           '<div class="eq-loc">' + (e.domicilio || '') + (e.localidad ? ' — ' + e.localidad : '') + '</div></div>' + cantHtml + '</div>';
@@ -719,12 +719,6 @@ function mostrarToast(msg, pdfUrl) {
   if (pdfUrl) {
     link.href = pdfUrl;
     link.style.display = 'block';
-    var a = document.createElement('a');
-    a.href = pdfUrl;
-    a.download = '';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   } else {
     link.style.display = 'none';
   }
@@ -804,10 +798,8 @@ async function guardarBaja() {
     if (!res.ok) throw new Error(json.error || 'Error al guardar la baja');
 
     document.getElementById('nro-baja').value = json.numero_completo;
-    mostrarToast('Baja ' + json.numero_completo + ' registrada', json.pdf_url);
-    if (json.pdf_url) window.open(json.pdf_url, '_blank');
 
-    // Update client status BEFORE redirect
+    // Update client status BEFORE any navigation/toast (must complete before page unloads)
     if (ordenRef && ordenRef.id && _tipoBaja) {
       try {
         console.log('Actualizando cliente:', ordenRef.id, 'tipo:', _tipoBaja, 'equipos:', JSON.stringify(_equiposBaja));
@@ -820,6 +812,9 @@ async function guardarBaja() {
         console.log('PATCH resultado:', JSON.stringify(patchData));
       } catch(e) { console.error('Error actualizando cliente:', e); }
     }
+
+    mostrarToast('Baja ' + json.numero_completo + ' registrada', json.pdf_url);
+    if (json.pdf_url) window.open(json.pdf_url, '_blank');
 
     setTimeout(function() { window.location.href = 'yaku-panel.html'; }, 2000);
   } catch(err) {
