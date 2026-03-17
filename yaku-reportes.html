@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reportes — Yakú Filtros</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;background:#f1f5f9;min-height:100vh;color:#111827;visibility:hidden;}
+body.ready{visibility:visible;}
+
+/* ── TOPBAR ── */
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.topbar-logos img.yaku{height:36px;}
+.topbar-logos .fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
+.topbar-logos img.fuk{height:26px;}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:0.3px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-right span{color:#9ca3af;font-size:12px;}
+.btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.15s;text-decoration:none;}
+.btn-logout:hover{border-color:#9ca3af;color:#fff;}
+
+/* ── CONTENT ── */
+.contenido{padding:28px 32px;max-width:1200px;margin:0 auto;}
+
+/* ── LOADING ── */
+.loading-overlay{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:#6b7280;gap:16px;}
+.spinner{width:36px;height:36px;border:3.5px solid #e5e7eb;border-top-color:#1a1a2e;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
+
+/* ── SECTION ── */
+.report-section{margin-bottom:40px;}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-left:0;}
+.section-header .bar{width:4px;height:32px;border-radius:2px;flex-shrink:0;}
+.section-header h2{font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.section-header .bar.blue{background:#2563eb;}
+.section-header h2.blue{color:#2563eb;}
+.section-header .bar.red{background:#c0392b;}
+.section-header h2.red{color:#c0392b;}
+.section-header .bar.green{background:#27ae60;}
+.section-header h2.green{color:#27ae60;}
+
+/* ── CARDS ── */
+.stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+.stat-card{background:#fff;border-radius:8px;padding:16px 22px;flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:3px solid #e5e7eb;}
+.stat-card.blue{border-top-color:#2563eb;}
+.stat-card.red{border-top-color:#c0392b;}
+.stat-card.green{border-top-color:#27ae60;}
+.stat-card .label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.stat-card .value{font-size:26px;font-weight:700;color:#1a1a2e;margin-top:4px;}
+.stat-card .sub{font-size:11px;color:#9ca3af;margin-top:2px;}
+
+/* ── TABLES ── */
+.tabla-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:hidden;margin-bottom:20px;}
+.tabla-header{padding:16px 20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;}
+.tabla-header h3{font-size:14px;font-weight:600;color:#374151;}
+.tabla-header span{font-size:12px;color:#9ca3af;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:#f9fafb;padding:10px 16px;text-align:left;font-size:11.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e5e7eb;}
+thead th.right{text-align:right;}
+tbody tr{border-bottom:1px solid #f3f4f6;transition:background 0.1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f9fafb;}
+tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
+tbody td.right{text-align:right;font-variant-numeric:tabular-nums;}
+tbody td.bold{font-weight:600;}
+tbody td.money{font-weight:600;color:#16a34a;}
+
+/* ── BAR CHART ── */
+.chart-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:hidden;margin-bottom:20px;}
+.chart-header{padding:16px 20px;border-bottom:1px solid #f3f4f6;}
+.chart-header h3{font-size:14px;font-weight:600;color:#374151;}
+.chart-body{padding:20px;overflow-x:auto;}
+.bar-chart{display:flex;align-items:flex-end;gap:12px;min-height:200px;padding-top:10px;}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:60px;flex:1;}
+.bar-amount{font-size:10px;font-weight:600;color:#374151;white-space:nowrap;}
+.bar-fill{width:100%;min-width:36px;border-radius:4px 4px 0 0;background:#2563eb;transition:height 0.4s ease;}
+.bar-label{font-size:10px;color:#6b7280;white-space:nowrap;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yaku">
+    <div class="fuk-wrap"><img class="fuk" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
+  </div>
+  <span class="topbar-title">Reportes — Yaku Filtros</span>
+  <div class="topbar-right">
+    <span id="topbar-fecha"></span>
+    <a href="/hub.html" class="btn-logout">&#8592; Inicio</a>
+    <button class="btn-logout" onclick="logout()">Cerrar sesion</button>
+  </div>
+</div>
+
+<div class="contenido" id="contenido">
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <span>Cargando datos...</span>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var API_URL = 'https://fukari-backend-production.up.railway.app';
+var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+sb.auth.getSession().then(function(result) {
+  var session = result.data.session;
+  if (!session) { window.location.href = '/index.html'; return; }
+  document.body.classList.add('ready');
+  iniciar();
+});
+
+function logout() {
+  sb.auth.signOut().then(function() { window.location.href = '/index.html'; });
+}
+
+function iniciar() {
+  var ahora = new Date();
+  document.getElementById('topbar-fecha').textContent = ahora.toLocaleDateString('es-AR', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  cargarDatos();
+}
+
+function cargarDatos() {
+  Promise.all([
+    fetch(API_URL + '/api/ordenes').then(function(r){ if(!r.ok) throw new Error('ordenes '+r.status); return r.json(); }),
+    fetch(API_URL + '/api/bajas?limit=9999').then(function(r){ if(!r.ok) throw new Error('bajas '+r.status); return r.json(); }),
+    fetch(API_URL + '/api/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); })
+  ]).then(function(results) {
+    var ordenes = results[0];
+    var bajasResp = results[1];
+    var clientes = results[2];
+    var bajas = Array.isArray(bajasResp) ? bajasResp : (bajasResp.data || []);
+    document.getElementById('loading').style.display = 'none';
+    renderAll(ordenes, bajas, clientes);
+  }).catch(function(err) {
+    document.getElementById('loading').innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
+  });
+}
+
+/* ── HELPERS ── */
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('es-AR');
+}
+
+function mesLabel(key) {
+  var parts = key.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+  var l = d.toLocaleDateString('es-AR', {month:'short', year:'2-digit'});
+  return l.charAt(0).toUpperCase() + l.slice(1);
+}
+
+function mesLabelLargo(key) {
+  var parts = key.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+  var l = d.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
+  return l.charAt(0).toUpperCase() + l.slice(1);
+}
+
+function pct(n, total) {
+  if (total === 0) return '0%';
+  return (n / total * 100).toFixed(1) + '%';
+}
+
+/* ── RENDER ALL ── */
+function renderAll(ordenes, bajas, clientes) {
+  var contenido = document.getElementById('contenido');
+  var html = '';
+  html += renderOrdenes(ordenes);
+  html += renderBajas(bajas);
+  html += renderClientes(clientes);
+  contenido.innerHTML = html;
+
+  // Animate bars after DOM insert
+  setTimeout(function() {
+    var bars = document.querySelectorAll('.bar-fill');
+    for (var i = 0; i < bars.length; i++) {
+      bars[i].style.height = bars[i].dataset.h;
+    }
+  }, 50);
+}
+
+/* ══════════════════════════════════════════
+   SECTION 1: ORDENES DE INSTALACION
+   ══════════════════════════════════════════ */
+function renderOrdenes(ordenes) {
+  var ahora = new Date();
+  var mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0');
+
+  var activas = ordenes.filter(function(o) { return !o.anulada; });
+  var anuladas = ordenes.filter(function(o) { return o.anulada; });
+
+  var totalFacturado = 0;
+  var totalFacturadoMes = 0;
+  activas.forEach(function(o) {
+    var t = parseFloat(o.total_general) || 0;
+    totalFacturado += t;
+    if (o.fecha_orden && o.fecha_orden.startsWith(mesActual)) {
+      totalFacturadoMes += t;
+    }
+  });
+  var totalSinIVA = totalFacturado / 1.21;
+  var totalMesSinIVA = totalFacturadoMes / 1.21;
+
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar blue"></div><h2 class="blue">Ordenes de Instalacion</h2></div>';
+
+  // Cards
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card blue"><div class="label">Total activas</div><div class="value">' + activas.length + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Total anuladas</div><div class="value">' + anuladas.length + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Total facturado (sin IVA)</div><div class="value">' + fmt(totalSinIVA) + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Facturado este mes</div><div class="value">' + fmt(totalMesSinIVA) + '</div><div class="sub">' + mesLabelLargo(mesActual) + '</div></div>';
+  html += '</div>';
+
+  // Facturado por vendedor
+  var vendedorMap = {};
+  activas.forEach(function(o) {
+    var v = o.vendedor || 'Sin vendedor';
+    if (!vendedorMap[v]) vendedorMap[v] = { ordenes: 0, total: 0 };
+    vendedorMap[v].ordenes++;
+    vendedorMap[v].total += (parseFloat(o.total_general) || 0);
+  });
+  var vendedores = Object.keys(vendedorMap).sort(function(a, b) { return vendedorMap[b].total - vendedorMap[a].total; });
+
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Facturado por vendedor</h3></div>';
+  html += '<table><thead><tr><th>Vendedor</th><th class="right">Ordenes</th><th class="right">Total facturado sin IVA</th></tr></thead><tbody>';
+  vendedores.forEach(function(v) {
+    html += '<tr><td class="bold">' + v + '</td><td class="right">' + vendedorMap[v].ordenes + '</td><td class="right money">' + fmt(vendedorMap[v].total / 1.21) + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Facturado por mes (last 12 months) - bar chart
+  var mesMap = {};
+  activas.forEach(function(o) {
+    if (!o.fecha_orden) return;
+    var k = o.fecha_orden.substring(0, 7);
+    if (!mesMap[k]) mesMap[k] = 0;
+    mesMap[k] += (parseFloat(o.total_general) || 0);
+  });
+
+  // Get last 12 months
+  var meses12 = [];
+  for (var i = 11; i >= 0; i--) {
+    var d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+    var k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    meses12.push(k);
+  }
+
+  var maxVal = 0;
+  meses12.forEach(function(k) {
+    var v = (mesMap[k] || 0) / 1.21;
+    if (v > maxVal) maxVal = v;
+  });
+
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Facturado por mes (sin IVA) — Ultimos 12 meses</h3></div>';
+  html += '<div class="chart-body"><div class="bar-chart">';
+  meses12.forEach(function(k) {
+    var v = (mesMap[k] || 0) / 1.21;
+    var hPct = maxVal > 0 ? Math.max((v / maxVal) * 180, v > 0 ? 4 : 0) : 0;
+    html += '<div class="bar-col">';
+    html += '<div class="bar-amount">' + fmt(v) + '</div>';
+    html += '<div class="bar-fill" style="height:0px;" data-h="' + hPct + 'px"></div>';
+    html += '<div class="bar-label">' + mesLabel(k) + '</div>';
+    html += '</div>';
+  });
+  html += '</div></div></div>';
+
+  // Top 10 clientes por monto
+  var clienteMap = {};
+  activas.forEach(function(o) {
+    var key = (o.cuit || 'SIN-CUIT') + '||' + (o.razon_social || 'Sin nombre');
+    if (!clienteMap[key]) clienteMap[key] = { razon: o.razon_social || 'Sin nombre', cuit: o.cuit || '—', ordenes: 0, total: 0 };
+    clienteMap[key].ordenes++;
+    clienteMap[key].total += (parseFloat(o.total_general) || 0);
+  });
+  var topClientes = Object.values(clienteMap).sort(function(a, b) { return b.total - a.total; }).slice(0, 10);
+
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Top 10 clientes por monto facturado</h3></div>';
+  html += '<table><thead><tr><th>Razon Social</th><th>CUIT</th><th class="right">Ordenes</th><th class="right">Total facturado</th></tr></thead><tbody>';
+  topClientes.forEach(function(c) {
+    html += '<tr><td class="bold">' + c.razon + '</td><td>' + c.cuit + '</td><td class="right">' + c.ordenes + '</td><td class="right money">' + fmt(c.total / 1.21) + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Productos mas vendidos
+  var prodMap = {};
+  activas.forEach(function(o) {
+    if (!Array.isArray(o.productos)) return;
+    o.productos.forEach(function(p) {
+      if (!p.modelo) return;
+      var m = p.modelo;
+      if (!prodMap[m]) prodMap[m] = { cantidad: 0, ordenes: 0 };
+      prodMap[m].cantidad += (parseInt(p.cantidad) || 0);
+    });
+    // Count unique models per order
+    var modelos = {};
+    o.productos.forEach(function(p) {
+      if (p.modelo) modelos[p.modelo] = true;
+    });
+    Object.keys(modelos).forEach(function(m) {
+      if (prodMap[m]) prodMap[m].ordenes++;
+    });
+  });
+  var productos = Object.keys(prodMap).sort(function(a, b) { return prodMap[b].cantidad - prodMap[a].cantidad; });
+
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Productos mas vendidos</h3></div>';
+  html += '<table><thead><tr><th>Modelo</th><th class="right">Cantidad total vendida</th><th class="right">Aparece en X ordenes</th></tr></thead><tbody>';
+  productos.forEach(function(m) {
+    html += '<tr><td class="bold">' + m + '</td><td class="right">' + prodMap[m].cantidad + '</td><td class="right">' + prodMap[m].ordenes + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  html += '</div>';
+  return html;
+}
+
+/* ══════════════════════════════════════════
+   SECTION 2: ORDENES DE BAJA
+   ══════════════════════════════════════════ */
+function renderBajas(bajas) {
+  var ahora = new Date();
+  var mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0');
+
+  var totalBajas = bajas.length;
+  var totales = bajas.filter(function(b) { return (b.tipo_baja || '').toLowerCase() === 'total'; });
+  var parciales = bajas.filter(function(b) { return (b.tipo_baja || '').toLowerCase() === 'parcial'; });
+  var esteMes = bajas.filter(function(b) { return b.fecha_baja && b.fecha_baja.startsWith(mesActual); });
+
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar red"></div><h2 class="red">Ordenes de Baja</h2></div>';
+
+  // Cards
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card red"><div class="label">Total bajas</div><div class="value">' + totalBajas + '</div></div>';
+  html += '<div class="stat-card red"><div class="label">Bajas totales</div><div class="value">' + totales.length + '</div></div>';
+  html += '<div class="stat-card red"><div class="label">Bajas parciales</div><div class="value">' + parciales.length + '</div></div>';
+  html += '<div class="stat-card red"><div class="label">Bajas este mes</div><div class="value">' + esteMes.length + '</div><div class="sub">' + mesLabelLargo(mesActual) + '</div></div>';
+  html += '</div>';
+
+  // Bajas por mes
+  var mesMap = {};
+  bajas.forEach(function(b) {
+    if (!b.fecha_baja) return;
+    var k = b.fecha_baja.substring(0, 7);
+    if (!mesMap[k]) mesMap[k] = { total: 0, totales: 0, parciales: 0 };
+    mesMap[k].total++;
+    if ((b.tipo_baja || '').toLowerCase() === 'total') mesMap[k].totales++;
+    else if ((b.tipo_baja || '').toLowerCase() === 'parcial') mesMap[k].parciales++;
+  });
+  var mesesBaja = Object.keys(mesMap).sort().reverse();
+
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Bajas por mes</h3></div>';
+  html += '<table><thead><tr><th>Mes</th><th class="right">Total</th><th class="right">Totales</th><th class="right">Parciales</th></tr></thead><tbody>';
+  mesesBaja.forEach(function(k) {
+    html += '<tr><td class="bold">' + mesLabelLargo(k) + '</td><td class="right">' + mesMap[k].total + '</td><td class="right">' + mesMap[k].totales + '</td><td class="right">' + mesMap[k].parciales + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Bajas por motivo
+  var motivoMap = {};
+  bajas.forEach(function(b) {
+    var m = b.motivo_baja || b.motivo || 'Sin motivo';
+    if (!motivoMap[m]) motivoMap[m] = 0;
+    motivoMap[m]++;
+  });
+  var motivos = Object.keys(motivoMap).sort(function(a, b) { return motivoMap[b] - motivoMap[a]; });
+
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Bajas por motivo</h3></div>';
+  html += '<table><thead><tr><th>Motivo</th><th class="right">Cantidad</th><th class="right">%</th></tr></thead><tbody>';
+  motivos.forEach(function(m) {
+    html += '<tr><td class="bold">' + m + '</td><td class="right">' + motivoMap[m] + '</td><td class="right">' + pct(motivoMap[m], totalBajas) + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Bajas por vendedor
+  var vendedorMap = {};
+  bajas.forEach(function(b) {
+    var v = b.vendedor || 'Sin vendedor';
+    if (!vendedorMap[v]) vendedorMap[v] = 0;
+    vendedorMap[v]++;
+  });
+  var vendedores = Object.keys(vendedorMap).sort(function(a, b) { return vendedorMap[b] - vendedorMap[a]; });
+
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Bajas por vendedor</h3></div>';
+  html += '<table><thead><tr><th>Vendedor</th><th class="right">Cantidad</th></tr></thead><tbody>';
+  vendedores.forEach(function(v) {
+    html += '<tr><td class="bold">' + v + '</td><td class="right">' + vendedorMap[v] + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  html += '</div>';
+  return html;
+}
+
+/* ══════════════════════════════════════════
+   SECTION 3: CLIENTES
+   ══════════════════════════════════════════ */
+function renderClientes(clientes) {
+  var activos = clientes.filter(function(c) { return c.activo !== false; });
+  var inactivos = clientes.filter(function(c) { return c.activo === false; });
+  var conEquipos = clientes.filter(function(c) { return Array.isArray(c.equipos_activos) && c.equipos_activos.length > 0; });
+
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar green"></div><h2 class="green">Clientes</h2></div>';
+
+  // Cards
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card green"><div class="label">Total activos</div><div class="value">' + activos.length + '</div></div>';
+  html += '<div class="stat-card green"><div class="label">Total inactivos</div><div class="value">' + inactivos.length + '</div></div>';
+  html += '<div class="stat-card green"><div class="label">% activos</div><div class="value">' + pct(activos.length, clientes.length) + '</div></div>';
+  html += '<div class="stat-card green"><div class="label">Total con equipos</div><div class="value">' + conEquipos.length + '</div></div>';
+  html += '</div>';
+
+  // Clientes por origen
+  var origenMap = {};
+  clientes.forEach(function(c) {
+    var o = c.origen || 'Sin origen';
+    if (!origenMap[o]) origenMap[o] = 0;
+    origenMap[o]++;
+  });
+  var origenes = Object.keys(origenMap).sort(function(a, b) { return origenMap[b] - origenMap[a]; });
+
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Clientes por origen</h3></div>';
+  html += '<table><thead><tr><th>Origen</th><th class="right">Cantidad</th><th class="right">%</th></tr></thead><tbody>';
+  origenes.forEach(function(o) {
+    html += '<tr><td class="bold">' + o + '</td><td class="right">' + origenMap[o] + '</td><td class="right">' + pct(origenMap[o], clientes.length) + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Top 10 clientes con mas equipos activos
+  var clienteEquipos = clientes.map(function(c) {
+    var equipos = Array.isArray(c.equipos_activos) ? c.equipos_activos : [];
+    var totalCant = 0;
+    equipos.forEach(function(e) { totalCant += (parseInt(e.cantidad) || 1); });
+    return { razon: c.razon_social || 'Sin nombre', cuit: c.cuit || '—', equipos: equipos.length, cantidad: totalCant };
+  }).sort(function(a, b) { return b.cantidad - a.cantidad; }).slice(0, 10);
+
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Top 10 clientes con mas equipos activos</h3></div>';
+  html += '<table><thead><tr><th>Razon Social</th><th>CUIT</th><th class="right">Equipos</th><th class="right">Cantidad total</th></tr></thead><tbody>';
+  clienteEquipos.forEach(function(c) {
+    html += '<tr><td class="bold">' + c.razon + '</td><td>' + c.cuit + '</td><td class="right">' + c.equipos + '</td><td class="right">' + c.cantidad + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Top 15 localidades
+  var locMap = {};
+  clientes.forEach(function(c) {
+    var l = c.localidad || 'Sin localidad';
+    if (!locMap[l]) locMap[l] = 0;
+    locMap[l]++;
+  });
+  var localidades = Object.keys(locMap).sort(function(a, b) { return locMap[b] - locMap[a]; }).slice(0, 15);
+
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Top 15 localidades</h3></div>';
+  html += '<table><thead><tr><th>Localidad</th><th class="right">Clientes</th></tr></thead><tbody>';
+  localidades.forEach(function(l) {
+    html += '<tr><td class="bold">' + l + '</td><td class="right">' + locMap[l] + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  html += '</div>';
+  return html;
+}
+</script>
+</body>
+</html>

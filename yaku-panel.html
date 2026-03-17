@@ -140,6 +140,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <input type="text" id="filtro-buscar" placeholder="Buscar por razón social, CUIT o localidad..." oninput="filtrar()">
     <select id="filtro-vendedor" onchange="filtrar()"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="María Pía Bologñese">María Pía Bologñese</option></select>
     <select id="filtro-mes" onchange="filtrar()"><option value="">Todos los meses</option></select>
+    <select id="filtro-estado" onchange="filtrar();calcularStats()"><option value="activas">Órdenes activas</option><option value="todas">Todas las órdenes</option><option value="anuladas">Órdenes anuladas</option></select>
     <button class="btn-refresh" onclick="cargarOrdenes()">&#8635; Actualizar</button>
     <a href="/yaku-orden-instalacion.html" class="btn-refresh" style="background:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Crear orden nueva</a>
   </div>
@@ -280,24 +281,31 @@ function localidadesUnicas(o) {
 }
 
 function calcularStats() {
-  const ahora = new Date();
-  const mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
-  const activas = todasLasOrdenes.filter(function(o){ return !o.anulada; });
-  const delMes = activas.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
-  const totalMes = delMes.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
-  const totalMesSinIVA = totalMes / 1.21;
-  document.getElementById('stat-total').textContent = activas.length;
+  var ahora = new Date();
+  var mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
+  var estado = document.getElementById('filtro-estado').value;
+  var base;
+  if (estado === 'anuladas') base = todasLasOrdenes.filter(function(o){ return o.anulada; });
+  else if (estado === 'todas') base = todasLasOrdenes;
+  else base = todasLasOrdenes.filter(function(o){ return !o.anulada; });
+  var delMes = base.filter(function(o){ return o.fecha_orden && o.fecha_orden.startsWith(mesActual); });
+  var totalMes = delMes.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
+  var totalMesSinIVA = totalMes / 1.21;
+  document.getElementById('stat-total').textContent = base.length;
   document.getElementById('stat-mes').textContent = delMes.length;
   document.getElementById('stat-mes-label').textContent = ahora.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
-  document.getElementById('stat-ultima').textContent = activas.length > 0 ? activas[0].numero_completo : '—';
+  document.getElementById('stat-ultima').textContent = base.length > 0 ? base[0].numero_completo : '—';
   document.getElementById('stat-monto').textContent = totalMesSinIVA > 0 ? '$' + totalMesSinIVA.toLocaleString('es-AR', {minimumFractionDigits:0}) : '$0';
 }
 
 function filtrar() {
-  const q = document.getElementById('filtro-buscar').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const mes = document.getElementById('filtro-mes').value;
-  const vendedor = document.getElementById('filtro-vendedor').value;
+  var q = document.getElementById('filtro-buscar').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  var mes = document.getElementById('filtro-mes').value;
+  var vendedor = document.getElementById('filtro-vendedor').value;
+  var estado = document.getElementById('filtro-estado').value;
   ordenesFiltradas = todasLasOrdenes.filter(function(o) {
+    if (estado === 'activas' && o.anulada) return false;
+    if (estado === 'anuladas' && !o.anulada) return false;
     var match = true;
     if (vendedor && (o.vendedor||'') !== vendedor) return false;
     if (q) {

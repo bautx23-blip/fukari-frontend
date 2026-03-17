@@ -105,6 +105,15 @@
     .task-card.baja:hover .task-icon { background: #c0392b; }
     .task-card.baja:hover .task-arrow { color: #c0392b; }
 
+    /* Card de reportes: acento verde */
+    .task-card.reportes:hover {
+      border-color: #27ae60;
+      box-shadow: 0 6px 20px rgba(39,174,96,0.12);
+    }
+    .task-card.reportes::after { background: #27ae60; }
+    .task-card.reportes:hover .task-icon { background: #27ae60; }
+    .task-card.reportes:hover .task-arrow { color: #27ae60; }
+
     /* Card de clientes: acento azul */
     .task-card.clientes:hover {
       border-color: #2563eb;
@@ -127,7 +136,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 22px;
     }
-    .task-card:not(.baja):hover .task-icon { background: #1a1a2e; }
+    .task-card:not(.baja):not(.reportes):not(.clientes):hover .task-icon { background: #1a1a2e; }
 
     .task-body {}
     .task-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 5px; }
@@ -191,7 +200,7 @@
       </div>
     </a>
 
-    <a href="/yaku-orden-baja.html" class="task-card baja">
+    <a href="/yaku-panel-bajas.html" class="task-card baja">
       <div class="task-icon">🔴</div>
       <div class="task-body">
         <div class="task-title">Órdenes de Baja</div>
@@ -215,6 +224,18 @@
       </div>
     </a>
 
+    <a href="/yaku-reportes.html" class="task-card reportes">
+      <div class="task-icon">📊</div>
+      <div class="task-body">
+        <div class="task-title">Reportes</div>
+        <div class="task-desc">Facturación mensual, métricas de instalaciones, bajas y exportación de datos.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge" style="background:#dcfce7;color:#27ae60;">Activo</span>
+        <span class="task-arrow">→</span>
+      </div>
+    </a>
+
   </div>
 
   <div class="section-label">Próximamente</div>
@@ -229,14 +250,6 @@
       <div class="task-footer"><span class="task-badge soon">Próximamente</span></div>
     </div>
 
-    <div class="task-card disabled">
-      <div class="task-icon">📊</div>
-      <div class="task-body">
-        <div class="task-title">Reportes</div>
-        <div class="task-desc">Facturación mensual, métricas de instalaciones y exportación de datos.</div>
-      </div>
-      <div class="task-footer"><span class="task-badge soon">Próximamente</span></div>
-    </div>
   </div>
 </div>
 

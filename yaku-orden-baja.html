@@ -822,7 +822,7 @@ async function guardarBaja() {
     mostrarToast('Baja ' + json.numero_completo + ' registrada', json.pdf_url);
     if (json.pdf_url) window.open(json.pdf_url, '_blank');
 
-    setTimeout(function() { window.location.href = 'yaku-panel.html'; }, 2000);
+    setTimeout(function() { window.location.href = 'yaku-panel-bajas.html'; }, 2000);
   } catch(err) {
     mostrarToast('Error: ' + err.message);
   } finally {
