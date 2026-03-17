@@ -190,26 +190,7 @@ async function cargarClientes() {
         bajasData.forEach(function(b) { if (b.cuit) window._bajasMap[b.cuit] = b; });
       }
     } catch(e) { console.log('Bajas error:', e); }
-    try {
-      var resOrdenes = await fetch(API_URL + '/api/ordenes');
-      if (resOrdenes.ok) {
-        window._ordenesList = await resOrdenes.json();
-        // Build map: CUIT → { ordenes count, total productos }
-        window._clienteOrdenesMap = {};
-        (window._ordenesList || []).forEach(function(o) {
-          if (!o.cuit || o.anulada) return;
-          var raw = o.cuit.replace(/\D/g, '');
-          if (!raw) return;
-          if (!window._clienteOrdenesMap[raw]) window._clienteOrdenesMap[raw] = { ordenes: 0, equipos: 0 };
-          window._clienteOrdenesMap[raw].ordenes++;
-          if (Array.isArray(o.productos)) {
-            o.productos.forEach(function(p) {
-              window._clienteOrdenesMap[raw].equipos += (parseInt(p.cantidad) || 1);
-            });
-          }
-        });
-      }
-    } catch(e) { console.log('Ordenes error:', e); }
+    // ordenes_count y equipos_count ya vienen pre-calculados del backend
     calcularStats();
     filtrar();
   } catch(err) {
@@ -239,14 +220,8 @@ function filtrar() {
   clientesFiltrados = todosLosClientes.filter(function(c) {
     if (tabActual === 'activos' && c.activo === false) return false;
     if (tabActual === 'inactivos' && c.activo !== false) return false;
-    if (origen === 'con_ordenes') {
-      var rawCuit = (c.cuit || '').replace(/\D/g, '');
-      if (!rawCuit || !window._clienteOrdenesMap || !window._clienteOrdenesMap[rawCuit]) return false;
-    }
-    if (origen === 'sin_ordenes') {
-      var rawCuit2 = (c.cuit || '').replace(/\D/g, '');
-      if (rawCuit2 && window._clienteOrdenesMap && window._clienteOrdenesMap[rawCuit2]) return false;
-    }
+    if (origen === 'con_ordenes' && !(c.ordenes_count > 0)) return false;
+    if (origen === 'sin_ordenes' && (c.ordenes_count > 0)) return false;
     if (q) {
       var rs = normStr(c.razon_social);
       var cuit = (c.cuit || '').toLowerCase();
@@ -275,10 +250,8 @@ function renderTabla() {
   var html = '<table><thead><tr><th>Razón Social</th><th>CUIT / DNI</th><th>Teléfono</th><th>Localidad</th><th>Equipos</th><th>Rubro</th><th>Origen</th><th></th></tr></thead><tbody>';
   pagina.forEach(function(c) {
     var identif = c.cuit || (c.dni ? 'DNI: ' + c.dni : '—');
-    var rawCuitMap = (c.cuit || '').replace(/\D/g, '');
-    var mapData = (rawCuitMap && window._clienteOrdenesMap) ? window._clienteOrdenesMap[rawCuitMap] : null;
-    var equiposCount = mapData ? mapData.equipos : 0;
-    var ordenesCount = mapData ? mapData.ordenes : 0;
+    var equiposCount = c.equipos_count || 0;
+    var ordenesCount = c.ordenes_count || 0;
     var equiposBadge = equiposCount > 0 ? '<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;" title="' + ordenesCount + ' orden(es)">' + equiposCount + '</span>' : '<span style="color:#9ca3af;font-size:11px;">0</span>';
     var origenBadge = c.origen === 'orden_instalacion'
       ? '<span class="badge-origen badge-orden">Orden</span>'
