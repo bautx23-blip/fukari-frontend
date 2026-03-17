@@ -110,9 +110,9 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
   <div class="filtros">
     <input type="text" id="filtro-buscar" placeholder="Buscar por razón social, CUIT o DNI..." oninput="filtrar()">
     <select id="filtro-origen" onchange="filtrar()">
-      <option value="">Todos los orígenes</option>
-      <option value="importacion">Importación</option>
-      <option value="orden_instalacion">Orden de instalación</option>
+      <option value="">Todos los clientes</option>
+      <option value="con_ordenes">Con órdenes de instalación</option>
+      <option value="sin_ordenes">Sin órdenes</option>
     </select>
     <button class="btn-refresh" onclick="cargarClientes()">&#8635; Actualizar</button>
   </div>
@@ -154,7 +154,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const POR_PAGINA = 25;
+var POR_PAGINA = 50;
 var todosLosClientes = [];
 var tabActual = 'activos';
 var clientesFiltrados = [];
@@ -194,6 +194,20 @@ async function cargarClientes() {
       var resOrdenes = await fetch(API_URL + '/api/ordenes');
       if (resOrdenes.ok) {
         window._ordenesList = await resOrdenes.json();
+        // Build map: CUIT → { ordenes count, total productos }
+        window._clienteOrdenesMap = {};
+        (window._ordenesList || []).forEach(function(o) {
+          if (!o.cuit || o.anulada) return;
+          var raw = o.cuit.replace(/\D/g, '');
+          if (!raw) return;
+          if (!window._clienteOrdenesMap[raw]) window._clienteOrdenesMap[raw] = { ordenes: 0, equipos: 0 };
+          window._clienteOrdenesMap[raw].ordenes++;
+          if (Array.isArray(o.productos)) {
+            o.productos.forEach(function(p) {
+              window._clienteOrdenesMap[raw].equipos += (parseInt(p.cantidad) || 1);
+            });
+          }
+        });
       }
     } catch(e) { console.log('Ordenes error:', e); }
     calcularStats();
@@ -225,7 +239,14 @@ function filtrar() {
   clientesFiltrados = todosLosClientes.filter(function(c) {
     if (tabActual === 'activos' && c.activo === false) return false;
     if (tabActual === 'inactivos' && c.activo !== false) return false;
-    if (origen && (c.origen || '') !== origen) return false;
+    if (origen === 'con_ordenes') {
+      var rawCuit = (c.cuit || '').replace(/\D/g, '');
+      if (!rawCuit || !window._clienteOrdenesMap || !window._clienteOrdenesMap[rawCuit]) return false;
+    }
+    if (origen === 'sin_ordenes') {
+      var rawCuit2 = (c.cuit || '').replace(/\D/g, '');
+      if (rawCuit2 && window._clienteOrdenesMap && window._clienteOrdenesMap[rawCuit2]) return false;
+    }
     if (q) {
       var rs = normStr(c.razon_social);
       var cuit = (c.cuit || '').toLowerCase();
@@ -254,8 +275,11 @@ function renderTabla() {
   var html = '<table><thead><tr><th>Razón Social</th><th>CUIT / DNI</th><th>Teléfono</th><th>Localidad</th><th>Equipos</th><th>Rubro</th><th>Origen</th><th></th></tr></thead><tbody>';
   pagina.forEach(function(c) {
     var identif = c.cuit || (c.dni ? 'DNI: ' + c.dni : '—');
-    var equiposCount = Array.isArray(c.equipos_activos) ? c.equipos_activos.reduce(function(acc,e){ return acc + (parseInt(e.cantidad)||1); },0) : 0;
-    var equiposBadge = equiposCount > 0 ? '<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;">' + equiposCount + '</span>' : '<span style="color:#9ca3af;font-size:11px;">0</span>';
+    var rawCuitMap = (c.cuit || '').replace(/\D/g, '');
+    var mapData = (rawCuitMap && window._clienteOrdenesMap) ? window._clienteOrdenesMap[rawCuitMap] : null;
+    var equiposCount = mapData ? mapData.equipos : 0;
+    var ordenesCount = mapData ? mapData.ordenes : 0;
+    var equiposBadge = equiposCount > 0 ? '<span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;" title="' + ordenesCount + ' orden(es)">' + equiposCount + '</span>' : '<span style="color:#9ca3af;font-size:11px;">0</span>';
     var origenBadge = c.origen === 'orden_instalacion'
       ? '<span class="badge-origen badge-orden">Orden</span>'
       : '<span class="badge-origen badge-importacion">Import</span>';

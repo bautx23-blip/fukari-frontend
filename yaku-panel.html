@@ -134,15 +134,15 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 
 <div class="contenido">
   <div class="stats-row">
-    <div class="stat-card"><div class="label">Total órdenes</div><div class="value" id="stat-total">—</div><div class="sub">históricas</div></div>
-    <div class="stat-card"><div class="label">No anuladas</div><div class="value" id="stat-mes">—</div><div class="sub" id="stat-mes-label">en rango</div></div>
+    <div class="stat-card"><div class="label">Total órdenes</div><div class="value" id="stat-total">—</div><div class="sub" id="stat-total-sub">en el rango</div></div>
+    <div class="stat-card"><div class="label">No anuladas</div><div class="value" id="stat-mes">—</div><div class="sub" id="stat-mes-label">en el rango</div></div>
     <div class="stat-card"><div class="label">Última orden</div><div class="value" id="stat-ultima">—</div><div class="sub">número</div></div>
-    <div class="stat-card"><div class="label">Total facturado</div><div class="value" id="stat-monto">—</div><div class="sub">este mes (sin IVA)</div></div>
+    <div class="stat-card"><div class="label">Total facturado (sin IVA)</div><div class="value" id="stat-monto">—</div><div class="sub" id="stat-monto-sub">en el rango</div></div>
   </div>
 
   <div class="filtros">
-    <input type="text" id="filtro-buscar" placeholder="Buscar por razón social, CUIT o localidad..." oninput="filtrar()">
-    <select id="filtro-vendedor" onchange="filtrar();calcularStats()"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="María Pía Bologñese">María Pía Bologñese</option></select>
+    <input type="text" id="filtro-buscar" placeholder="Buscar por razón social, CUIT o localidad..." oninput="filtrar();calcularStats()">
+    <select id="filtro-vendedor" onchange="filtrar();calcularStats()" style="max-width:200px;"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="María Pía Bologñese">María Pía Bologñese</option></select>
     <label style="font-size:11px;color:#6b7280;font-weight:600;">Desde</label>
     <input type="date" id="filtro-desde" onchange="cargarOrdenes()" style="max-width:150px;">
     <label style="font-size:11px;color:#6b7280;font-weight:600;">Hasta</label>
@@ -251,8 +251,8 @@ async function cargarOrdenes() {
     var res = await fetch(url);
     if (!res.ok) throw new Error('Error ' + res.status);
     todasLasOrdenes = await res.json();
-    calcularStats();
     filtrar();
+    calcularStats();
   } catch(err) {
     document.getElementById('tabla-body').innerHTML = '<div class="error-msg">Error al cargar: ' + err.message + '</div>';
   }
@@ -284,21 +284,19 @@ function localidadesUnicas(o) {
 }
 
 function calcularStats() {
-  var estado = document.getElementById('filtro-estado').value;
-  var base;
-  if (estado === 'anuladas') base = todasLasOrdenes.filter(function(o){ return o.anulada; });
-  else if (estado === 'todas') base = todasLasOrdenes;
-  else base = todasLasOrdenes.filter(function(o){ return !o.anulada; });
-  // Facturado siempre excluye anuladas
-  var noAnuladas = todasLasOrdenes.filter(function(o){ return !o.anulada; });
+  // Stats se calculan sobre ordenesFiltradas (respetan TODOS los filtros activos)
+  var noAnuladas = ordenesFiltradas.filter(function(o){ return !o.anulada; });
   var totalFact = noAnuladas.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
   var totalSinIVA = totalFact / 1.21;
-  document.getElementById('stat-total').textContent = base.length;
+  document.getElementById('stat-total').textContent = ordenesFiltradas.length;
   document.getElementById('stat-mes').textContent = noAnuladas.length;
   var desde = document.getElementById('filtro-desde').value;
   var hasta = document.getElementById('filtro-hasta').value;
-  document.getElementById('stat-mes-label').textContent = (desde && hasta) ? desde + ' a ' + hasta : 'rango seleccionado';
-  document.getElementById('stat-ultima').textContent = base.length > 0 ? base[0].numero_completo : '—';
+  var rangoLabel = (desde && hasta) ? desde + ' a ' + hasta : 'en el rango';
+  document.getElementById('stat-mes-label').textContent = rangoLabel;
+  document.getElementById('stat-total-sub').textContent = rangoLabel;
+  document.getElementById('stat-monto-sub').textContent = rangoLabel;
+  document.getElementById('stat-ultima').textContent = ordenesFiltradas.length > 0 ? ordenesFiltradas[0].numero_completo : '—';
   document.getElementById('stat-monto').textContent = totalSinIVA > 0 ? '$' + totalSinIVA.toLocaleString('es-AR', {minimumFractionDigits:0}) : '$0';
 }
 
