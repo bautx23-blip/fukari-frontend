@@ -285,7 +285,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       <div class="dato-cell"><label>Razon Social:</label><input type="text" id="razon-social" placeholder="Nombre o razon social"></div>
     </div>
     <div class="datos-row">
-      <div class="dato-cell" style="flex:1.4;"><label>C.U.I.T.:</label><input type="text" id="cuit" placeholder="20-12345678-9" maxlength="15" oninput="normalizarCuit(this)" onblur="normalizarCuit(this)"><span id="cuit-status"></span></div>
+      <div class="dato-cell" style="flex:1.4;"><label>C.U.I.T.:</label><input type="text" id="cuit" placeholder="20-12345678-9" maxlength="15" oninput="normalizarCuit(this)" onblur="normalizarCuit(this);verificarCuitExistente(this)"><span id="cuit-status"></span><div id="cuit-existe-aviso" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:5px;padding:6px 10px;margin-top:4px;font-size:11px;color:#92400e;">⚠️ Este CUIT ya existe como cliente. Los equipos se agregarán al cliente existente.</div></div>
       <div class="dato-cell" style="flex:0.6;"><label>Tel.:</label><input type="text" id="telefono" placeholder="5493424485582" oninput="normalizarTelIntl(this)" onblur="normalizarTelIntl(this)"></div>
     </div>
     <div class="datos-row" id="dom-row">
@@ -488,6 +488,28 @@ function normalizarCuit(input) {
     status.textContent = raw.length + '/11';
     status.className = 'cuit-err';
   }
+}
+
+var _cuitCheckTimeout = null;
+function verificarCuitExistente(input) {
+  var aviso = document.getElementById('cuit-existe-aviso');
+  aviso.style.display = 'none';
+  if (!window._esNuevoCliente) return;
+  var raw = input.value.replace(/\D/g, '');
+  if (raw.length < 11) return;
+  clearTimeout(_cuitCheckTimeout);
+  _cuitCheckTimeout = setTimeout(function() {
+    fetch(API_URL + '/api/clientes/search?q=' + encodeURIComponent(raw))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.length > 0) {
+          aviso.style.display = 'block';
+        } else {
+          aviso.style.display = 'none';
+        }
+      })
+      .catch(function() {});
+  }, 400);
 }
 
 // ── LOCALIDADES (multi-instancia) ──
@@ -790,9 +812,11 @@ async function guardarOrden() {
     if (!res.ok) throw new Error(json.error || 'Error al guardar');
     document.getElementById('nro-orden').value = json.numero_completo;
 
-
-
-    mostrarToast('Orden ' + json.numero_completo + ' guardada', json.pdf_url);
+    if (json.cliente_existente) {
+      mostrarToast('Orden ' + json.numero_completo + ' guardada — Este CUIT ya estaba registrado como cliente. Se actualizaron sus equipos.', json.pdf_url);
+    } else {
+      mostrarToast('Orden ' + json.numero_completo + ' guardada', json.pdf_url);
+    }
     // Abrir PDF en nueva pestaña
     if (json.pdf_url) window.open(json.pdf_url, '_blank');
     // Redirigir al panel después de 1.5s
