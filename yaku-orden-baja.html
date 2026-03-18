@@ -121,6 +121,20 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 .localidad-no-results{padding:8px 10px;font-size:10px;color:#6b7280;text-align:center;}
 /* ── Estado sin datos cliente ── */
 .estado-vacio{text-align:center;padding:20px;color:#9ca3af;font-size:12px;font-style:italic;}
+/* ── Equipos manuales ── */
+.equipos-manual-section{display:none;margin-bottom:12px;}
+.equipo-manual-row{display:flex;gap:6px;align-items:flex-end;padding:6px 0;border-bottom:1px solid #f3f4f6;}
+.equipo-manual-row:last-child{border-bottom:none;}
+.equipo-manual-row .em-field{display:flex;flex-direction:column;gap:2px;}
+.equipo-manual-row .em-field label{font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;}
+.equipo-manual-row .em-field input,.equipo-manual-row .em-field select{border:1px solid #d1d5db;border-radius:4px;padding:5px 7px;font-size:11px;font-family:inherit;outline:none;}
+.equipo-manual-row .em-field input:focus,.equipo-manual-row .em-field select:focus{border-color:#1565c0;background:#eff6ff;}
+.btn-agregar-equipo{background:#c2410c;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;margin-top:8px;transition:background 0.15s;}
+.btn-agregar-equipo:hover{background:#9a3412;}
+.btn-eliminar-equipo{background:none;border:1px solid #dc2626;color:#dc2626;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit;flex-shrink:0;align-self:center;}
+.btn-eliminar-equipo:hover{background:#fef2f2;}
+.em-loc-wrap{position:relative;}
+.em-loc-wrap .localidad-dropdown{width:220px;}
 @media print{
   body{background:white;padding:0;}
   .toolbar,.busqueda-panel,#toast,#btn-manual{display:none !important;}
@@ -261,6 +275,13 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
         <tr><td colspan="4" class="estado-vacio">Buscá un cliente para ver sus equipos</td></tr>
       </tbody>
     </table>
+
+    <!-- Equipos manuales (solo en modo manual) -->
+    <div class="equipos-manual-section" id="equipos-manual-section">
+      <p style="font-size:8.5px;font-weight:700;color:#c2410c;text-transform:uppercase;margin-bottom:5px;">Equipos a dar de baja (carga manual):</p>
+      <div id="equipos-manual-list"></div>
+      <button type="button" class="btn-agregar-equipo" onclick="agregarEquipoManual()">+ Agregar equipo</button>
+    </div>
   </div>
 
   <!-- ── DATOS DE LA BAJA (editables) ── -->
@@ -407,6 +428,7 @@ var _fotoFile = null;
 var _tipoBaja = null;  // 'total' | 'parcial'
 var _equiposBaja = []; // equipos seleccionados para baja parcial
 var _manualMode = false; // true when client data is entered manually
+var _equipoManualCount = 0; // counter for manual equipment row IDs
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', function() {
@@ -481,8 +503,13 @@ function activarCargaManual() {
   // Remove readonly styling
   document.getElementById('datos-cliente-section').classList.remove('seccion-readonly');
 
-  // Clear and hide products table
-  document.getElementById('productos-ref-body').innerHTML = '<tr><td colspan="4" class="estado-vacio">Cliente cargado manualmente — sin equipos registrados</td></tr>';
+  // Hide DB products table, show manual equipment section
+  document.getElementById('productos-ref-body').innerHTML = '';
+  document.querySelector('#tabla-productos-ref').style.display = 'none';
+  document.querySelector('#datos-cliente-section > p').style.display = 'none';
+  document.getElementById('equipos-manual-section').style.display = 'block';
+  document.getElementById('equipos-manual-list').innerHTML = '';
+  _equipoManualCount = 0;
 
   // Show sections
   document.getElementById('datos-cliente-section').style.display = 'block';
@@ -554,6 +581,96 @@ function navLocalidadManual(e) {
   }
 }
 
+// ── EQUIPOS MANUALES ──
+function agregarEquipoManual() {
+  var id = _equipoManualCount++;
+  var list = document.getElementById('equipos-manual-list');
+  var row = document.createElement('div');
+  row.className = 'equipo-manual-row';
+  row.id = 'em-row-' + id;
+  row.innerHTML =
+    '<div class="em-field" style="flex:2;"><label>Modelo</label><input type="text" id="em-modelo-' + id + '" placeholder="Ej: 103S"></div>' +
+    '<div class="em-field" style="flex:0.5;"><label>Cant.</label><input type="number" id="em-cant-' + id + '" value="1" min="1" style="width:50px;"></div>' +
+    '<div class="em-field" style="flex:2;"><label>Domicilio</label><input type="text" id="em-dom-' + id + '" placeholder="Calle, nro..."></div>' +
+    '<div class="em-field em-loc-wrap" style="flex:1.5;"><label>Localidad</label>' +
+      '<input type="text" id="em-loc-' + id + '" placeholder="Buscar..." autocomplete="off"' +
+      ' oninput="filtrarLocEquipo(this,' + id + ')" onfocus="filtrarLocEquipo(this,' + id + ')" onkeydown="navLocEquipo(event,' + id + ')">' +
+      '<div class="localidad-dropdown" id="em-loc-drop-' + id + '"></div></div>' +
+    '<button type="button" class="btn-eliminar-equipo" onclick="eliminarEquipoManual(' + id + ')">✕</button>';
+  list.appendChild(row);
+}
+
+function eliminarEquipoManual(id) {
+  var row = document.getElementById('em-row-' + id);
+  if (row) row.remove();
+}
+
+function getEquiposManuales() {
+  var equipos = [];
+  document.querySelectorAll('#equipos-manual-list .equipo-manual-row').forEach(function(row) {
+    var id = row.id.replace('em-row-', '');
+    var modelo = document.getElementById('em-modelo-' + id).value.trim();
+    var cant = parseInt(document.getElementById('em-cant-' + id).value) || 1;
+    var dom = document.getElementById('em-dom-' + id).value.trim();
+    var loc = document.getElementById('em-loc-' + id).value.trim();
+    if (modelo || dom || loc) {
+      equipos.push({ modelo: modelo, cantidad: cant, domicilio: dom, localidad: loc });
+    }
+  });
+  return equipos;
+}
+
+// Localidad autocomplete for manual equipment rows
+var _emLocActivo = {};
+var _emLocFiltradas = {};
+
+function filtrarLocEquipo(input, id) {
+  var drop = document.getElementById('em-loc-drop-' + id);
+  _emLocActivo[id] = -1;
+  var q = input.value;
+  if (!q || q.trim() === '') {
+    _emLocFiltradas[id] = LOCALIDADES.slice(0, 30);
+  } else {
+    var qn = normStr(q);
+    _emLocFiltradas[id] = LOCALIDADES.filter(function(l){ return normStr(l.nombre).indexOf(qn) !== -1; }).slice(0, 40);
+  }
+  if (_emLocFiltradas[id].length === 0) {
+    drop.innerHTML = '<div class="localidad-no-results">Sin resultados</div>';
+  } else {
+    drop.innerHTML = _emLocFiltradas[id].map(function(l, i) {
+      return '<div class="localidad-item" data-idx="' + i + '" onmousedown="elegirLocEquipo(' + i + ',' + id + ')">' +
+        '<span>' + l.nombre + '</span><span class="depto">' + l.departamento + '</span></div>';
+    }).join('');
+  }
+  drop.classList.add('open');
+}
+
+function elegirLocEquipo(idx, id) {
+  document.getElementById('em-loc-' + id).value = _emLocFiltradas[id][idx].nombre;
+  document.getElementById('em-loc-drop-' + id).classList.remove('open');
+}
+
+function navLocEquipo(e, id) {
+  var drop = document.getElementById('em-loc-drop-' + id);
+  var items = drop.querySelectorAll('.localidad-item');
+  if (!_emLocActivo[id] && _emLocActivo[id] !== 0) _emLocActivo[id] = -1;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _emLocActivo[id] = Math.min(_emLocActivo[id] + 1, items.length - 1);
+    items.forEach(function(el, i){ el.classList.toggle('active', i === _emLocActivo[id]); });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _emLocActivo[id] = Math.max(_emLocActivo[id] - 1, 0);
+    items.forEach(function(el, i){ el.classList.toggle('active', i === _emLocActivo[id]); });
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (_emLocActivo[id] >= 0 && _emLocFiltradas[id][_emLocActivo[id]]) elegirLocEquipo(_emLocActivo[id], id);
+    else drop.classList.remove('open');
+  } else if (e.key === 'Escape') {
+    drop.classList.remove('open');
+  }
+}
+
 function cargarDatosCliente(cliente) {
   ordenRef = cliente;
   _manualMode = false;
@@ -569,6 +686,10 @@ function cargarDatosCliente(cliente) {
   badge.style.color = '#374151';
   document.getElementById('row-domicilio-manual').style.display = 'none';
   document.getElementById('btn-manual').style.display = 'none';
+  // Restore DB products table, hide manual equipos
+  document.querySelector('#tabla-productos-ref').style.display = '';
+  document.querySelector('#datos-cliente-section > p').style.display = '';
+  document.getElementById('equipos-manual-section').style.display = 'none';
 
   // Rellenar campos readonly
   document.getElementById('razon-social').value = cliente.razon_social || '';
@@ -630,10 +751,10 @@ function seleccionarTipoBaja(tipo) {
 
   if (tipo === 'parcial') {
     // Show equipos selector
-    var equipos = (ordenRef && ordenRef.equipos_activos) || [];
+    var equipos = _manualMode ? getEquiposManuales() : ((ordenRef && ordenRef.equipos_activos) || []);
     var list = document.getElementById('equipos-check-list');
     if (equipos.length === 0) {
-      list.innerHTML = '<p style="font-size:12px;color:#9ca3af;">Este cliente no tiene equipos registrados.</p>';
+      list.innerHTML = '<p style="font-size:12px;color:#9ca3af;">' + (_manualMode ? 'Agregá equipos arriba primero para poder seleccionarlos.' : 'Este cliente no tiene equipos registrados.') + '</p>';
     } else {
       list.innerHTML = equipos.map(function(e, i) {
         var cant = parseInt(e.cantidad) || 1;
@@ -657,7 +778,7 @@ function toggleCantBaja(cb, idx, cant) {
 }
 
 function actualizarEquiposBaja() {
-  var equipos = (ordenRef && ordenRef.equipos_activos) || [];
+  var equipos = _manualMode ? getEquiposManuales() : ((ordenRef && ordenRef.equipos_activos) || []);
   _equiposBaja = [];
   document.querySelectorAll('#equipos-check-list input[type=checkbox]:checked').forEach(function(cb) {
     var idx = parseInt(cb.value);
@@ -683,7 +804,7 @@ function onRetiraChange() {
 
 function buildDomRetiroOptions() {
   var wrap = document.getElementById('dom-retiro-options');
-  var equipos = (!_manualMode && ordenRef && ordenRef.equipos_activos) ? ordenRef.equipos_activos : [];
+  var equipos = _manualMode ? getEquiposManuales() : ((ordenRef && ordenRef.equipos_activos) || []);
   
   // Get unique domicilios from equipos
   var domicilios = [];
@@ -812,23 +933,39 @@ function setFile(id, file) {
 }
 
 // ── VALIDACIÓN ──
-function validarCampos() {
+// Hard errors: things that truly block saving
+function validarCamposHard() {
   var errores = [];
   if (!ordenRef && !_manualMode) errores.push('Buscá un cliente antes de guardar');
-  if (_manualMode && !document.getElementById('razon-social').value.trim()) errores.push('Razón social del cliente');
   if (!_tipoBaja) errores.push('Tipo de baja (total o parcial)');
-  if (_tipoBaja === 'parcial' && _equiposBaja.length === 0) errores.push('Seleccioná al menos un equipo para baja parcial');
-  if (!document.getElementById('motivo-baja').value) errores.push('Motivo de baja');
-  if (!document.getElementById('vendedor').value) errores.push('Vendedor');
-  if (!document.getElementById('responsable-nombre').value.trim()) errores.push('Nombre del responsable');
-  if (!document.getElementById('fecha-baja').value) errores.push('Fecha de baja');
+  return errores;
+}
+
+// Soft warnings: important but user can choose to continue
+function obtenerAdvertencias() {
+  var warns = [];
+  if (!document.getElementById('razon-social').value.trim()) warns.push('Razón social');
+  if (!document.getElementById('cuit').value.trim()) warns.push('CUIT');
+  if (!document.getElementById('motivo-baja').value) warns.push('Motivo de baja');
+  if (!document.getElementById('vendedor').value) warns.push('Vendedor');
+  if (!document.getElementById('responsable-nombre').value.trim()) warns.push('Nombre del responsable');
+  if (!document.getElementById('fecha-baja').value) warns.push('Fecha de baja');
+  // Check equipos
+  var tieneEquipos = false;
+  if (_manualMode) {
+    tieneEquipos = getEquiposManuales().length > 0;
+  } else {
+    tieneEquipos = (ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0);
+  }
+  if (!tieneEquipos) warns.push('Al menos 1 equipo');
+  if (_tipoBaja === 'parcial' && _equiposBaja.length === 0) warns.push('Equipos seleccionados para baja parcial');
   var retira = document.getElementById('retira-equipo').value;
   if (retira === 'si') {
     var domVal = document.getElementById('dom-retiro').value.trim();
     var domManual = document.getElementById('dom-retiro-manual') ? document.getElementById('dom-retiro-manual').value.trim() : '';
-    if (!domVal && !domManual) errores.push('Domicilio de retiro');
+    if (!domVal && !domManual) warns.push('Domicilio de retiro');
   }
-  return errores;
+  return warns;
 }
 
 function mostrarErrores(errores) {
@@ -837,11 +974,32 @@ function mostrarErrores(errores) {
   var popup = document.createElement('div');
   popup.id = 'popup-errores';
   popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:2px solid #dc2626;border-radius:10px;padding:24px 28px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:380px;width:90%;';
-  popup.innerHTML = '<div style="font-weight:700;font-size:14px;color:#dc2626;margin-bottom:12px;">⚠️ Campos incompletos</div>' +
+  popup.innerHTML = '<div style="font-weight:700;font-size:14px;color:#dc2626;margin-bottom:12px;">⚠️ No se puede guardar</div>' +
     '<ul style="margin:0 0 16px 16px;padding:0;font-size:13px;color:#374151;">' +
     errores.map(function(e){ return '<li>' + e + '</li>'; }).join('') +
     '</ul><button onclick="document.getElementById(\'popup-errores\').remove()" style="background:#1565c0;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:13px;cursor:pointer;font-weight:600;">Entendido</button>';
   document.body.appendChild(popup);
+}
+
+function mostrarAdvertencias(warns) {
+  return new Promise(function(resolve) {
+    var existing = document.getElementById('popup-advertencias');
+    if (existing) existing.remove();
+    var popup = document.createElement('div');
+    popup.id = 'popup-advertencias';
+    popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:2px solid #f59e0b;border-radius:10px;padding:24px 28px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:420px;width:90%;';
+    popup.innerHTML = '<div style="font-weight:700;font-size:14px;color:#b45309;margin-bottom:12px;">⚠️ Hay campos sin completar</div>' +
+      '<ul style="margin:0 0 16px 16px;padding:0;font-size:13px;color:#374151;">' +
+      warns.map(function(e){ return '<li>' + e + '</li>'; }).join('') +
+      '</ul><p style="font-size:12px;color:#6b7280;margin-bottom:16px;">¿Deseas continuar igualmente?</p>' +
+      '<div style="display:flex;gap:10px;">' +
+      '<button id="popup-adv-continuar" style="background:#c2410c;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:13px;cursor:pointer;font-weight:600;">Continuar</button>' +
+      '<button id="popup-adv-volver" style="background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:6px;padding:8px 20px;font-size:13px;cursor:pointer;font-weight:600;">Volver a editar</button>' +
+      '</div>';
+    document.body.appendChild(popup);
+    document.getElementById('popup-adv-continuar').onclick = function() { popup.remove(); resolve(true); };
+    document.getElementById('popup-adv-volver').onclick = function() { popup.remove(); resolve(false); };
+  });
 }
 
 function mostrarToast(msg, pdfUrl) {
@@ -872,12 +1030,24 @@ async function guardarBaja() {
       if (session) window._currentUserName = _map[session.user.email] || session.user.email;
     }
 
-    var errores = validarCampos();
-    if (errores.length > 0) {
+    // Hard validation (blocking)
+    var erroresHard = validarCamposHard();
+    if (erroresHard.length > 0) {
       btn.disabled = false;
       btn.textContent = '💾 Guardar y generar PDF';
-      mostrarErrores(errores);
+      mostrarErrores(erroresHard);
       return;
+    }
+
+    // Soft validation (warning with option to continue)
+    var advertencias = obtenerAdvertencias();
+    if (advertencias.length > 0) {
+      var continuar = await mostrarAdvertencias(advertencias);
+      if (!continuar) {
+        btn.disabled = false;
+        btn.textContent = '💾 Guardar y generar PDF';
+        return;
+      }
     }
 
     // Subir foto si existe
@@ -909,7 +1079,7 @@ async function guardarBaja() {
       domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '',
       localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '',
       cliente_manual: _manualMode,
-      productos_ref: _tipoBaja === 'parcial' ? _equiposBaja : (ordenRef && ordenRef.equipos_activos) || [],
+      productos_ref: _tipoBaja === 'parcial' ? _equiposBaja : (_manualMode ? getEquiposManuales() : ((ordenRef && ordenRef.equipos_activos) || [])),
       fecha_baja: document.getElementById('fecha-baja').value,
       motivo: document.getElementById('motivo-baja').value,
       observaciones: document.getElementById('observaciones').value,
@@ -989,6 +1159,13 @@ function limpiarForm() {
   document.getElementById('row-domicilio-manual').style.display = 'none';
   if (document.getElementById('domicilio-manual')) document.getElementById('domicilio-manual').value = '';
   if (document.getElementById('localidad-manual')) document.getElementById('localidad-manual').value = '';
+  // Reset manual equipos
+  document.getElementById('equipos-manual-section').style.display = 'none';
+  document.getElementById('equipos-manual-list').innerHTML = '';
+  _equipoManualCount = 0;
+  // Restore DB products table
+  document.querySelector('#tabla-productos-ref').style.display = '';
+  document.querySelector('#datos-cliente-section > p').style.display = '';
   document.getElementById('datos-cliente-section').style.display = 'none';
   document.getElementById('datos-baja-section').style.display = 'none';
   document.getElementById('footer-firmas').style.display = 'none';
