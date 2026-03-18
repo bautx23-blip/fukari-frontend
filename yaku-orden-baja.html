@@ -133,8 +133,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 .btn-agregar-equipo:hover{background:#9a3412;}
 .btn-eliminar-equipo{background:none;border:1px solid #dc2626;color:#dc2626;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit;flex-shrink:0;align-self:center;}
 .btn-eliminar-equipo:hover{background:#fef2f2;}
-.em-loc-wrap{position:relative;}
-.em-loc-wrap .localidad-dropdown{width:220px;}
+.equipo-manual-row .localidad-dropdown{width:220px;}
 @media print{
   body{background:white;padding:0;}
   .toolbar,.busqueda-panel,#toast,#btn-manual{display:none !important;}
@@ -588,11 +587,12 @@ function agregarEquipoManual() {
   var row = document.createElement('div');
   row.className = 'equipo-manual-row';
   row.id = 'em-row-' + id;
+  var modeloOpts = MODELOS.map(function(m){ return '<option value="' + m + '">' + m + '</option>'; }).join('');
   row.innerHTML =
-    '<div class="em-field" style="flex:2;"><label>Modelo</label><input type="text" id="em-modelo-' + id + '" placeholder="Ej: 103S"></div>' +
+    '<div class="em-field" style="flex:2;"><label>Modelo</label><select id="em-modelo-' + id + '"><option value="">-- Modelo --</option>' + modeloOpts + '</select></div>' +
     '<div class="em-field" style="flex:0.5;"><label>Cant.</label><input type="number" id="em-cant-' + id + '" value="1" min="1" style="width:50px;"></div>' +
     '<div class="em-field" style="flex:2;"><label>Domicilio</label><input type="text" id="em-dom-' + id + '" placeholder="Calle, nro..."></div>' +
-    '<div class="em-field em-loc-wrap" style="flex:1.5;"><label>Localidad</label>' +
+    '<div class="em-field localidad-wrap" style="flex:1.5;position:relative;"><label>Localidad</label>' +
       '<input type="text" id="em-loc-' + id + '" placeholder="Buscar..." autocomplete="off"' +
       ' oninput="filtrarLocEquipo(this,' + id + ')" onfocus="filtrarLocEquipo(this,' + id + ')" onkeydown="navLocEquipo(event,' + id + ')">' +
       '<div class="localidad-dropdown" id="em-loc-drop-' + id + '"></div></div>' +
