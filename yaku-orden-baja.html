@@ -123,7 +123,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 .estado-vacio{text-align:center;padding:20px;color:#9ca3af;font-size:12px;font-style:italic;}
 @media print{
   body{background:white;padding:0;}
-  .toolbar,.busqueda-panel,#toast{display:none !important;}
+  .toolbar,.busqueda-panel,#toast,#btn-manual{display:none !important;}
   .orden{box-shadow:none;width:100%;min-height:unset;padding:10mm 12mm 20mm;}
   input,textarea,select{border-bottom-color:transparent !important;}
   .logo-fukari{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -190,6 +190,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
     </div>
     <p class="busqueda-hint" id="busqueda-hint">Buscá en la base de clientes por CUIT, DNI o nombre</p>
     <p class="busqueda-error" id="busqueda-error"></p>
+    <button class="btn-buscar" id="btn-manual" style="display:none;margin-top:8px;background:#c2410c;" onclick="activarCargaManual()">📝 Cargar datos manualmente</button>
   </div>
 
   <!-- ── TIPO DE BAJA ── -->
@@ -217,7 +218,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 
   <!-- ── DATOS DEL CLIENTE (readonly, se completa solo) ── -->
   <div class="seccion-readonly" id="datos-cliente-section" style="display:none;">
-    <div class="badge-readonly">&#128274; Datos del cliente — solo lectura</div>
+    <div class="badge-readonly" id="badge-readonly">&#128274; Datos del cliente — solo lectura</div>
     <div class="datos-grid">
       <div class="datos-row">
         <div class="dato-cell"><label>Razon Social:</label><input type="text" id="razon-social" readonly></div>
@@ -229,6 +230,19 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       <div class="datos-row">
         <div class="dato-cell" style="flex:1;"><label>Rubro:</label><input type="text" id="rubro" readonly></div>
         <div class="dato-cell" style="flex:1;"><label>Orden de referencia:</label><input type="text" id="orden-ref-numero" readonly></div>
+      </div>
+      <div class="datos-row" id="row-domicilio-manual" style="display:none;">
+        <div class="dato-cell" style="flex:1.5;"><label>Domicilio:</label><input type="text" id="domicilio-manual" placeholder="Calle, número, piso/dpto..."></div>
+        <div class="dato-cell" style="flex:1;">
+          <label>Localidad:</label>
+          <div class="localidad-wrap" style="flex:1;">
+            <input type="text" id="localidad-manual" placeholder="Buscar localidad..." autocomplete="off"
+              oninput="filtrarLocalidadesManual(this.value)"
+              onfocus="filtrarLocalidadesManual(this.value)"
+              onkeydown="navLocalidadManual(event)">
+            <div class="localidad-dropdown" id="loc-drop-manual"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -392,6 +406,7 @@ var ordenRef = null;
 var _fotoFile = null;
 var _tipoBaja = null;  // 'total' | 'parcial'
 var _equiposBaja = []; // equipos seleccionados para baja parcial
+var _manualMode = false; // true when client data is entered manually
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', function() {
@@ -431,13 +446,129 @@ async function buscarCliente() {
         }).join('');
       window._clienteResultados = data;
     }
-  } catch(err) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+  } catch(err) {
+    errEl.textContent = err.message; errEl.style.display = 'block';
+    // Show manual entry button when no client found
+    if (err.message.indexOf('No se encontró') !== -1) {
+      document.getElementById('btn-manual').style.display = 'inline-flex';
+    }
+  }
   finally { btn.disabled = false; btn.textContent = '🔍 Buscar'; }
 }
 function elegirCliente(idx) { var c = window._clienteResultados[idx]; if (c) cargarDatosCliente(c); }
 
+// ── CARGA MANUAL (cliente no encontrado) ──
+function activarCargaManual() {
+  _manualMode = true;
+  ordenRef = null;
+
+  // Make client fields editable
+  ['razon-social','cuit','telefono','rubro','orden-ref-numero'].forEach(function(id) {
+    var el = document.getElementById(id);
+    el.removeAttribute('readonly');
+    el.value = '';
+  });
+
+  // Show domicilio/localidad row
+  document.getElementById('row-domicilio-manual').style.display = 'flex';
+
+  // Update badge
+  var badge = document.getElementById('badge-readonly');
+  badge.textContent = '✏️ Datos del cliente — carga manual';
+  badge.style.background = '#fef3c7';
+  badge.style.color = '#92400e';
+
+  // Remove readonly styling
+  document.getElementById('datos-cliente-section').classList.remove('seccion-readonly');
+
+  // Clear and hide products table
+  document.getElementById('productos-ref-body').innerHTML = '<tr><td colspan="4" class="estado-vacio">Cliente cargado manualmente — sin equipos registrados</td></tr>';
+
+  // Show sections
+  document.getElementById('datos-cliente-section').style.display = 'block';
+  document.getElementById('datos-baja-section').style.display = 'block';
+  document.getElementById('footer-firmas').style.display = 'flex';
+  document.getElementById('btn-guardar').disabled = false;
+  document.getElementById('tipo-baja-panel').style.display = 'block';
+  _tipoBaja = null;
+  _equiposBaja = [];
+
+  // Hide manual button
+  document.getElementById('btn-manual').style.display = 'none';
+
+  // Success feedback
+  var errEl = document.getElementById('busqueda-error');
+  errEl.style.cssText = 'display:block;color:#c2410c;';
+  errEl.textContent = '✏️ Modo manual — completá los datos del cliente a mano';
+
+  // Focus first field
+  document.getElementById('razon-social').focus();
+}
+
+// ── LOCALIDAD AUTOCOMPLETE (manual mode) ──
+var locManualActivo = -1;
+var locManualFiltradas = [];
+
+function filtrarLocalidadesManual(q) {
+  var drop = document.getElementById('loc-drop-manual');
+  locManualActivo = -1;
+  if (!q || q.trim() === '') {
+    locManualFiltradas = LOCALIDADES.slice(0, 30);
+  } else {
+    var qn = normStr(q);
+    locManualFiltradas = LOCALIDADES.filter(function(l){ return normStr(l.nombre).indexOf(qn) !== -1; }).slice(0, 40);
+  }
+  if (locManualFiltradas.length === 0) {
+    drop.innerHTML = '<div class="localidad-no-results">Sin resultados</div>';
+  } else {
+    drop.innerHTML = locManualFiltradas.map(function(l, i) {
+      return '<div class="localidad-item" data-idx="' + i + '" onmousedown="elegirLocalidadManual(' + i + ')">' +
+        '<span>' + l.nombre + '</span><span class="depto">' + l.departamento + '</span></div>';
+    }).join('');
+  }
+  drop.classList.add('open');
+}
+
+function elegirLocalidadManual(idx) {
+  document.getElementById('localidad-manual').value = locManualFiltradas[idx].nombre;
+  document.getElementById('loc-drop-manual').classList.remove('open');
+}
+
+function navLocalidadManual(e) {
+  var drop = document.getElementById('loc-drop-manual');
+  var items = drop.querySelectorAll('.localidad-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    locManualActivo = Math.min(locManualActivo + 1, items.length - 1);
+    items.forEach(function(el, i){ el.classList.toggle('active', i === locManualActivo); });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    locManualActivo = Math.max(locManualActivo - 1, 0);
+    items.forEach(function(el, i){ el.classList.toggle('active', i === locManualActivo); });
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (locManualActivo >= 0 && locManualFiltradas[locManualActivo]) elegirLocalidadManual(locManualActivo);
+    else drop.classList.remove('open');
+  } else if (e.key === 'Escape') {
+    drop.classList.remove('open');
+  }
+}
+
 function cargarDatosCliente(cliente) {
   ordenRef = cliente;
+  _manualMode = false;
+
+  // Restore readonly state on client fields
+  ['razon-social','cuit','telefono','rubro','orden-ref-numero'].forEach(function(id) {
+    document.getElementById(id).setAttribute('readonly', true);
+  });
+  document.getElementById('datos-cliente-section').classList.add('seccion-readonly');
+  var badge = document.getElementById('badge-readonly');
+  badge.innerHTML = '&#128274; Datos del cliente — solo lectura';
+  badge.style.background = '#e5e7eb';
+  badge.style.color = '#374151';
+  document.getElementById('row-domicilio-manual').style.display = 'none';
+  document.getElementById('btn-manual').style.display = 'none';
 
   // Rellenar campos readonly
   document.getElementById('razon-social').value = cliente.razon_social || '';
@@ -552,7 +683,7 @@ function onRetiraChange() {
 
 function buildDomRetiroOptions() {
   var wrap = document.getElementById('dom-retiro-options');
-  var equipos = (ordenRef && ordenRef.equipos_activos) || [];
+  var equipos = (!_manualMode && ordenRef && ordenRef.equipos_activos) ? ordenRef.equipos_activos : [];
   
   // Get unique domicilios from equipos
   var domicilios = [];
@@ -683,7 +814,8 @@ function setFile(id, file) {
 // ── VALIDACIÓN ──
 function validarCampos() {
   var errores = [];
-  if (!ordenRef) errores.push('Buscá un cliente antes de guardar');
+  if (!ordenRef && !_manualMode) errores.push('Buscá un cliente antes de guardar');
+  if (_manualMode && !document.getElementById('razon-social').value.trim()) errores.push('Razón social del cliente');
   if (!_tipoBaja) errores.push('Tipo de baja (total o parcial)');
   if (_tipoBaja === 'parcial' && _equiposBaja.length === 0) errores.push('Seleccioná al menos un equipo para baja parcial');
   if (!document.getElementById('motivo-baja').value) errores.push('Motivo de baja');
@@ -770,10 +902,13 @@ async function guardarBaja() {
     var payload = {
       orden_ref_id: null,
       orden_ref_numero: document.getElementById('orden-ref-numero').value.trim() || '',
-      razon_social: ordenRef.razon_social || '',
-      cuit: ordenRef.cuit || ordenRef.dni || '',
-      telefono: ordenRef.telefono || '',
-      rubro: ordenRef.rubro || '',
+      razon_social: _manualMode ? document.getElementById('razon-social').value.trim() : (ordenRef.razon_social || ''),
+      cuit: _manualMode ? document.getElementById('cuit').value.trim() : (ordenRef.cuit || ordenRef.dni || ''),
+      telefono: _manualMode ? document.getElementById('telefono').value.trim() : (ordenRef.telefono || ''),
+      rubro: _manualMode ? document.getElementById('rubro').value.trim() : (ordenRef.rubro || ''),
+      domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '',
+      localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '',
+      cliente_manual: _manualMode,
       productos_ref: _tipoBaja === 'parcial' ? _equiposBaja : (ordenRef && ordenRef.equipos_activos) || [],
       fecha_baja: document.getElementById('fecha-baja').value,
       motivo: document.getElementById('motivo-baja').value,
@@ -800,8 +935,8 @@ async function guardarBaja() {
     document.getElementById('nro-baja').value = json.numero_completo;
 
     // Update client status BEFORE any navigation/toast (must complete before page unloads)
-    console.log('[BAJA] Pre-PATCH check — ordenRef.id:', ordenRef ? ordenRef.id : 'NULL', '_tipoBaja:', _tipoBaja, '_equiposBaja:', JSON.stringify(_equiposBaja));
-    if (ordenRef && ordenRef.id && _tipoBaja) {
+    console.log('[BAJA] Pre-PATCH check — ordenRef.id:', ordenRef ? ordenRef.id : 'NULL', '_tipoBaja:', _tipoBaja, '_equiposBaja:', JSON.stringify(_equiposBaja), '_manualMode:', _manualMode);
+    if (ordenRef && ordenRef.id && _tipoBaja && !_manualMode) {
       try {
         var patchUrl = API_URL + '/api/clientes/' + ordenRef.id + '/baja';
         var patchBody = { tipo: _tipoBaja, equipos_a_dar_baja: _equiposBaja };
@@ -836,8 +971,24 @@ function limpiarForm() {
   if (!confirm('¿Limpiar el formulario?')) return;
   ordenRef = null;
   _fotoFile = null;
+  _manualMode = false;
   document.getElementById('busqueda-input').value = '';
   document.getElementById('busqueda-error').style.display = 'none';
+  document.getElementById('btn-manual').style.display = 'none';
+  // Restore readonly on client fields
+  ['razon-social','cuit','telefono','rubro','orden-ref-numero'].forEach(function(id) {
+    var el = document.getElementById(id);
+    el.setAttribute('readonly', true);
+    el.value = '';
+  });
+  document.getElementById('datos-cliente-section').classList.add('seccion-readonly');
+  var badge = document.getElementById('badge-readonly');
+  badge.innerHTML = '&#128274; Datos del cliente — solo lectura';
+  badge.style.background = '#e5e7eb';
+  badge.style.color = '#374151';
+  document.getElementById('row-domicilio-manual').style.display = 'none';
+  if (document.getElementById('domicilio-manual')) document.getElementById('domicilio-manual').value = '';
+  if (document.getElementById('localidad-manual')) document.getElementById('localidad-manual').value = '';
   document.getElementById('datos-cliente-section').style.display = 'none';
   document.getElementById('datos-baja-section').style.display = 'none';
   document.getElementById('footer-firmas').style.display = 'none';
