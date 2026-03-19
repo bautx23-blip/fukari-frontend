@@ -300,7 +300,10 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       <div class="dato-cell"><label>Correo Electronico:</label><input type="email" id="email" placeholder="cliente@ejemplo.com"></div>
     </div>
     <div class="datos-row">
-      <div class="dato-cell" style="flex:1;"><label>Rubro:</label><select id="rubro" onchange="onRubroChange()"><option value="">-- Seleccionar --</option><option value="PARTICULAR">PARTICULAR</option><option value="EMPRESA">EMPRESA</option><option value="COMERCIO">COMERCIO</option><option value="ORGANISMO PÚBLICO">ORGANISMO PÚBLICO</option></select></div>
+      <div class="dato-cell" style="flex:1;"><label>Rubro:</label><select id="rubro"><option value="">-- Seleccionar --</option><option value="PARTICULAR">PARTICULAR</option><option value="EMPRESA">EMPRESA</option><option value="COMERCIO">COMERCIO</option><option value="ORGANISMO PÚBLICO">ORGANISMO PÚBLICO</option></select></div>
+    </div>
+    <div class="datos-row">
+      <div class="dato-cell" style="flex:1;"><label>Tipo de Documento:</label><select id="tipo-documento" onchange="onTipoDocumentoChange()"><option value="">-- Seleccionar --</option><option value="DNI">DNI</option><option value="CUIT">CUIT</option><option value="CUIL">CUIL</option><option value="Constancia de Monotributo">Constancia de Monotributo</option><option value="Constancia de Inscripción">Constancia de Inscripción</option><option value="Otro">Otro</option></select></div>
     </div>
     <div class="datos-row">
       <div class="dato-cell" style="flex:1;"><label>Responsable / Nombre:</label><input type="text" id="responsable-nombre" placeholder="Nombre"></div>
@@ -325,10 +328,23 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
     </div>
     <div class="datos-row" id="constancia-section" style="display:none;">
       <div class="dato-cell" style="flex:1;flex-direction:column;align-items:flex-start;gap:6px;">
-        <label style="font-size:8.5px;font-weight:700;color:#444;text-transform:uppercase;" id="constancia-label-titulo">Constancia de Inscripción (AFIP/IIBB)</label>
+        <label style="font-size:8.5px;font-weight:700;color:#444;text-transform:uppercase;" id="constancia-label-titulo">Constancia de Inscripción</label>
         <div class="dni-drop" id="constancia-drop" ondrop="handleDrop(event,'constancia')" ondragover="event.preventDefault()" onclick="document.getElementById('constancia-input').click()">
           <span id="constancia-label">Arrastrá o hacé click — PDF, JPG o PNG</span>
           <input type="file" id="constancia-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="handleFile(event,'constancia')">
+        </div>
+      </div>
+    </div>
+    <div class="datos-row" id="otro-documento-section" style="display:none;">
+      <div class="dato-cell" style="flex:1;flex-direction:column;align-items:flex-start;gap:6px;">
+        <label style="font-size:8.5px;font-weight:700;color:#444;text-transform:uppercase;">Especificar tipo de documento</label>
+        <input type="text" id="tipo-documento-otro" placeholder="Describí el tipo de documento...">
+      </div>
+      <div class="dato-cell" style="flex:1;flex-direction:column;align-items:flex-start;gap:6px;">
+        <label style="font-size:8.5px;font-weight:700;color:#444;text-transform:uppercase;">Documento</label>
+        <div class="dni-drop" id="otro-doc-drop" ondrop="handleDrop(event,'otro-documento')" ondragover="event.preventDefault()" onclick="document.getElementById('otro-doc-input').click()">
+          <span id="otro-doc-label">Arrastrá o hacé click — PDF, JPG o PNG</span>
+          <input type="file" id="otro-doc-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="handleFile(event,'otro-documento')">
         </div>
       </div>
     </div>
@@ -695,6 +711,8 @@ function recolectarDatos() {
     dom_instalacion: domStr,
     metodo_pago: document.getElementById('metodo-pago').value,
     rubro: document.getElementById('rubro').value,
+    tipo_documento: document.getElementById('tipo-documento').value,
+    tipo_documento_otro: document.getElementById('tipo-documento').value === 'Otro' ? (document.getElementById('tipo-documento-otro').value || '') : '',
     responsable: responsable,
     responsable_celular: document.getElementById('responsable-celular').value,
     localidad: localidadPrincipal,
@@ -772,7 +790,8 @@ async function guardarOrden() {
     // Agregar datos BCRA
     if (bcraData) datos.bcra = bcraData;
     if (window._esNuevoCliente) datos.es_nuevo_cliente = true;
-    if (datos.rubro === 'PARTICULAR') {
+    // Upload de documentos según tipo_documento
+    if (datos.tipo_documento === 'DNI') {
       var nroTemp = document.getElementById('nro-orden').value || ('dni-' + Date.now());
       for (var lado of ['dni-frente', 'dni-dorso']) {
         var file = _dniFiles[lado];
@@ -789,7 +808,8 @@ async function guardarOrden() {
         }
       }
     }
-    if ((datos.rubro === 'EMPRESA' || datos.rubro === 'COMERCIO') && _dniFiles['constancia']) {
+    var tiposConstancia = ['CUIT', 'CUIL', 'Constancia de Monotributo', 'Constancia de Inscripción'];
+    if (tiposConstancia.indexOf(datos.tipo_documento) !== -1 && _dniFiles['constancia']) {
       var nroTemp2 = document.getElementById('nro-orden').value || ('const-' + Date.now());
       var cFile = _dniFiles['constancia'];
       var cExt = cFile.name.split('.').pop();
@@ -800,6 +820,19 @@ async function guardarOrden() {
       if (!cUpErr) {
         var { data: cUrlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(cFileName);
         datos.constancia_url = cUrlData.publicUrl;
+      }
+    }
+    if (datos.tipo_documento === 'Otro' && _dniFiles['otro-documento']) {
+      var nroTemp3 = document.getElementById('nro-orden').value || ('otro-' + Date.now());
+      var oFile = _dniFiles['otro-documento'];
+      var oExt = oFile.name.split('.').pop();
+      var oFileName = nroTemp3 + '-otro-documento.' + oExt;
+      var { data: oUpData, error: oUpErr } = await window._sb.storage
+        .from('ordenes-dni')
+        .upload(oFileName, oFile, { upsert: true });
+      if (!oUpErr) {
+        var { data: oUrlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(oFileName);
+        datos.otro_documento_url = oUrlData.publicUrl;
       }
     }
 
@@ -832,21 +865,22 @@ async function guardarOrden() {
 }
 
 
-// ── RUBRO / DNI ──
-function onRubroChange() {
-  var rubro = document.getElementById('rubro').value;
-  document.getElementById('dni-section').style.display = rubro === 'PARTICULAR' ? 'flex' : 'none';
-  var mostrarConstancia = rubro === 'EMPRESA' || rubro === 'COMERCIO';
+// ── TIPO DOCUMENTO ──
+function onTipoDocumentoChange() {
+  var tipo = document.getElementById('tipo-documento').value;
+  document.getElementById('dni-section').style.display = tipo === 'DNI' ? 'flex' : 'none';
+  var mostrarConstancia = tipo === 'CUIT' || tipo === 'CUIL' || tipo === 'Constancia de Monotributo' || tipo === 'Constancia de Inscripción';
   document.getElementById('constancia-section').style.display = mostrarConstancia ? 'flex' : 'none';
+  document.getElementById('otro-documento-section').style.display = tipo === 'Otro' ? 'flex' : 'none';
   if (mostrarConstancia) {
     var titulo = document.getElementById('constancia-label-titulo');
-    titulo.textContent = rubro === 'COMERCIO'
-      ? 'Constancia de Inscripción (CUIT / Monotributo)'
-      : 'Constancia de Inscripción (AFIP/IIBB)';
+    if (tipo === 'Constancia de Monotributo') titulo.textContent = 'Constancia de Monotributo';
+    else if (tipo === 'Constancia de Inscripción') titulo.textContent = 'Constancia de Inscripción';
+    else titulo.textContent = 'Constancia de ' + tipo;
   }
 }
 
-var _dniFiles = { 'dni-frente': null, 'dni-dorso': null, 'constancia': null };
+var _dniFiles = { 'dni-frente': null, 'dni-dorso': null, 'constancia': null, 'otro-documento': null };
 
 function handleDrop(e, id) {
   e.preventDefault();
@@ -856,7 +890,7 @@ function handleDrop(e, id) {
 
 function handleFile(e, id) {
   var file = e.target.files[0];
-  if (id === 'constancia') {
+  if (id === 'constancia' || id === 'otro-documento') {
     var allowed = ['application/pdf','image/jpeg','image/jpg','image/png'];
     if (!allowed.includes(file.type)) {
       alert('Tipo de archivo no válido.\nSolo se aceptan: PDF, JPG o PNG.\nPor favor seleccioná un archivo de esos formatos.');
@@ -907,17 +941,22 @@ function limpiarForm() {
     .then(function(r){ return r.json(); })
     .then(function(d){ document.getElementById('nro-orden').value = d.numero_completo; })
     .catch(function(){ document.getElementById('nro-orden').value = '00002 - ????????'; });
-  _dniFiles = { 'dni-frente': null, 'dni-dorso': null, 'constancia': null };
+  _dniFiles = { 'dni-frente': null, 'dni-dorso': null, 'constancia': null, 'otro-documento': null };
   document.getElementById('dni-frente-label').textContent = 'Arrastrá o hacé click para subir';
   document.getElementById('dni-dorso-label').textContent = 'Arrastrá o hacé click para subir';
   document.getElementById('dni-frente-drop').classList.remove('ok');
   document.getElementById('dni-dorso-drop').classList.remove('ok');
   document.getElementById('dni-section').style.display = 'none';
   document.getElementById('constancia-section').style.display = 'none';
+  document.getElementById('otro-documento-section').style.display = 'none';
   var cl = document.getElementById('constancia-label');
   if (cl) cl.textContent = 'Arrastrá o hacé click — PDF, JPG o PNG';
   var cd = document.getElementById('constancia-drop');
   if (cd) cd.classList.remove('ok');
+  var ol = document.getElementById('otro-doc-label');
+  if (ol) ol.textContent = 'Arrastrá o hacé click — PDF, JPG o PNG';
+  var od = document.getElementById('otro-doc-drop');
+  if (od) od.classList.remove('ok');
   // Limpiar direcciones extra
   document.getElementById('dom-extra-wrap').innerHTML = '';
   var eq0Row = document.getElementById('dom-eq0-row');
