@@ -1071,7 +1071,9 @@ function obtenerAdvertencias() {
   if (!document.getElementById('fecha-baja').value) warns.push('Fecha de baja');
   // Check equipos
   var tieneEquipos = false;
-  if (_manualMode) {
+  if (_tipoBaja === 'total') {
+    tieneEquipos = (parseInt(document.getElementById('baja-total-cantidad').value) || 0) > 0;
+  } else if (_manualMode) {
     tieneEquipos = getEquiposManuales().length > 0;
   } else {
     tieneEquipos = (ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0);
@@ -1242,7 +1244,15 @@ async function guardarBaja() {
       domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '',
       localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '',
       cliente_manual: _manualMode,
-      productos_ref: _tipoBaja === 'parcial' ? _equiposBaja : (_tipoBaja === 'total' && !_manualMode && ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0 ? ordenRef.equipos_activos : []),
+      productos_ref: (function() {
+        if (_tipoBaja === 'parcial') return _equiposBaja;
+        if (_tipoBaja === 'total') {
+          if (!_manualMode && ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0) return ordenRef.equipos_activos;
+          var cantTotal = parseInt(document.getElementById('baja-total-cantidad').value) || 1;
+          return [{ modelo: 'Baja total', cantidad: cantTotal, domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '', localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '' }];
+        }
+        return [];
+      })(),
       cantidad_equipos: _tipoBaja === 'total' ? (parseInt(document.getElementById('baja-total-cantidad').value) || 1) : undefined,
       fecha_baja: document.getElementById('fecha-baja').value,
       motivo: document.getElementById('motivo-baja').value,
@@ -1251,7 +1261,11 @@ async function guardarBaja() {
       responsable: responsable,
       responsable_celular: document.getElementById('responsable-celular').value,
       tipo_baja: _tipoBaja || 'total',
-      equipos_baja: _equiposBaja,
+      equipos_baja: _tipoBaja === 'total' ? (function() {
+        if (!_manualMode && ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0) return ordenRef.equipos_activos;
+        var cantTotal = parseInt(document.getElementById('baja-total-cantidad').value) || 1;
+        return [{ modelo: 'Baja total', cantidad: cantTotal, domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '', localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '' }];
+      })() : _equiposBaja,
       retira_equipo: document.getElementById('retira-equipo').value === 'si',
       dom_retiro: document.getElementById('dom-retiro').value.trim() || (document.getElementById('dom-retiro-manual') ? document.getElementById('dom-retiro-manual').value.trim() : ''),
       localidad_retiro: document.getElementById('localidad-retiro').value.trim() || (document.getElementById('localidad-retiro-manual') ? document.getElementById('localidad-retiro-manual').value.trim() : ''),

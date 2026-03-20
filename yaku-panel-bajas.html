@@ -154,6 +154,7 @@ tr.fila-anulada td:last-child{opacity:1;text-decoration:none;}
     <select id="filtro-vendedor" onchange="filtrar()"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="María Pía Bologñese">María Pía Bologñese</option></select>
     <select id="filtro-mes" onchange="filtrar()"><option value="">Todos los meses</option></select>
     <select id="filtro-tipo" onchange="filtrar()"><option value="">Todas</option><option value="total">Total</option><option value="parcial">Parcial</option></select>
+    <select id="filtro-estado" onchange="filtrar()"><option value="activas" selected>Activas</option><option value="anuladas">Anuladas</option><option value="">Todas</option></select>
     <button class="btn-refresh" onclick="cargarBajas()">&#8635; Actualizar</button>
     <a href="/yaku-orden-baja.html" class="btn-refresh" style="background:#c0392b;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Crear orden de baja</a>
   </div>
@@ -309,7 +310,10 @@ function filtrar() {
   var mes = document.getElementById('filtro-mes').value;
   var vendedor = document.getElementById('filtro-vendedor').value;
   var tipo = document.getElementById('filtro-tipo').value;
+  var estado = document.getElementById('filtro-estado').value;
   bajasFiltradas = todasLasBajas.filter(function(b) {
+    if (estado === 'activas' && b.anulada) return false;
+    if (estado === 'anuladas' && !b.anulada) return false;
     var match = true;
     if (vendedor && (b.vendedor||'') !== vendedor) return false;
     if (tipo && (b.tipo_baja||'').toLowerCase() !== tipo) return false;
