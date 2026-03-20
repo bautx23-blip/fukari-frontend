@@ -53,6 +53,8 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .btn-mail:hover{background:#e5e7eb;border-color:#9ca3af;}
 .btn-del-orden{background:#fee2e2;border:1.5px solid #fecaca;border-radius:6px;color:#dc2626;font-size:11px;padding:6px 10px;cursor:pointer;transition:all 0.15s;line-height:1;display:inline-flex;align-items:center;white-space:nowrap;}
 .btn-del-orden:hover{background:#fecaca;border-color:#f87171;}
+.btn-edit-orden{background:#fef3c7;border:1.5px solid #fde68a;border-radius:6px;color:#d97706;font-size:11px;padding:6px 10px;cursor:pointer;transition:all 0.15s;line-height:1;display:inline-flex;align-items:center;white-space:nowrap;}
+.btn-edit-orden:hover{background:#fde68a;border-color:#f59e0b;}
 .badge-anulada{background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:0.3px;}
 tr.fila-anulada td{opacity:0.5;text-decoration:line-through;}
 tr.fila-anulada td:last-child{opacity:1;text-decoration:none;}
@@ -68,7 +70,7 @@ tr.fila-anulada td:last-child{opacity:1;text-decoration:none;}
 .btn-confirmar-anular:disabled{opacity:0.6;cursor:not-allowed;}
 .btn-cancelar-anular{padding:9px 20px;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;}
 .btn-cancelar-anular:hover{background:#e5e7eb;}
-@media(max-width:768px){.acciones-wrap{gap:4px;}.btn-ver,.btn-mail,.btn-dl,.btn-del-orden{padding:5px 8px;font-size:10px;}}
+@media(max-width:768px){.acciones-wrap{gap:4px;}.btn-ver,.btn-mail,.btn-dl,.btn-del-orden,.btn-edit-orden{padding:5px 8px;font-size:10px;}}
 .sin-pdf{color:#9ca3af;font-size:12px;font-style:italic;}
 .loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
 .error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
@@ -99,6 +101,29 @@ tr.fila-anulada td:last-child{opacity:1;text-decoration:none;}
 .btn-modal-pdf:hover{background:#a93226;}
 .btn-modal-close{padding:9px 20px;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;}
 .btn-modal-close:hover{background:#e5e7eb;}
+/* Modal editar */
+#modal-editar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1500;align-items:center;justify-content:center;}
+#modal-editar-overlay.open{display:flex;}
+.modal-editar{background:#fff;border-radius:10px;width:700px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.modal-editar .modal-header{padding:18px 22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:10;border-radius:10px 10px 0 0;}
+.modal-editar .modal-header h3{font-size:15px;font-weight:700;}
+.edit-form{padding:20px 22px;}
+.edit-form .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.edit-form .form-full{grid-column:1/-1;}
+.edit-form label{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;display:block;margin-bottom:4px;}
+.edit-form input,.edit-form select,.edit-form textarea{width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;transition:border-color 0.15s;}
+.edit-form input:focus,.edit-form select:focus,.edit-form textarea:focus{border-color:#c0392b;}
+.edit-form textarea{resize:vertical;min-height:60px;}
+.edit-form .section-title{font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.5px;margin:18px 0 10px;padding-top:14px;border-top:1px solid #f3f4f6;grid-column:1/-1;}
+.edit-form .section-title:first-child{margin-top:0;padding-top:0;border-top:none;}
+.edit-form .doc-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#c0392b;text-decoration:none;margin-top:4px;}
+.edit-form .doc-link:hover{text-decoration:underline;}
+.modal-editar .modal-footer{padding:16px 22px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:#fff;border-radius:0 0 10px 10px;}
+.btn-guardar-edit{padding:9px 24px;background:#c0392b;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-guardar-edit:hover{background:#a93226;}
+.btn-guardar-edit:disabled{opacity:0.6;cursor:not-allowed;}
+.btn-cancelar-edit{padding:9px 20px;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;}
+.btn-cancelar-edit:hover{background:#e5e7eb;}
 </style>
 </head>
 <body>
@@ -176,6 +201,20 @@ tr.fila-anulada td:last-child{opacity:1;text-decoration:none;}
     <div class="modal-anular-footer">
       <button class="btn-cancelar-anular" onclick="cerrarModalAnular()">Cancelar</button>
       <button class="btn-confirmar-anular" id="btn-confirmar-anular" onclick="ejecutarAnular()">Sí, anular</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-editar-overlay" onclick="if(event.target===this)cerrarModalEditar()">
+  <div class="modal-editar">
+    <div class="modal-header">
+      <h3 id="modal-editar-titulo">Editar Baja</h3>
+      <button class="modal-close" onclick="cerrarModalEditar()">&#215;</button>
+    </div>
+    <div class="edit-form" id="edit-form-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancelar-edit" onclick="cerrarModalEditar()">Cancelar</button>
+      <button class="btn-guardar-edit" id="btn-guardar-edit" onclick="guardarEdicionBaja()">Guardar cambios</button>
     </div>
   </div>
 </div>
@@ -335,7 +374,8 @@ function renderTabla() {
       mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subjB + '&body=' + bodyB + '" title="Enviar por mail">&#9993;</a>';
     }
     var deleteBtn = (esAdmin && !b.anulada) ? '<button class="btn-del-orden" onclick="confirmarAnular(\'' + b.id + '\',\'' + (b.numero_completo||'').replace(/'/g,'') + '\')" title="Anular baja">&#9888;</button>' : '';
-    html += '<td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(b).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + deleteBtn + '</div></td>';
+    var editBtn = (esAdmin && !b.anulada) ? '<button class="btn-edit-orden" onclick=\'abrirEdicionBaja(' + JSON.stringify(b).replace(/'/g,"&#39;") + ')\' title="Editar baja">&#9998;</button>' : '';
+    html += '<td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(b).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + editBtn + deleteBtn + '</div></td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -437,6 +477,127 @@ function confirmarAnular(id, numero) {
 
 function cerrarModalAnular() {
   document.getElementById('modal-anular-overlay').style.display = 'none';
+}
+
+// ── EDITAR BAJA ──
+var _editBajaActual = null;
+
+function esc(v) { return (v||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function abrirEdicionBaja(b) {
+  _editBajaActual = b;
+  document.getElementById('modal-editar-titulo').textContent = 'Editar Baja ' + (b.numero_completo||'');
+
+  var html = '<div class="form-grid">';
+  html += '<div class="section-title" style="margin-top:0;padding-top:0;border-top:none;">Datos del cliente</div>';
+  html += '<div class="form-full"><label>Razón Social</label><input type="text" id="edit-razon_social" value="' + esc(b.razon_social) + '"></div>';
+  html += '<div><label>CUIT</label><input type="text" id="edit-cuit" value="' + esc(b.cuit) + '"></div>';
+  html += '<div><label>Teléfono</label><input type="text" id="edit-telefono" value="' + esc(b.telefono) + '"></div>';
+  html += '<div><label>Rubro</label><input type="text" id="edit-rubro" value="' + esc(b.rubro) + '"></div>';
+  html += '<div><label>Orden de Referencia</label><input type="text" id="edit-orden_ref_numero" value="' + esc(b.orden_ref_numero) + '"></div>';
+
+  html += '<div class="section-title">Datos de la baja</div>';
+  html += '<div><label>Fecha de Baja</label><input type="date" id="edit-fecha_baja" value="' + esc(b.fecha_baja) + '"></div>';
+  html += '<div><label>Tipo de Baja</label><select id="edit-tipo_baja"><option value="total"' + ((b.tipo_baja||'').toLowerCase()==='total'?' selected':'') + '>Total</option><option value="parcial"' + ((b.tipo_baja||'').toLowerCase()==='parcial'?' selected':'') + '>Parcial</option></select></div>';
+  html += '<div class="form-full"><label>Motivo</label><select id="edit-motivo"><option value="Solicitud del cliente"' + (b.motivo==='Solicitud del cliente'?' selected':'') + '>Solicitud del cliente</option><option value="Falta de pago"' + (b.motivo==='Falta de pago'?' selected':'') + '>Falta de pago</option><option value="Mudanza"' + (b.motivo==='Mudanza'?' selected':'') + '>Mudanza</option><option value="Vencimiento de contrato"' + (b.motivo==='Vencimiento de contrato'?' selected':'') + '>Vencimiento de contrato</option><option value="Otro"' + (b.motivo==='Otro'?' selected':'') + '>Otro</option></select></div>';
+  html += '<div class="form-full"><label>Observaciones</label><textarea id="edit-observaciones">' + esc(b.observaciones) + '</textarea></div>';
+  html += '<div><label>Vendedor</label><select id="edit-vendedor"><option value="René Biagioni"' + (b.vendedor==='René Biagioni'?' selected':'') + '>René Biagioni</option><option value="María Pía Bologñese"' + (b.vendedor==='María Pía Bologñese'?' selected':'') + '>María Pía Bologñese</option></select></div>';
+
+  html += '<div class="section-title">Responsable</div>';
+  html += '<div><label>Responsable</label><input type="text" id="edit-responsable" value="' + esc(b.responsable) + '"></div>';
+  html += '<div><label>Celular Responsable</label><input type="text" id="edit-responsable_celular" value="' + esc(b.responsable_celular) + '"></div>';
+
+  html += '<div class="section-title">Retiro de equipo</div>';
+  html += '<div><label>Retira Equipo</label><select id="edit-retira_equipo"><option value="true"' + (b.retira_equipo?' selected':'') + '>Sí</option><option value="false"' + (!b.retira_equipo?' selected':'') + '>No</option></select></div>';
+  html += '<div><label>Domicilio de Retiro</label><input type="text" id="edit-dom_retiro" value="' + esc(b.dom_retiro) + '"></div>';
+  html += '<div><label>Localidad de Retiro</label><input type="text" id="edit-localidad_retiro" value="' + esc(b.localidad_retiro) + '"></div>';
+
+  // Documentación
+  html += '<div class="section-title">Documentación</div>';
+  if (b.dni_frente_url) html += '<div><label>DNI Frente</label><a class="doc-link" href="' + b.dni_frente_url + '" target="_blank">&#128196; Ver actual</a></div>';
+  if (b.dni_dorso_url) html += '<div><label>DNI Dorso</label><a class="doc-link" href="' + b.dni_dorso_url + '" target="_blank">&#128196; Ver actual</a></div>';
+  if (b.constancia_url) html += '<div><label>Constancia</label><a class="doc-link" href="' + b.constancia_url + '" target="_blank">&#128196; Ver actual</a></div>';
+  if (b.foto_equipo_url) html += '<div><label>Foto Equipo</label><a class="doc-link" href="' + b.foto_equipo_url + '" target="_blank">&#128196; Ver actual</a></div>';
+  html += '<div class="form-full" style="margin-top:8px;"><label>Reemplazar DNI Frente</label><input type="file" id="edit-dni-frente" accept="image/*"></div>';
+  html += '<div class="form-full"><label>Reemplazar DNI Dorso</label><input type="file" id="edit-dni-dorso" accept="image/*"></div>';
+  html += '<div class="form-full"><label>Reemplazar Constancia</label><input type="file" id="edit-constancia" accept="image/*,.pdf"></div>';
+  html += '<div class="form-full"><label>Reemplazar Foto Equipo</label><input type="file" id="edit-foto-equipo" accept="image/*"></div>';
+
+  html += '</div>';
+  document.getElementById('edit-form-body').innerHTML = html;
+  document.getElementById('modal-editar-overlay').classList.add('open');
+}
+
+function cerrarModalEditar() {
+  document.getElementById('modal-editar-overlay').classList.remove('open');
+  _editBajaActual = null;
+}
+
+async function subirArchivoBajaEdit(fileInput, nombreBase) {
+  var file = fileInput.files[0];
+  if (!file) return null;
+  var ext = file.name.split('.').pop();
+  var fileName = nombreBase + '.' + ext;
+  var { error } = await sb.storage.from('ordenes-dni').upload(fileName, file, { upsert: true });
+  if (error) { console.error('Upload error:', error); return null; }
+  var { data } = sb.storage.from('ordenes-dni').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+async function guardarEdicionBaja() {
+  if (!_editBajaActual) return;
+  var btn = document.getElementById('btn-guardar-edit');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    var payload = {
+      razon_social: document.getElementById('edit-razon_social').value.trim(),
+      cuit: document.getElementById('edit-cuit').value.trim(),
+      telefono: document.getElementById('edit-telefono').value.trim(),
+      rubro: document.getElementById('edit-rubro').value.trim(),
+      orden_ref_numero: document.getElementById('edit-orden_ref_numero').value.trim(),
+      fecha_baja: document.getElementById('edit-fecha_baja').value,
+      tipo_baja: document.getElementById('edit-tipo_baja').value,
+      motivo: document.getElementById('edit-motivo').value,
+      observaciones: document.getElementById('edit-observaciones').value.trim(),
+      vendedor: document.getElementById('edit-vendedor').value,
+      responsable: document.getElementById('edit-responsable').value.trim(),
+      responsable_celular: document.getElementById('edit-responsable_celular').value.trim(),
+      retira_equipo: document.getElementById('edit-retira_equipo').value === 'true',
+      dom_retiro: document.getElementById('edit-dom_retiro').value.trim(),
+      localidad_retiro: document.getElementById('edit-localidad_retiro').value.trim()
+    };
+
+    // Subir archivos nuevos si se seleccionaron
+    var base = _editBajaActual.numero_completo || _editBajaActual.id;
+    var dniFrenteUrl = await subirArchivoBajaEdit(document.getElementById('edit-dni-frente'), base + '-dni-frente');
+    if (dniFrenteUrl) payload.dni_frente_url = dniFrenteUrl;
+    var dniDorsoUrl = await subirArchivoBajaEdit(document.getElementById('edit-dni-dorso'), base + '-dni-dorso');
+    if (dniDorsoUrl) payload.dni_dorso_url = dniDorsoUrl;
+    var constanciaUrl = await subirArchivoBajaEdit(document.getElementById('edit-constancia'), base + '-constancia');
+    if (constanciaUrl) payload.constancia_url = constanciaUrl;
+    var fotoUrl = await subirArchivoBajaEdit(document.getElementById('edit-foto-equipo'), base + '-foto-equipo');
+    if (fotoUrl) payload.foto_equipo_url = fotoUrl;
+
+    var res = await fetch(API_URL + '/api/bajas/' + _editBajaActual.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      var err = await res.json();
+      throw new Error(err.error || 'Error al guardar');
+    }
+
+    cerrarModalEditar();
+    cargarBajas();
+  } catch (err) {
+    alert('Error al guardar: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar cambios';
+  }
 }
 
 function ejecutarAnular() {

@@ -52,7 +52,9 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .btn-mail:hover{background:#e5e7eb;border-color:#9ca3af;}
 .btn-del-orden{background:#fee2e2;border:1.5px solid #fecaca;border-radius:6px;color:#dc2626;font-size:11px;padding:6px 10px;cursor:pointer;transition:all 0.15s;line-height:1;display:inline-flex;align-items:center;white-space:nowrap;}
 .btn-del-orden:hover{background:#fecaca;border-color:#f87171;}
-@media(max-width:768px){.acciones-wrap{gap:4px;}.btn-ver,.btn-mail,.btn-del-orden,.btn-dl{padding:5px 8px;font-size:10px;}}
+.btn-edit-orden{background:#fef3c7;border:1.5px solid #fde68a;border-radius:6px;color:#d97706;font-size:11px;padding:6px 10px;cursor:pointer;transition:all 0.15s;line-height:1;display:inline-flex;align-items:center;white-space:nowrap;}
+.btn-edit-orden:hover{background:#fde68a;border-color:#f59e0b;}
+@media(max-width:768px){.acciones-wrap{gap:4px;}.btn-ver,.btn-mail,.btn-del-orden,.btn-dl,.btn-edit-orden{padding:5px 8px;font-size:10px;}}
 .sin-pdf{color:#9ca3af;font-size:12px;font-style:italic;}
 .loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
 .error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
@@ -115,6 +117,29 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 .btn-confirmar-borrar:disabled{opacity:0.6;cursor:not-allowed;}
 .btn-cancelar-borrar{padding:9px 20px;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;}
 .btn-cancelar-borrar:hover{background:#e5e7eb;}
+/* Modal editar */
+#modal-editar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1500;align-items:center;justify-content:center;}
+#modal-editar-overlay.open{display:flex;}
+.modal-editar{background:#fff;border-radius:10px;width:700px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.modal-editar .modal-header{padding:18px 22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:10;border-radius:10px 10px 0 0;}
+.modal-editar .modal-header h3{font-size:15px;font-weight:700;}
+.edit-form{padding:20px 22px;}
+.edit-form .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.edit-form .form-full{grid-column:1/-1;}
+.edit-form label{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;display:block;margin-bottom:4px;}
+.edit-form input,.edit-form select,.edit-form textarea{width:100%;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;transition:border-color 0.15s;}
+.edit-form input:focus,.edit-form select:focus,.edit-form textarea:focus{border-color:#1a1a2e;}
+.edit-form textarea{resize:vertical;min-height:60px;}
+.edit-form .section-title{font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.5px;margin:18px 0 10px;padding-top:14px;border-top:1px solid #f3f4f6;grid-column:1/-1;}
+.edit-form .section-title:first-child{margin-top:0;padding-top:0;border-top:none;}
+.edit-form .doc-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#2563eb;text-decoration:none;margin-top:4px;}
+.edit-form .doc-link:hover{text-decoration:underline;}
+.modal-editar .modal-footer{padding:16px 22px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:#fff;border-radius:0 0 10px 10px;}
+.btn-guardar-edit{padding:9px 24px;background:#1a1a2e;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-guardar-edit:hover{background:#2a2a45;}
+.btn-guardar-edit:disabled{opacity:0.6;cursor:not-allowed;}
+.btn-cancelar-edit{padding:9px 20px;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;}
+.btn-cancelar-edit:hover{background:#e5e7eb;}
 </style>
 </head>
 <body>
@@ -196,6 +221,20 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <div class="modal-borrar-footer">
       <button class="btn-cancelar-borrar" onclick="cerrarModalBorrar()">Cancelar</button>
       <button class="btn-confirmar-borrar" id="btn-confirmar-borrar" onclick="ejecutarBorrar()" style="background:#d97706;">Sí, anular</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-editar-overlay" onclick="if(event.target===this)cerrarModalEditar()">
+  <div class="modal-editar">
+    <div class="modal-header">
+      <h3 id="modal-editar-titulo">Editar Orden</h3>
+      <button class="modal-close" onclick="cerrarModalEditar()">&#215;</button>
+    </div>
+    <div class="edit-form" id="edit-form-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancelar-edit" onclick="cerrarModalEditar()">Cancelar</button>
+      <button class="btn-guardar-edit" id="btn-guardar-edit" onclick="guardarEdicion()">Guardar cambios</button>
     </div>
   </div>
 </div>
@@ -349,7 +388,8 @@ function renderTabla() {
       mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subj + '&body=' + body + '" title="Enviar por mail">&#9993;</a>';
     }
     var deleteBtn = (esAdmin && !o.anulada) ? '<button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Anular orden">&#9888;</button>' : '';
-    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + deleteBtn + '</div></td></tr>';
+    var editBtn = (esAdmin && !o.anulada) ? '<button class="btn-edit-orden" onclick=\'abrirEdicion(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\' title="Editar orden">&#9998;</button>' : '';
+    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + editBtn + deleteBtn + '</div></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
@@ -538,6 +578,180 @@ function cerrarModal(e) {
     document.getElementById('modal-overlay').classList.remove('open');
   }
 }
+
+// ── EDITAR ORDEN ──
+var _editOrdenActual = null;
+
+function abrirEdicion(o) {
+  _editOrdenActual = o;
+  document.getElementById('modal-editar-titulo').textContent = 'Editar Orden ' + (o.numero_completo||'');
+
+  var fechaVal = o.fecha_orden || '';
+
+  var html = '<div class="form-grid">';
+  html += '<div class="section-title" style="margin-top:0;padding-top:0;border-top:none;">Datos del cliente</div>';
+  html += '<div class="form-full"><label>Razón Social</label><input type="text" id="edit-razon_social" value="' + esc(o.razon_social) + '"></div>';
+  html += '<div><label>CUIT</label><input type="text" id="edit-cuit" value="' + esc(o.cuit) + '"></div>';
+  html += '<div><label>Teléfono</label><input type="text" id="edit-telefono" value="' + esc(o.telefono) + '"></div>';
+  html += '<div><label>Email</label><input type="email" id="edit-email" value="' + esc(o.email) + '"></div>';
+  html += '<div><label>Rubro</label><select id="edit-rubro"><option value="PARTICULAR"' + (o.rubro==='PARTICULAR'?' selected':'') + '>PARTICULAR</option><option value="EMPRESA"' + (o.rubro==='EMPRESA'?' selected':'') + '>EMPRESA</option><option value="COMERCIO"' + (o.rubro==='COMERCIO'?' selected':'') + '>COMERCIO</option><option value="ORGANISMO PÚBLICO"' + (o.rubro==='ORGANISMO PÚBLICO'?' selected':'') + '>ORGANISMO PÚBLICO</option></select></div>';
+  html += '<div><label>Método de Pago</label><input type="text" id="edit-metodo_pago" value="' + esc(o.metodo_pago) + '"></div>';
+
+  html += '<div class="section-title">Instalación</div>';
+  html += '<div class="form-full"><label>Domicilio de Instalación</label><input type="text" id="edit-dom_instalacion" value="' + esc(o.dom_instalacion) + '"></div>';
+  html += '<div><label>Localidad</label><input type="text" id="edit-localidad" value="' + esc(o.localidad) + '"></div>';
+  html += '<div><label>Plano</label><input type="text" id="edit-plano" value="' + esc(o.plano) + '"></div>';
+
+  html += '<div class="section-title">Orden</div>';
+  html += '<div><label>Fecha de Orden</label><input type="date" id="edit-fecha_orden" value="' + esc(fechaVal) + '"></div>';
+  html += '<div><label>Vendedor</label><select id="edit-vendedor"><option value="René Biagioni"' + (o.vendedor==='René Biagioni'?' selected':'') + '>René Biagioni</option><option value="María Pía Bologñese"' + (o.vendedor==='María Pía Bologñese'?' selected':'') + '>María Pía Bologñese</option></select></div>';
+  html += '<div><label>Cobrar</label><select id="edit-cobrar"><option value="Sí"' + (o.cobrar==='Sí'?' selected':'') + '>Sí</option><option value="No"' + (o.cobrar==='No'?' selected':'') + '>No</option></select></div>';
+  html += '<div><label>Plazo Mantenimiento</label><input type="text" id="edit-plazo_mantenimiento" value="' + esc(o.plazo_mantenimiento) + '"></div>';
+  html += '<div class="form-full"><label>Aclaraciones</label><textarea id="edit-aclaraciones">' + esc(o.aclaraciones) + '</textarea></div>';
+
+  html += '<div class="section-title">Responsable</div>';
+  html += '<div><label>Responsable</label><input type="text" id="edit-responsable" value="' + esc(o.responsable) + '"></div>';
+  html += '<div><label>Celular Responsable</label><input type="text" id="edit-responsable_celular" value="' + esc(o.responsable_celular) + '"></div>';
+
+  // Productos
+  html += '<div class="section-title">Productos</div>';
+  var prods = o.productos || [];
+  html += '<div class="form-full" id="edit-productos-wrap">';
+  prods.forEach(function(p, i) {
+    html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;" class="edit-prod-row">';
+    html += '<div><label>Modelo</label><input type="text" class="edit-prod-modelo" value="' + esc(p.modelo) + '"></div>';
+    html += '<div><label>Cantidad</label><input type="number" class="edit-prod-cantidad" value="' + (p.cantidad||1) + '" min="1"></div>';
+    html += '<div><label>P. Unitario</label><input type="number" class="edit-prod-precio" value="' + (p.precio_unitario||0) + '" step="0.01"></div>';
+    html += '<div><label>Domicilio</label><input type="text" class="edit-prod-domicilio" value="' + esc(p.domicilio) + '"></div>';
+    html += '<div><label>Localidad</label><input type="text" class="edit-prod-localidad" value="' + esc(p.localidad) + '"></div>';
+    html += '<div><button type="button" onclick="this.closest(\'.edit-prod-row\').remove()" style="padding:6px 10px;background:#fee2e2;color:#dc2626;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:12px;">&#10005;</button></div>';
+    html += '</div>';
+  });
+  html += '<button type="button" onclick="agregarProductoEdit()" style="padding:6px 14px;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:6px;font-size:12px;cursor:pointer;margin-top:4px;">+ Agregar producto</button>';
+  html += '</div>';
+
+  // Documentación
+  html += '<div class="section-title">Documentación</div>';
+  if (o.dni_frente_url) html += '<div><label>DNI Frente</label><a class="doc-link" href="' + o.dni_frente_url + '" target="_blank">&#128196; Ver actual</a></div>';
+  if (o.dni_dorso_url) html += '<div><label>DNI Dorso</label><a class="doc-link" href="' + o.dni_dorso_url + '" target="_blank">&#128196; Ver actual</a></div>';
+  if (o.constancia_url) html += '<div><label>Constancia</label><a class="doc-link" href="' + o.constancia_url + '" target="_blank">&#128196; Ver actual</a></div>';
+  if (o.otro_documento_url) html += '<div><label>Otro Documento</label><a class="doc-link" href="' + o.otro_documento_url + '" target="_blank">&#128196; Ver actual</a></div>';
+  html += '<div class="form-full" style="margin-top:8px;"><label>Reemplazar DNI Frente</label><input type="file" id="edit-dni-frente" accept="image/*"></div>';
+  html += '<div class="form-full"><label>Reemplazar DNI Dorso</label><input type="file" id="edit-dni-dorso" accept="image/*"></div>';
+  html += '<div class="form-full"><label>Reemplazar Constancia</label><input type="file" id="edit-constancia" accept="image/*,.pdf"></div>';
+
+  html += '</div>';
+  document.getElementById('edit-form-body').innerHTML = html;
+  document.getElementById('modal-editar-overlay').classList.add('open');
+}
+
+function agregarProductoEdit() {
+  var wrap = document.getElementById('edit-productos-wrap');
+  var btn = wrap.querySelector('button:last-child');
+  var row = document.createElement('div');
+  row.className = 'edit-prod-row';
+  row.style = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;';
+  row.innerHTML = '<div><label>Modelo</label><input type="text" class="edit-prod-modelo" value=""></div>' +
+    '<div><label>Cantidad</label><input type="number" class="edit-prod-cantidad" value="1" min="1"></div>' +
+    '<div><label>P. Unitario</label><input type="number" class="edit-prod-precio" value="0" step="0.01"></div>' +
+    '<div><label>Domicilio</label><input type="text" class="edit-prod-domicilio" value=""></div>' +
+    '<div><label>Localidad</label><input type="text" class="edit-prod-localidad" value=""></div>' +
+    '<div><button type="button" onclick="this.closest(\'.edit-prod-row\').remove()" style="padding:6px 10px;background:#fee2e2;color:#dc2626;border:1.5px solid #fecaca;border-radius:6px;cursor:pointer;font-size:12px;">&#10005;</button></div>';
+  wrap.insertBefore(row, btn);
+}
+
+function cerrarModalEditar() {
+  document.getElementById('modal-editar-overlay').classList.remove('open');
+  _editOrdenActual = null;
+}
+
+async function subirArchivoEdit(fileInput, nombreBase) {
+  var file = fileInput.files[0];
+  if (!file) return null;
+  var ext = file.name.split('.').pop();
+  var fileName = nombreBase + '.' + ext;
+  var { error } = await sb.storage.from('ordenes-dni').upload(fileName, file, { upsert: true });
+  if (error) { console.error('Upload error:', error); return null; }
+  var { data } = sb.storage.from('ordenes-dni').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+async function guardarEdicion() {
+  if (!_editOrdenActual) return;
+  var btn = document.getElementById('btn-guardar-edit');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    // Recolectar productos
+    var prodRows = document.querySelectorAll('.edit-prod-row');
+    var productos = [];
+    prodRows.forEach(function(row) {
+      var modelo = row.querySelector('.edit-prod-modelo').value.trim();
+      if (!modelo) return;
+      productos.push({
+        modelo: modelo,
+        cantidad: parseInt(row.querySelector('.edit-prod-cantidad').value) || 1,
+        precio_unitario: parseFloat(row.querySelector('.edit-prod-precio').value) || 0,
+        domicilio: row.querySelector('.edit-prod-domicilio').value.trim(),
+        localidad: row.querySelector('.edit-prod-localidad').value.trim()
+      });
+    });
+
+    var payload = {
+      razon_social: document.getElementById('edit-razon_social').value.trim(),
+      cuit: document.getElementById('edit-cuit').value.trim(),
+      telefono: document.getElementById('edit-telefono').value.trim(),
+      email: document.getElementById('edit-email').value.trim(),
+      rubro: document.getElementById('edit-rubro').value,
+      metodo_pago: document.getElementById('edit-metodo_pago').value.trim(),
+      dom_instalacion: document.getElementById('edit-dom_instalacion').value.trim(),
+      localidad: document.getElementById('edit-localidad').value.trim(),
+      plano: document.getElementById('edit-plano').value.trim(),
+      fecha_orden: document.getElementById('edit-fecha_orden').value,
+      vendedor: document.getElementById('edit-vendedor').value,
+      cobrar: document.getElementById('edit-cobrar').value,
+      plazo_mantenimiento: document.getElementById('edit-plazo_mantenimiento').value.trim(),
+      aclaraciones: document.getElementById('edit-aclaraciones').value.trim(),
+      responsable: document.getElementById('edit-responsable').value.trim(),
+      responsable_celular: document.getElementById('edit-responsable_celular').value.trim(),
+      productos: productos
+    };
+
+    // Subir archivos nuevos si se seleccionaron
+    var base = _editOrdenActual.numero_completo || _editOrdenActual.id;
+    var dniFrenteInput = document.getElementById('edit-dni-frente');
+    var dniDorsoInput = document.getElementById('edit-dni-dorso');
+    var constanciaInput = document.getElementById('edit-constancia');
+
+    var dniFrenteUrl = await subirArchivoEdit(dniFrenteInput, base + '-dni-frente');
+    if (dniFrenteUrl) payload.dni_frente_url = dniFrenteUrl;
+    var dniDorsoUrl = await subirArchivoEdit(dniDorsoInput, base + '-dni-dorso');
+    if (dniDorsoUrl) payload.dni_dorso_url = dniDorsoUrl;
+    var constanciaUrl = await subirArchivoEdit(constanciaInput, base + '-constancia');
+    if (constanciaUrl) payload.constancia_url = constanciaUrl;
+
+    var res = await fetch(API_URL + '/api/ordenes/' + _editOrdenActual.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      var err = await res.json();
+      throw new Error(err.error || 'Error al guardar');
+    }
+
+    cerrarModalEditar();
+    cargarOrdenes();
+  } catch (err) {
+    alert('Error al guardar: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Guardar cambios';
+  }
+}
+
+function esc(v) { return (v||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>
 </html>
