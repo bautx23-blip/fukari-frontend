@@ -803,8 +803,8 @@ async function guardarOrden() {
     if (errores.length > 0 && !window._forzarGuardado) {
       btn.disabled = false;
       btn.textContent = 'Guardar y generar PDF';
-      // "Sí, es cliente" puede continuar igual; "No, es nuevo" debe completar todo
-      mostrarErrores(errores, !window._esNuevoCliente);
+      // Siempre permitir continuar aunque falten campos
+      mostrarErrores(errores, true);
       return;
     }
     window._forzarGuardado = false;
