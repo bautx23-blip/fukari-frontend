@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock y Precios — Yakú</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;background:#f1f5f9;min-height:100vh;color:#111827;visibility:hidden;}
+body.ready{visibility:visible;}
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.topbar-logos img.yaku{height:36px;}
+.topbar-logos .fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
+.topbar-logos img.fuk{height:26px;}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:0.3px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-right span{color:#9ca3af;font-size:12px;}
+.btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.15s;}
+.btn-logout:hover{border-color:#9ca3af;color:#fff;}
+.contenido{padding:28px 32px;max-width:800px;margin:0 auto;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.page-header h1{font-size:20px;font-weight:700;color:#1a1a2e;}
+.page-header p{font-size:13px;color:#6b7280;}
+.btn-volver{padding:8px 16px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
+.btn-volver:hover{background:#f3f4f6;}
+.tabla-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:hidden;}
+.tabla-header{padding:16px 20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;}
+.tabla-header h3{font-size:14px;font-weight:600;color:#374151;}
+.tabla-header span{font-size:12px;color:#9ca3af;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:#f9fafb;padding:10px 16px;text-align:left;font-size:11.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e5e7eb;}
+thead th:last-child{text-align:center;}
+tbody tr{border-bottom:1px solid #f3f4f6;transition:background 0.1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f9fafb;}
+tbody td{padding:10px 16px;font-size:13px;color:#374151;vertical-align:middle;}
+.modelo-name{font-weight:600;}
+.precio-cell{display:flex;align-items:center;gap:8px;justify-content:center;}
+.precio-input{width:110px;padding:6px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;text-align:right;outline:none;transition:border-color 0.15s;}
+.precio-input:focus{border-color:#d97706;background:#fffbeb;}
+.btn-save{padding:5px 12px;background:#d97706;color:#fff;border:none;border-radius:5px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.btn-save:hover{background:#b45309;}
+.btn-save:disabled{opacity:0.5;cursor:not-allowed;}
+.btn-save.saved{background:#16a34a;}
+.loading{text-align:center;padding:40px;color:#9ca3af;font-size:14px;}
+#toast{position:fixed;bottom:28px;right:28px;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:340px;display:none;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
+    <div class="fuk-wrap">
+      <img class="fuk" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari">
+    </div>
+  </div>
+  <span class="topbar-title">Stock y Precios</span>
+  <div class="topbar-right">
+    <span id="fecha-hoy"></span>
+    <span class="topbar-user" id="user-email"></span>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="contenido">
+  <div class="page-header">
+    <div>
+      <h1>Stock y Precios</h1>
+      <p>Editá los precios unitarios de cada modelo. Los precios se cargarán automáticamente en las nuevas órdenes.</p>
+    </div>
+    <a href="/hub.html" class="btn-volver">&#8592; Volver</a>
+  </div>
+
+  <div class="tabla-wrap">
+    <div class="tabla-header">
+      <h3>Modelos</h3>
+      <span id="total-modelos"></span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Modelo</th>
+          <th style="text-align:center;width:220px;">Precio Unitario</th>
+        </tr>
+      </thead>
+      <tbody id="stock-body">
+        <tr><td colspan="2" class="loading">Cargando modelos...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const API_URL = 'https://fukari-backend-production.up.railway.app';
+const SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (!session) { window.location.href = '/index.html'; return; }
+  document.body.classList.add('ready');
+  document.getElementById('user-email').textContent = session.user.email;
+  var d = new Date();
+  document.getElementById('fecha-hoy').textContent =
+    d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+  cargarStock();
+});
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = '/index.html';
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 2500);
+}
+
+async function cargarStock() {
+  try {
+    var res = await fetch(API_URL + '/api/stock');
+    if (!res.ok) throw new Error('Error al cargar');
+    var items = await res.json();
+    var tbody = document.getElementById('stock-body');
+    document.getElementById('total-modelos').textContent = items.length + ' modelos';
+
+    tbody.innerHTML = items.map(function(item) {
+      return '<tr>' +
+        '<td class="modelo-name">' + item.modelo + '</td>' +
+        '<td><div class="precio-cell">' +
+          '<span>$</span>' +
+          '<input type="number" class="precio-input" id="precio-' + item.id + '" value="' + (item.precio || 0) + '" min="0" step="0.01">' +
+          '<button class="btn-save" onclick="guardarPrecio(' + item.id + ')">Guardar</button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join('');
+  } catch(err) {
+    document.getElementById('stock-body').innerHTML =
+      '<tr><td colspan="2" class="loading">Error al cargar stock: ' + err.message + '</td></tr>';
+  }
+}
+
+async function guardarPrecio(id) {
+  var input = document.getElementById('precio-' + id);
+  var btn = input.parentElement.querySelector('.btn-save');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  try {
+    var res = await fetch(API_URL + '/api/stock/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ precio: parseFloat(input.value) || 0 })
+    });
+    if (!res.ok) throw new Error('Error al guardar');
+    btn.textContent = 'Guardado';
+    btn.classList.add('saved');
+    showToast('Precio actualizado correctamente');
+    setTimeout(function(){ btn.textContent = 'Guardar'; btn.classList.remove('saved'); btn.disabled = false; }, 1500);
+  } catch(err) {
+    btn.textContent = 'Guardar';
+    btn.disabled = false;
+    showToast('Error: ' + err.message);
+  }
+}
+</script>
+</body>
+</html>

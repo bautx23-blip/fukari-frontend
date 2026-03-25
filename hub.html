@@ -114,6 +114,15 @@
     .task-card.reportes:hover .task-icon { background: #27ae60; }
     .task-card.reportes:hover .task-arrow { color: #27ae60; }
 
+    /* Card de stock: acento naranja */
+    .task-card.stock:hover {
+      border-color: #d97706;
+      box-shadow: 0 6px 20px rgba(217,119,6,0.12);
+    }
+    .task-card.stock::after { background: #d97706; }
+    .task-card.stock:hover .task-icon { background: #d97706; }
+    .task-card.stock:hover .task-arrow { color: #d97706; }
+
     /* Card de clientes: acento azul */
     .task-card.clientes:hover {
       border-color: #2563eb;
@@ -236,19 +245,17 @@
       </div>
     </a>
 
-  </div>
-
-  <div class="section-label">Próximamente</div>
-
-  <div class="tasks-grid">
-    <div class="task-card disabled">
+    <a href="/yaku-stock.html" class="task-card stock">
       <div class="task-icon">📦</div>
       <div class="task-body">
-        <div class="task-title">Stock y Modelos</div>
-        <div class="task-desc">Administrá los modelos disponibles y precios unitarios.</div>
+        <div class="task-title">Stock y Precios</div>
+        <div class="task-desc">Administrá los modelos disponibles y sus precios unitarios.</div>
       </div>
-      <div class="task-footer"><span class="task-badge soon">Próximamente</span></div>
-    </div>
+      <div class="task-footer">
+        <span class="task-badge" style="background:#fef3c7;color:#d97706;">Activo</span>
+        <span class="task-arrow">→</span>
+      </div>
+    </a>
 
   </div>
 </div>
