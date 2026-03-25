@@ -25,6 +25,11 @@ body.ready{visibility:visible;}
 .page-header p{font-size:13px;color:#6b7280;}
 .btn-volver{padding:8px 16px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
 .btn-volver:hover{background:#f3f4f6;}
+.tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid #e5e7eb;}
+.tab{padding:10px 24px;font-size:14px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-2px;transition:all 0.15s;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;}
+.tab:hover{color:#374151;}
+.tab.active{color:#d97706;border-bottom-color:#d97706;}
+.tab.active-venta{color:#2563eb;border-bottom-color:#2563eb;}
 .tabla-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:hidden;}
 .tabla-header{padding:16px 20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;}
 .tabla-header h3{font-size:14px;font-weight:600;color:#374151;}
@@ -44,6 +49,8 @@ tbody td{padding:10px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .btn-save:hover{background:#b45309;}
 .btn-save:disabled{opacity:0.5;cursor:not-allowed;}
 .btn-save.saved{background:#16a34a;}
+.btn-save.venta{background:#2563eb;}
+.btn-save.venta:hover{background:#1d4ed8;}
 .loading{text-align:center;padding:40px;color:#9ca3af;font-size:14px;}
 #toast{position:fixed;bottom:28px;right:28px;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:340px;display:none;}
 </style>
@@ -74,9 +81,14 @@ tbody td{padding:10px 16px;font-size:13px;color:#374151;vertical-align:middle;}
     <a href="/hub.html" class="btn-volver">&#8592; Volver</a>
   </div>
 
+  <div class="tabs">
+    <button class="tab active" id="tab-alquiler" onclick="cambiarTab('alquiler')">Alquiler</button>
+    <button class="tab" id="tab-venta" onclick="cambiarTab('venta')">Venta</button>
+  </div>
+
   <div class="tabla-wrap">
     <div class="tabla-header">
-      <h3>Modelos</h3>
+      <h3 id="tabla-titulo">Modelos — Alquiler</h3>
       <span id="total-modelos"></span>
     </div>
     <table>
@@ -103,6 +115,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+var _tabActual = 'alquiler';
+
 sb.auth.getSession().then(({ data: { session } }) => {
   if (!session) { window.location.href = '/index.html'; return; }
   document.body.classList.add('ready');
@@ -110,7 +124,7 @@ sb.auth.getSession().then(({ data: { session } }) => {
   var d = new Date();
   document.getElementById('fecha-hoy').textContent =
     d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
-  cargarStock();
+  cargarStock('alquiler');
 });
 
 async function logout() {
@@ -125,21 +139,30 @@ function showToast(msg) {
   setTimeout(function(){ t.style.display = 'none'; }, 2500);
 }
 
-async function cargarStock() {
+function cambiarTab(tipo) {
+  _tabActual = tipo;
+  document.getElementById('tab-alquiler').className = 'tab' + (tipo === 'alquiler' ? ' active' : '');
+  document.getElementById('tab-venta').className = 'tab' + (tipo === 'venta' ? ' active-venta' : '');
+  document.getElementById('tabla-titulo').textContent = 'Modelos — ' + (tipo === 'alquiler' ? 'Alquiler' : 'Venta');
+  cargarStock(tipo);
+}
+
+async function cargarStock(tipo) {
   try {
-    var res = await fetch(API_URL + '/api/stock');
+    var res = await fetch(API_URL + '/api/stock?tipo=' + tipo);
     if (!res.ok) throw new Error('Error al cargar');
     var items = await res.json();
     var tbody = document.getElementById('stock-body');
     document.getElementById('total-modelos').textContent = items.length + ' modelos';
 
+    var btnClass = tipo === 'venta' ? 'btn-save venta' : 'btn-save';
     tbody.innerHTML = items.map(function(item) {
       return '<tr>' +
         '<td class="modelo-name">' + item.modelo + '</td>' +
         '<td><div class="precio-cell">' +
           '<span>$</span>' +
           '<input type="number" class="precio-input" id="precio-' + item.id + '" value="' + (item.precio || 0) + '" min="0" step="0.01">' +
-          '<button class="btn-save" onclick="guardarPrecio(' + item.id + ')">Guardar</button>' +
+          '<button class="' + btnClass + '" onclick="guardarPrecio(' + item.id + ')">Guardar</button>' +
         '</div></td>' +
       '</tr>';
     }).join('');
@@ -151,7 +174,7 @@ async function cargarStock() {
 
 async function guardarPrecio(id) {
   var input = document.getElementById('precio-' + id);
-  var btn = input.parentElement.querySelector('.btn-save');
+  var btn = input.parentElement.querySelector('.btn-save, .btn-save.venta');
   btn.disabled = true;
   btn.textContent = 'Guardando...';
   try {
