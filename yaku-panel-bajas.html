@@ -610,7 +610,11 @@ function ejecutarAnular() {
   var btn = document.getElementById('btn-confirmar-anular');
   btn.disabled = true;
   btn.textContent = 'Anulando...';
-  fetch(API_URL + '/api/bajas/' + id, { method: 'DELETE' })
+  fetch(API_URL + '/api/bajas/' + id, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: _currentUserEmail })
+  })
     .then(function(res) {
       if (!res.ok) return res.json().then(function(j){ throw new Error(j.error || 'Error al anular'); });
       return res.json();

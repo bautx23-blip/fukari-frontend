@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fukari — Papelera</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      min-height: 100vh;
+      background: #f1f5f9;
+      color: #111827;
+      visibility: hidden;
+    }
+    body.ready { visibility: visible; }
+
+    .topbar {
+      background: #1a1a2e;
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-logos { display: flex; align-items: center; gap: 12px; }
+    .topbar-logos img.yaku { height: 36px; }
+    .fuk-wrap {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px; padding: 4px 8px;
+      display: flex; align-items: center;
+    }
+    .fuk-wrap img { height: 26px; }
+    .topbar-title { color: #fff; font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .topbar-right span { color: #9ca3af; font-size: 12px; }
+    .topbar-user { color: #94a3b8; font-size: 12px; }
+    .btn-logout {
+      background: transparent; border: 1px solid #4b5563;
+      color: #d1d5db; padding: 6px 14px; border-radius: 6px;
+      font-family: inherit; font-size: 12px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-logout:hover { border-color: #9ca3af; color: #fff; }
+    .btn-back {
+      background: transparent; border: 1px solid #4b5563;
+      color: #d1d5db; padding: 6px 14px; border-radius: 6px;
+      font-family: inherit; font-size: 12px; cursor: pointer; transition: all 0.15s;
+      text-decoration: none;
+    }
+    .btn-back:hover { border-color: #9ca3af; color: #fff; }
+
+    .contenido {
+      padding: 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .page-header { margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+    .page-header .icon { font-size: 24px; }
+
+    .no-permiso {
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 48px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 15px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .tab-btn {
+      padding: 10px 24px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: #6b7280;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      color: #1a1a2e;
+      border-bottom-color: #1a1a2e;
+    }
+    .tab-btn:hover { color: #1a1a2e; }
+
+    .tabla-wrap {
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #f9fafb;
+      padding: 10px 16px;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6b7280;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    tbody td {
+      padding: 12px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid #f3f4f6;
+      vertical-align: middle;
+    }
+    tbody tr:hover { background: #f9fafb; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .badge-num {
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    .badge-dias {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+    .badge-dias.safe { background: #fef3c7; color: #d97706; }
+    .badge-dias.danger { background: #fee2e2; color: #dc2626; }
+
+    .acciones { display: flex; gap: 6px; }
+
+    .btn-restaurar {
+      background: #dcfce7;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 6px;
+      color: #16a34a;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .btn-restaurar:hover { background: #bbf7d0; border-color: #86efac; }
+
+    .btn-purge {
+      background: #fee2e2;
+      border: 1.5px solid #fecaca;
+      border-radius: 6px;
+      color: #dc2626;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .btn-purge:hover { background: #fecaca; border-color: #f87171; }
+
+    .empty-msg {
+      padding: 40px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .loading {
+      padding: 40px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    /* Modal confirmación */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-box {
+      background: #fff;
+      border-radius: 12px;
+      width: 420px;
+      max-width: 90vw;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-header h3 { font-size: 15px; font-weight: 700; }
+    .modal-body { padding: 20px; font-size: 13.5px; color: #374151; line-height: 1.6; }
+    .modal-footer {
+      padding: 14px 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      border-top: 1px solid #f3f4f6;
+    }
+    .modal-footer button {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-cancel {
+      background: #f3f4f6;
+      border: 1.5px solid #d1d5db;
+      color: #374151;
+    }
+    .btn-cancel:hover { background: #e5e7eb; }
+    .btn-confirm-danger {
+      background: #dc2626;
+      border: 1.5px solid #dc2626;
+      color: #fff;
+    }
+    .btn-confirm-danger:hover { background: #b91c1c; }
+
+    @media (max-width: 768px) {
+      .contenido { padding: 16px; }
+      .acciones { flex-direction: column; gap: 4px; }
+      .btn-restaurar, .btn-purge { padding: 5px 8px; font-size: 10px; }
+      table { font-size: 12px; }
+      thead th, tbody td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yaku">
+    <div class="fuk-wrap">
+      <img src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari">
+    </div>
+  </div>
+  <span class="topbar-title">Papelera</span>
+  <div class="topbar-right">
+    <a href="/hub.html" class="btn-back">&larr; Volver al panel</a>
+    <span class="topbar-user" id="user-email"></span>
+    <button class="btn-logout" onclick="logout()">Cerrar sesion</button>
+  </div>
+</div>
+
+<div class="contenido" id="main-content" style="display:none;">
+  <div class="page-header">
+    <span class="icon">&#128465;</span>
+    <h1>Papelera</h1>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="cambiarTab('ordenes')">Ordenes de Instalacion</button>
+    <button class="tab-btn" onclick="cambiarTab('bajas')">Ordenes de Baja</button>
+  </div>
+
+  <div class="tabla-wrap">
+    <div class="loading" id="loading">Cargando papelera...</div>
+    <table id="tabla-papelera" style="display:none;">
+      <thead>
+        <tr>
+          <th>Numero</th>
+          <th>Razon Social</th>
+          <th>Fecha borrado</th>
+          <th>Borrado por</th>
+          <th>Auto-eliminar</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-papelera"></tbody>
+    </table>
+    <div class="empty-msg" id="empty-msg" style="display:none;">No hay elementos en la papelera</div>
+  </div>
+</div>
+
+<div class="contenido" id="no-permiso-content" style="display:none;">
+  <div class="no-permiso">
+    <p>No tenes permiso para acceder a esta seccion.</p>
+    <br>
+    <a href="/hub.html" style="color:#1a1a2e; font-weight:600;">Volver al panel</a>
+  </div>
+</div>
+
+<!-- Modal de confirmación para purge -->
+<div class="modal-overlay" id="modal-purge">
+  <div class="modal-box">
+    <div class="modal-header" style="background:#dc2626;">
+      <span style="font-size:20px;">&#9888;</span>
+      <h3>Eliminar definitivamente</h3>
+    </div>
+    <div class="modal-body">
+      ¿Estas seguro que queres eliminar <strong id="modal-purge-nombre"></strong> definitivamente?<br>
+      <span style="font-size:12px;color:#9ca3af;margin-top:6px;display:block;">Esta accion no se puede deshacer.</span>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModalPurge()">Cancelar</button>
+      <button class="btn-confirm-danger" id="btn-confirm-purge" onclick="ejecutarPurge()">Si, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+var API_URL = 'https://fukari-backend-production.up.railway.app';
+var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var _userEmail = '';
+var _tabActual = 'ordenes';
+var _dataPapelera = { ordenes: [], bajas: [] };
+
+// Auth check
+sb.auth.getSession().then(function(result) {
+  var session = result.data.session;
+  if (!session) {
+    window.location.href = '/index.html';
+    return;
+  }
+  document.body.classList.add('ready');
+  _userEmail = session.user.email;
+  document.getElementById('user-email').textContent = _userEmail;
+
+  if (_userEmail !== ADMIN_EMAIL) {
+    document.getElementById('no-permiso-content').style.display = '';
+    return;
+  }
+  document.getElementById('main-content').style.display = '';
+  cargarPapelera();
+});
+
+async function cargarPapelera() {
+  document.getElementById('loading').style.display = '';
+  document.getElementById('tabla-papelera').style.display = 'none';
+  document.getElementById('empty-msg').style.display = 'none';
+  try {
+    var res = await fetch(API_URL + '/api/papelera?email=' + encodeURIComponent(_userEmail));
+    if (!res.ok) throw new Error('Error al cargar papelera');
+    var data = await res.json();
+    _dataPapelera = data;
+    renderTab();
+  } catch(err) {
+    document.getElementById('loading').textContent = 'Error: ' + err.message;
+  }
+}
+
+function cambiarTab(tab) {
+  _tabActual = tab;
+  var btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(function(b, i) {
+    b.classList.toggle('active', (i === 0 && tab === 'ordenes') || (i === 1 && tab === 'bajas'));
+  });
+  renderTab();
+}
+
+function renderTab() {
+  var items = _tabActual === 'ordenes' ? _dataPapelera.ordenes : _dataPapelera.bajas;
+  var tipo = _tabActual === 'ordenes' ? 'orden' : 'baja';
+  var tbody = document.getElementById('tbody-papelera');
+  var tabla = document.getElementById('tabla-papelera');
+  var empty = document.getElementById('empty-msg');
+  var loading = document.getElementById('loading');
+
+  loading.style.display = 'none';
+
+  if (!items || items.length === 0) {
+    tabla.style.display = 'none';
+    empty.style.display = '';
+    return;
+  }
+
+  tabla.style.display = '';
+  empty.style.display = 'none';
+
+  var html = '';
+  items.forEach(function(item) {
+    var deletedDate = new Date(item.deleted_at);
+    var ahora = new Date();
+    var diasPasados = Math.floor((ahora - deletedDate) / (1000 * 60 * 60 * 24));
+    var diasRestantes = 30 - diasPasados;
+    if (diasRestantes < 0) diasRestantes = 0;
+    var badgeClass = diasRestantes <= 7 ? 'danger' : 'safe';
+
+    html += '<tr>';
+    html += '<td><span class="badge-num">' + esc(item.numero_completo || '-') + '</span></td>';
+    html += '<td>' + esc(item.razon_social || '-') + '</td>';
+    html += '<td>' + formatFecha(item.deleted_at) + '</td>';
+    html += '<td>' + esc(item.deleted_by || '-') + '</td>';
+    html += '<td><span class="badge-dias ' + badgeClass + '">' + (diasRestantes > 0 ? diasRestantes + ' dias' : 'Vence hoy') + '</span></td>';
+    html += '<td class="acciones">';
+    html += '<button class="btn-restaurar" onclick="restaurar(\'' + tipo + '\',\'' + item.id + '\')">Restaurar</button>';
+    html += '<button class="btn-purge" onclick="confirmarPurge(\'' + tipo + '\',\'' + item.id + '\',\'' + esc((item.numero_completo || '').replace(/'/g, '')) + '\')">Eliminar</button>';
+    html += '</td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+async function restaurar(tipo, id) {
+  try {
+    var res = await fetch(API_URL + '/api/papelera/restore/' + tipo + '/' + id, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: _userEmail })
+    });
+    if (!res.ok) {
+      var j = await res.json();
+      throw new Error(j.error || 'Error al restaurar');
+    }
+    await cargarPapelera();
+  } catch(err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+var _purgeData = {};
+function confirmarPurge(tipo, id, nombre) {
+  _purgeData = { tipo: tipo, id: id };
+  document.getElementById('modal-purge-nombre').textContent = nombre;
+  document.getElementById('modal-purge').style.display = 'flex';
+}
+
+function cerrarModalPurge() {
+  document.getElementById('modal-purge').style.display = 'none';
+}
+
+async function ejecutarPurge() {
+  var btn = document.getElementById('btn-confirm-purge');
+  btn.disabled = true;
+  btn.textContent = 'Eliminando...';
+  try {
+    var res = await fetch(API_URL + '/api/papelera/purge/' + _purgeData.tipo + '/' + _purgeData.id, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: _userEmail })
+    });
+    if (!res.ok) {
+      var j = await res.json();
+      throw new Error(j.error || 'Error al eliminar');
+    }
+    cerrarModalPurge();
+    await cargarPapelera();
+  } catch(err) {
+    alert('Error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Si, eliminar';
+  }
+}
+
+function formatFecha(iso) {
+  if (!iso) return '-';
+  var d = new Date(iso);
+  return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = '/index.html';
+}
+</script>
+</body>
+</html>
