@@ -132,6 +132,15 @@
     .task-card.clientes:hover .task-icon { background: #2563eb; }
     .task-card.clientes:hover .task-arrow { color: #2563eb; }
 
+    /* Card de papelera: acento gris */
+    .task-card.papelera:hover {
+      border-color: #7f8c8d;
+      box-shadow: 0 6px 20px rgba(127,140,141,0.12);
+    }
+    .task-card.papelera::after { background: #7f8c8d; }
+    .task-card.papelera:hover .task-icon { background: #7f8c8d; }
+    .task-card.papelera:hover .task-arrow { color: #7f8c8d; }
+
     .task-card.disabled {
       opacity: 0.45;
       cursor: not-allowed;
@@ -257,6 +266,18 @@
       </div>
     </a>
 
+    <a href="/yaku-papelera.html" class="task-card papelera" id="card-papelera" style="display:none;">
+      <div class="task-icon" style="font-size:20px;">&#128465;</div>
+      <div class="task-body">
+        <div class="task-title">Papelera</div>
+        <div class="task-desc">Revisá y restaurá ordenes eliminadas, o eliminalas definitivamente.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge" style="background:#ecf0f1;color:#7f8c8d;">Admin</span>
+        <span class="task-arrow">&rarr;</span>
+      </div>
+    </a>
+
   </div>
 </div>
 
@@ -275,6 +296,9 @@
     document.body.classList.add('ready');
     const email = session.user.email;
     document.getElementById('user-email').textContent = email;
+    if (email === 'renebiagioni@yakuagua.com.ar') {
+      document.getElementById('card-papelera').style.display = '';
+    }
     const d = new Date();
     document.getElementById('fecha-hoy').textContent =
       d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });

@@ -422,7 +422,11 @@ async function ejecutarBorrar() {
   btn.disabled = true;
   btn.textContent = 'Anulando...';
   try {
-    var res = await fetch(API_URL + '/api/ordenes/' + id, { method: 'DELETE' });
+    var res = await fetch(API_URL + '/api/ordenes/' + id, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: _currentUserEmail })
+    });
     if (!res.ok) {
       var j = await res.json();
       throw new Error(j.error || 'Error al anular');
