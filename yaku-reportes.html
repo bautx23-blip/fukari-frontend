@@ -592,7 +592,8 @@ function exportarPDF() {
     scrollY: -window.scrollY
   }).then(function(canvas) {
     var imgData = canvas.toDataURL('image/jpeg', 0.95);
-    var pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+    var jsPDF = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+    var pdf = new jsPDF('p', 'mm', 'a4');
 
     var pageWidth = pdf.internal.pageSize.getWidth();
     var pageHeight = pdf.internal.pageSize.getHeight();
