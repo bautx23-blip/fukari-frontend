@@ -356,7 +356,8 @@ function renderTabla() {
     }
     var motivo = b.motivo || '—';
     if (motivo.length > 40) motivo = motivo.substring(0,40) + '...';
-    var pdfBtn = b.pdf_url ? '<a class="btn-dl" href="' + b.pdf_url + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
+    var pdfHref = b.pdf_url ? b.pdf_url + '?t=' + Date.now() : '';
+    var pdfBtn = b.pdf_url ? '<a class="btn-dl" href="' + pdfHref + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
 
     var anuladaBadge = b.anulada ? '<span class="badge-anulada">ANULADA</span>' : '';
     var filaClass = b.anulada ? ' class="fila-anulada"' : '';
@@ -460,7 +461,7 @@ function verDetalle(b) {
     '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Equipos</label>' + equiposHtml + '</div>';
 
   var pdfBtn = document.getElementById('modal-pdf-btn');
-  if (b.pdf_url) { pdfBtn.href = b.pdf_url; pdfBtn.style.display = 'inline-block'; }
+  if (b.pdf_url) { pdfBtn.href = b.pdf_url + '?t=' + Date.now(); pdfBtn.style.display = 'inline-block'; }
   else { pdfBtn.style.display = 'none'; }
   document.getElementById('modal-overlay').classList.add('open');
 }
