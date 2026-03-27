@@ -79,6 +79,25 @@ tbody td.money{font-weight:600;color:#16a34a;}
 .bar-amount{font-size:10px;font-weight:600;color:#374151;white-space:nowrap;}
 .bar-fill{width:100%;min-width:36px;border-radius:4px 4px 0 0;background:#2563eb;transition:height 0.4s ease;}
 .bar-label{font-size:10px;color:#6b7280;white-space:nowrap;text-align:center;}
+
+/* ── FILTROS BAR ── */
+.filtros-bar{background:#fff;border-radius:8px;padding:14px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.filtros-bar label{font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;}
+.filtros-bar select, .filtros-bar input[type="date"]{padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;}
+.filtros-bar input[type="date"]{max-width:160px;}
+.periodo-btns{display:flex;gap:6px;margin-left:8px;}
+.periodo-btn{padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:6px;background:#fff;font-family:inherit;font-size:11.5px;font-weight:600;color:#6b7280;cursor:pointer;transition:all 0.15s;}
+.periodo-btn:hover{border-color:#2563eb;color:#2563eb;}
+.periodo-btn.active{background:#2563eb;color:#fff;border-color:#2563eb;}
+.btn-export-pdf{margin-left:auto;padding:8px 16px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
+.btn-export-pdf:hover{background:#2d2d4e;}
+.btn-export-pdf:disabled{opacity:0.5;cursor:not-allowed;}
+
+@media print{
+  .topbar,.filtros-bar{display:none!important;}
+  .contenido{padding:0!important;max-width:100%!important;}
+  body{visibility:visible!important;background:#fff!important;}
+}
 </style>
 </head>
 <body>
@@ -96,25 +115,37 @@ tbody td.money{font-weight:600;color:#16a34a;}
   </div>
 </div>
 
-<div class="contenido" id="contenido">
-  <div style="background:#fff;border-radius:8px;padding:14px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
-    <label style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Origen:</label>
-    <select id="filtro-origen" onchange="reRender()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;">
+<div style="padding:20px 32px 0;max-width:1200px;margin:0 auto;">
+  <div class="filtros-bar">
+    <label>Origen:</label>
+    <select id="filtro-origen" onchange="reRender()">
       <option value="app" selected>Creadas desde app</option>
-      <option value="importadas">Históricas (importadas)</option>
+      <option value="importadas">Historicas (importadas)</option>
       <option value="todas">Todas las fuentes</option>
     </select>
-    <label style="font-size:12px;font-weight:600;color:#6b7280;">Desde</label>
-    <input type="date" id="filtro-desde" onchange="reRender()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;max-width:160px;">
-    <label style="font-size:12px;font-weight:600;color:#6b7280;">Hasta</label>
-    <input type="date" id="filtro-hasta" onchange="reRender()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;max-width:160px;">
+    <label>Desde</label>
+    <input type="date" id="filtro-desde" onchange="onFechaManual()">
+    <label>Hasta</label>
+    <input type="date" id="filtro-hasta" onchange="onFechaManual()">
+    <div class="periodo-btns">
+      <button class="periodo-btn" onclick="setPeriodo('mes')">Este mes</button>
+      <button class="periodo-btn" onclick="setPeriodo('trimestre')">Trimestre</button>
+      <button class="periodo-btn" onclick="setPeriodo('anio')">Este año</button>
+      <button class="periodo-btn active" onclick="setPeriodo('todo')">Todo</button>
+    </div>
+    <button class="btn-export-pdf" id="btn-pdf" onclick="exportarPDF()">&#128196; Exportar PDF</button>
   </div>
+</div>
+
+<div class="contenido" id="contenido">
   <div class="loading-overlay" id="loading">
     <div class="spinner"></div>
     <span>Cargando datos...</span>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 var API_URL = 'https://fukari-backend-production.up.railway.app';
@@ -510,6 +541,118 @@ function renderClientes(clientes) {
 
   html += '</div>';
   return html;
+}
+
+/* ── PERIODO PRESETS ── */
+function setPeriodo(tipo) {
+  var ahora = new Date();
+  var desde = '';
+  var hasta = ahora.toISOString().split('T')[0];
+
+  if (tipo === 'mes') {
+    desde = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-01';
+  } else if (tipo === 'trimestre') {
+    var d = new Date(ahora.getFullYear(), ahora.getMonth() - 2, 1);
+    desde = d.toISOString().split('T')[0];
+  } else if (tipo === 'anio') {
+    desde = ahora.getFullYear() + '-01-01';
+  } else {
+    desde = '';
+    hasta = '';
+  }
+
+  document.getElementById('filtro-desde').value = desde;
+  document.getElementById('filtro-hasta').value = hasta;
+
+  var btns = document.querySelectorAll('.periodo-btn');
+  btns.forEach(function(b) { b.classList.remove('active'); });
+  event.target.classList.add('active');
+
+  reRender();
+}
+
+function onFechaManual() {
+  var btns = document.querySelectorAll('.periodo-btn');
+  btns.forEach(function(b) { b.classList.remove('active'); });
+  reRender();
+}
+
+/* ── EXPORTAR PDF ── */
+function exportarPDF() {
+  var btn = document.getElementById('btn-pdf');
+  btn.disabled = true;
+  btn.textContent = 'Generando...';
+
+  var contenido = document.getElementById('contenido');
+
+  html2canvas(contenido, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#f1f5f9',
+    scrollY: -window.scrollY
+  }).then(function(canvas) {
+    var imgData = canvas.toDataURL('image/jpeg', 0.95);
+    var pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+
+    var pageWidth = pdf.internal.pageSize.getWidth();
+    var pageHeight = pdf.internal.pageSize.getHeight();
+    var margin = 10;
+    var usableWidth = pageWidth - margin * 2;
+
+    var imgWidth = usableWidth;
+    var imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    // Header
+    var ahora = new Date();
+    var fechaStr = ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    var desde = document.getElementById('filtro-desde').value;
+    var hasta = document.getElementById('filtro-hasta').value;
+    var periodoStr = desde || hasta ? (desde || '...') + ' a ' + (hasta || '...') : 'Todo el periodo';
+
+    pdf.setFontSize(16);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Reportes — Yaku Filtros', margin, 14);
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, 'normal');
+    pdf.setTextColor(120);
+    pdf.text('Generado: ' + fechaStr + '  |  Periodo: ' + periodoStr, margin, 20);
+    pdf.setTextColor(0);
+
+    var yOffset = 26;
+    var remainingHeight = imgHeight;
+    var sourceY = 0;
+
+    while (remainingHeight > 0) {
+      var availableHeight = (yOffset === 26 ? pageHeight - yOffset - margin : pageHeight - margin * 2);
+      var sliceHeight = Math.min(remainingHeight, availableHeight);
+      var sliceCanvasHeight = (sliceHeight / imgHeight) * canvas.height;
+
+      var sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = sliceCanvasHeight;
+      var ctx = sliceCanvas.getContext('2d');
+      ctx.drawImage(canvas, 0, sourceY, canvas.width, sliceCanvasHeight, 0, 0, canvas.width, sliceCanvasHeight);
+
+      var sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+      var startY = yOffset === 26 ? yOffset : margin;
+      pdf.addImage(sliceData, 'JPEG', margin, startY, imgWidth, sliceHeight);
+
+      remainingHeight -= sliceHeight;
+      sourceY += sliceCanvasHeight;
+
+      if (remainingHeight > 0) {
+        pdf.addPage();
+        yOffset = 0;
+      }
+    }
+
+    pdf.save('Reportes-Yaku-' + fechaStr.replace(/\//g, '-') + '.pdf');
+  }).catch(function(err) {
+    alert('Error al generar PDF: ' + err.message);
+  }).finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = '&#128196; Exportar PDF';
+  });
 }
 </script>
 </body>
