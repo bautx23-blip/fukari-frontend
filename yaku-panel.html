@@ -175,7 +175,8 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <select id="filtro-estado" onchange="filtrar();calcularStats()"><option value="activas">Órdenes activas</option><option value="todas">Todas las órdenes</option><option value="anuladas">Órdenes anuladas</option></select>
     <select id="filtro-origen" onchange="cargarOrdenes()"><option value="app" selected>Creadas desde app</option><option value="importadas">Históricas (importadas)</option><option value="todas">Todas las fuentes</option></select>
     <button class="btn-refresh" onclick="cargarOrdenes()">&#8635; Actualizar</button>
-    <a href="/yaku-orden-instalacion.html" class="btn-refresh" style="background:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Crear orden nueva</a>
+    <a href="/yaku-orden-instalacion.html" class="btn-refresh" style="background:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Orden Alquiler</a>
+    <a href="/yaku-orden-instalacion.html?tipo=venta" class="btn-refresh" style="background:#d97706;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Orden Venta</a>
   </div>
 
   <div class="tabla-wrap">
@@ -373,7 +374,7 @@ function renderTabla() {
   const pagina = ordenesFiltradas.slice(inicio, inicio + POR_PAGINA);
   const totalPags = Math.ceil(total / POR_PAGINA);
   const esAdmin = _currentUserEmail === ADMIN_EMAIL;
-  var html = '<table><thead><tr><th>N° Orden</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Vendedor</th><th>Total</th><th>PDF</th><th>Acciones</th></tr></thead><tbody>';
+  var html = '<table><thead><tr><th>N° Orden</th><th>Tipo</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Vendedor</th><th>Total</th><th>PDF</th><th>Acciones</th></tr></thead><tbody>';
   pagina.forEach(function(o) {
     var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
     var tot = o.total_general ? '$' + parseFloat(o.total_general).toLocaleString('es-AR', {minimumFractionDigits:2}) : '—';
@@ -381,16 +382,21 @@ function renderTabla() {
     var pdfBtn = o.pdf_url ? '<a class="btn-ver" href="' + pdfHref + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
     var anuladaBadge = o.anulada ? '<span class="badge-anulada">ANULADA</span>' : '';
     var filaClass = o.anulada ? ' class="fila-anulada"' : '';
+    var esVenta = o.tipo_orden === 'venta';
+    var tipoBadge = esVenta
+      ? '<span style="display:inline-block;background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">VENTA</span>'
+      : '<span style="display:inline-block;background:#dbeafe;color:#2563eb;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">ALQUILER</span>';
     var mailBtn = '';
+    var tipoOrdenLabel = esVenta ? 'orden de venta' : 'orden de instalación';
     if (o.pdf_url) {
       var loc = (o.localidad||'').trim();
-      var subj = encodeURIComponent('Nueva orden de instalación — ' + loc + ' — ' + (o.razon_social||''));
-      var body = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva orden de instalación, para la localidad de ' + loc + '; el equipo será para ' + (o.responsable||'') + ' y su celular es ' + (o.responsable_celular||'') + '.\n\nLink de orden de instalación: ' + o.pdf_url);
+      var subj = encodeURIComponent('Nueva ' + tipoOrdenLabel + ' — ' + loc + ' — ' + (o.razon_social||''));
+      var body = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva ' + tipoOrdenLabel + ', para la localidad de ' + loc + '; el equipo será para ' + (o.responsable||'') + ' y su celular es ' + (o.responsable_celular||'') + '.\n\nLink de ' + tipoOrdenLabel + ': ' + o.pdf_url);
       mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subj + '&body=' + body + '" title="Enviar por mail">&#9993;</a>';
     }
     var deleteBtn = (esAdmin && !o.anulada) ? '<button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Anular orden">&#9888;</button>' : '';
     var editBtn = (esAdmin && !o.anulada) ? '<button class="btn-edit-orden" onclick=\'abrirEdicion(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\' title="Editar orden">&#9998;</button>' : '';
-    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + editBtn + deleteBtn + '</div></td></tr>';
+    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + tipoBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td><td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + editBtn + deleteBtn + '</div></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
