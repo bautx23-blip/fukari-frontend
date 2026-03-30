@@ -296,7 +296,7 @@
   </div>
   <div class="topbar-actions">
     <button class="btn btn-secondary btn-sm" onclick="openPlantillasModal()">📋 Plantillas</button>
-    <button class="btn btn-secondary btn-sm" onclick="exportar()">⬇ Exportar mes</button>
+    <button class="btn btn-secondary btn-sm" id="btnExportar" onclick="exportar()" disabled title="Sin cobros para exportar">⬇ Exportar XLS Cobranzas</button>
     <button class="btn btn-primary btn-sm" onclick="openCampanaModal()" id="btnCampana">
       📤 Lanzar campaña
     </button>
@@ -447,6 +447,16 @@ async function cargarStats() {
     document.getElementById('statCobrado').textContent = s.cobrado || 0;
     document.getElementById('statPendiente').textContent = (s.pendiente || 0) + (s.mensaje_enviado || 0);
     document.getElementById('statDisputa').textContent = s.disputa || 0;
+    // Habilitar/deshabilitar botón exportar
+    const exportables = (s.cobrado || 0) + (s.comprobante_recibido || 0);
+    const btnExp = document.getElementById('btnExportar');
+    if (exportables > 0) {
+      btnExp.disabled = false;
+      btnExp.title = `Exportar ${exportables} cobros`;
+    } else {
+      btnExp.disabled = true;
+      btnExp.title = 'Sin cobros para exportar';
+    }
   } catch {}
 }
 
@@ -657,6 +667,7 @@ async function subirArchivo(event) {
 
 // ── EXPORTAR ─────────────────────────────────────────────────
 function exportar() {
+  toast('Generando archivo...', 'success');
   window.location.href = `${API}/exportar?periodo=${periodoActual}`;
 }
 
