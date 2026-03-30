@@ -203,6 +203,28 @@
     .info-row .val.warn  { color: var(--warn); }
     .info-row .val.red   { color: var(--danger); }
 
+    /* ── HISTORIAL ── */
+    .historial-card {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      margin-bottom: 8px; overflow: hidden; transition: border-color .15s;
+    }
+    .historial-card:hover { border-color: var(--accent); }
+    .historial-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; cursor: pointer; user-select: none;
+    }
+    .historial-header .periodo { font-size: 13px; font-weight: 600; color: var(--text); }
+    .historial-header .meta { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .historial-header .arrow { color: var(--muted); transition: transform .2s; font-size: 10px; }
+    .historial-card.open .historial-header .arrow { transform: rotate(90deg); }
+    .historial-body { display: none; padding: 0 12px 10px; }
+    .historial-card.open .historial-body { display: block; }
+    .historial-msgs { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 8px 0; }
+    .historial-msg { font-size: 12px; color: var(--muted); line-height: 1.4; padding: 6px 8px; background: var(--surface); border-radius: 6px; }
+    .historial-msg.outbound { border-left: 2px solid var(--accent); }
+    .historial-msg.inbound { border-left: 2px solid var(--border2); }
+    .historial-notas { font-size: 11px; color: var(--muted); padding: 6px 0; border-top: 1px solid var(--border); margin-top: 6px; word-break: break-word; }
+
     /* ── BUTTONS ── */
     .btn {
       padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer;
@@ -505,6 +527,7 @@ async function seleccionarCobro(id) {
   renderLista();
   renderDetail(cobroSeleccionado);
   await cargarMensajes(id);
+  cargarHistorial(id);
 }
 
 function renderDetail(c) {
@@ -562,6 +585,10 @@ function renderDetail(c) {
         <div>
           <div class="info-section-title">Domicilio</div>
           <div style="font-size:13px;color:var(--muted);line-height:1.5">${c.domicilio || '—'}<br>${c.localidad || ''}</div>
+        </div>
+        <div>
+          <div class="info-section-title">Historial de cobranzas</div>
+          <div id="historialContainer" style="font-size:12px;color:var(--muted)">Cargando...</div>
         </div>
       </aside>
     </div>
@@ -662,6 +689,78 @@ async function subirArchivo(event) {
   } catch (err) {
     toast('Error al subir: ' + err.message, 'error');
     label.textContent = '📂 Subir planilla del mes';
+  }
+}
+
+// ── HISTORIAL ────────────────────────────────────────────────
+async function cargarHistorial(cobroId) {
+  const container = document.getElementById('historialContainer');
+  if (!container) return;
+  try {
+    const res = await fetch(`${API}/${cobroId}/historial`);
+    const historial = await res.json();
+    if (!historial.length) {
+      container.innerHTML = '<span style="color:var(--muted);font-size:12px">Sin historial previo</span>';
+      return;
+    }
+    const mesesNombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    container.innerHTML = historial.map(h => {
+      const [anio, mes] = (h.mes_periodo || '').split('-');
+      const periodoLabel = mes ? `${mesesNombres[parseInt(mes)-1]} ${anio}` : h.mes_periodo;
+      const importeLabel = `$${Number(h.importe_pagado || h.importe || 0).toLocaleString('es-AR')}`;
+      const fechaCobro = h.fecha_cobrado ? new Date(h.fecha_cobrado).toLocaleDateString('es-AR') : '';
+      return `
+        <div class="historial-card" id="hist-${h.id}">
+          <div class="historial-header" onclick="toggleHistorial('${h.id}')">
+            <span class="periodo">${periodoLabel}</span>
+            <span class="meta">
+              <span>${importeLabel}</span>
+              <span class="status ${h.estado}" style="font-size:11px;padding:2px 6px">${estadoLabel(h.estado)}</span>
+              <span class="arrow">▶</span>
+            </span>
+          </div>
+          <div class="historial-body">
+            <div class="info-row"><span class="lbl">Importe</span><span class="val green">${importeLabel}</span></div>
+            ${fechaCobro ? `<div class="info-row"><span class="lbl">Cobrado</span><span class="val">${fechaCobro}</span></div>` : ''}
+            ${h.tipo_comprobante ? `<div class="info-row"><span class="lbl">Tipo</span><span class="val">${h.tipo_comprobante}</span></div>` : ''}
+            ${h.nro_comprobante ? `<div class="info-row"><span class="lbl">N° comp.</span><span class="val">${h.nro_comprobante}</span></div>` : ''}
+            ${h.notas ? `<div class="historial-notas">📋 ${h.notas}</div>` : ''}
+            <div class="historial-msgs" id="hist-msgs-${h.id}"><span style="color:var(--muted)">Click para ver mensajes...</span></div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch {
+    container.innerHTML = '<span style="color:var(--muted);font-size:12px">Error cargando historial</span>';
+  }
+}
+
+async function toggleHistorial(id) {
+  const card = document.getElementById(`hist-${id}`);
+  if (!card) return;
+  const wasOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+
+  // Cargar mensajes al abrir por primera vez
+  if (!wasOpen) {
+    const msgsContainer = document.getElementById(`hist-msgs-${id}`);
+    if (msgsContainer && msgsContainer.dataset.loaded !== 'true') {
+      try {
+        const res = await fetch(`${API}/${id}/mensajes`);
+        const msgs = await res.json();
+        if (msgs.length) {
+          msgsContainer.innerHTML = msgs.map(m => {
+            const hora = new Date(m.created_at).toLocaleString('es-AR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+            const contenido = m.tipo === 'IMAGE' ? '📷 Imagen' + (m.imagen_url ? `<br><img src="${m.imagen_url}" style="max-width:120px;border-radius:6px;margin-top:4px;cursor:zoom-in" onclick="window.open(this.src,'_blank')">` : '') : (m.contenido || '').slice(0, 150) + ((m.contenido || '').length > 150 ? '...' : '');
+            return `<div class="historial-msg ${m.direccion.toLowerCase()}">${hora} — ${contenido}</div>`;
+          }).join('');
+        } else {
+          msgsContainer.innerHTML = '<span style="color:var(--muted)">Sin mensajes</span>';
+        }
+        msgsContainer.dataset.loaded = 'true';
+      } catch {
+        msgsContainer.innerHTML = '<span style="color:var(--muted)">Error</span>';
+      }
+    }
   }
 }
 
