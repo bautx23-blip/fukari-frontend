@@ -234,6 +234,8 @@ var bajasFiltradas = [];
 var paginaActual = 1;
 var _currentUserEmail = null;
 var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+var PIA_EMAIL = 'ventas@yakuagua.com.ar';
+var PIA_VENDEDOR = 'María Pía Bologñese';
 
 sb.auth.getSession().then(function(result) {
   var session = result.data.session;
@@ -252,6 +254,16 @@ function logout() {
 function iniciarPanel() {
   var ahora = new Date();
   document.getElementById('topbar-fecha').textContent = ahora.toLocaleDateString('es-AR', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  // Pia: solo ve sus bajas
+  if (_currentUserEmail === PIA_EMAIL) {
+    var filtroVendedor = document.getElementById('filtro-vendedor');
+    if (filtroVendedor) {
+      filtroVendedor.value = PIA_VENDEDOR;
+      filtroVendedor.style.display = 'none';
+    }
+  }
+
   cargarBajas();
 }
 

@@ -254,6 +254,8 @@ let ordenesFiltradas = [];
 let paginaActual = 1;
 let _currentUserEmail = null;
 const ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+const PIA_EMAIL = 'ventas@yakuagua.com.ar';
+const PIA_VENDEDOR = 'María Pía Bologñese';
 
 sb.auth.getSession().then(({ data: { session } }) => {
   if (!session) { window.location.href = '/index.html'; return; }
@@ -274,6 +276,20 @@ function iniciarPanel() {
   var primerDia = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
   document.getElementById('filtro-desde').value = primerDia.toISOString().split('T')[0];
   document.getElementById('filtro-hasta').value = ahora.toISOString().split('T')[0];
+
+  // Pia: restringir vista
+  if (_currentUserEmail === PIA_EMAIL) {
+    // Forzar filtro vendedor a Pia y ocultarlo
+    var filtroVendedor = document.getElementById('filtro-vendedor');
+    filtroVendedor.value = PIA_VENDEDOR;
+    filtroVendedor.style.display = 'none';
+    // Ocultar botón de orden de venta y filtros avanzados
+    document.querySelectorAll('a[href*="tipo=venta"]').forEach(function(el){ el.style.display = 'none'; });
+    // Ocultar filtro de origen
+    var filtroOrigen = document.getElementById('filtro-origen');
+    if (filtroOrigen) filtroOrigen.style.display = 'none';
+  }
+
   cargarOrdenes();
 }
 

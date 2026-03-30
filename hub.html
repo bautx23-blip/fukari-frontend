@@ -320,6 +320,15 @@
     if (email === 'renebiagioni@yakuagua.com.ar') {
       document.getElementById('card-papelera').style.display = '';
     }
+    // Pia: solo ve Órdenes de Instalación y Órdenes de Baja
+    if (email === 'ventas@yakuagua.com.ar') {
+      document.querySelectorAll('.task-card').forEach(function(card) {
+        var href = card.getAttribute('href') || '';
+        if (href !== '/yaku-panel.html' && href !== '/yaku-panel-bajas.html' && href !== '/yaku-orden-instalacion.html') {
+          card.style.display = 'none';
+        }
+      });
+    }
     const d = new Date();
     document.getElementById('fecha-hoy').textContent =
       d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
