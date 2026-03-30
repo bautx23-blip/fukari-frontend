@@ -41,7 +41,18 @@ tbody tr{border-bottom:1px solid #f3f4f6;transition:background 0.1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:#f9fafb;}
 tbody td{padding:10px 16px;font-size:13px;color:#374151;vertical-align:middle;}
+tbody tr.fuera-stock{opacity:0.5;background:#fef2f2;}
+tbody tr.fuera-stock .modelo-name{text-decoration:line-through;color:#9ca3af;}
 .modelo-name{font-weight:600;}
+.badge-stock{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle;}
+.badge-stock.activo{background:#dcfce7;color:#16a34a;}
+.badge-stock.inactivo{background:#fee2e2;color:#dc2626;}
+.btn-toggle{padding:5px 10px;border:1.5px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;background:#fff;color:#6b7280;}
+.btn-toggle:hover{border-color:#9ca3af;}
+.btn-toggle.desactivar{color:#dc2626;border-color:#fecaca;}
+.btn-toggle.desactivar:hover{background:#fef2f2;}
+.btn-toggle.activar{color:#16a34a;border-color:#bbf7d0;}
+.btn-toggle.activar:hover{background:#f0fdf4;}
 .precio-cell{display:flex;align-items:center;gap:8px;justify-content:center;}
 .precio-input{width:110px;padding:6px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;text-align:right;outline:none;transition:border-color 0.15s;}
 .precio-input:focus{border-color:#d97706;background:#fffbeb;}
@@ -96,6 +107,7 @@ tbody td{padding:10px 16px;font-size:13px;color:#374151;vertical-align:middle;}
         <tr>
           <th>Modelo</th>
           <th style="text-align:center;width:220px;">Precio Unitario</th>
+          <th style="text-align:center;width:140px;">Stock</th>
         </tr>
       </thead>
       <tbody id="stock-body">
@@ -157,18 +169,39 @@ async function cargarStock(tipo) {
 
     var btnClass = tipo === 'venta' ? 'btn-save venta' : 'btn-save';
     tbody.innerHTML = items.map(function(item) {
-      return '<tr>' +
-        '<td class="modelo-name">' + item.modelo + '</td>' +
+      var activo = item.activo !== false;
+      var filaClass = activo ? '' : ' class="fuera-stock"';
+      var badge = activo
+        ? '<span class="badge-stock activo">EN STOCK</span>'
+        : '<span class="badge-stock inactivo">FUERA DE STOCK</span>';
+      var toggleBtn = activo
+        ? '<button class="btn-toggle desactivar" onclick="toggleStock(' + item.id + ')">Desactivar</button>'
+        : '<button class="btn-toggle activar" onclick="toggleStock(' + item.id + ')">Activar</button>';
+      return '<tr' + filaClass + '>' +
+        '<td class="modelo-name">' + item.modelo + badge + '</td>' +
         '<td><div class="precio-cell">' +
           '<span>$</span>' +
           '<input type="number" class="precio-input" id="precio-' + item.id + '" value="' + (item.precio || 0) + '" min="0" step="0.01">' +
           '<button class="' + btnClass + '" onclick="guardarPrecio(' + item.id + ')">Guardar</button>' +
         '</div></td>' +
+        '<td style="text-align:center">' + toggleBtn + '</td>' +
       '</tr>';
     }).join('');
   } catch(err) {
     document.getElementById('stock-body').innerHTML =
       '<tr><td colspan="2" class="loading">Error al cargar stock: ' + err.message + '</td></tr>';
+  }
+}
+
+async function toggleStock(id) {
+  try {
+    var res = await fetch(API_URL + '/api/stock/' + id + '/toggle', { method: 'PATCH' });
+    if (!res.ok) throw new Error('Error al cambiar estado');
+    var item = await res.json();
+    showToast(item.activo ? 'Modelo activado' : 'Modelo marcado fuera de stock');
+    cargarStock(_tabActual);
+  } catch(err) {
+    showToast('Error: ' + err.message);
   }
 }
 
