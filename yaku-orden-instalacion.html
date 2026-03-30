@@ -446,14 +446,19 @@ const LOCALIDADES = [{"nombre":"Acebal","departamento":"Rosario"},{"nombre":"Agu
 
 // ── STOCK PRECIOS ──
 var _stockPrecios = {};
-fetch(API_URL + '/api/stock?tipo=' + TIPO_ORDEN)
-  .then(function(r){ return r.json(); })
-  .then(function(items){
-    MODELOS_STOCK = items;
-    MODELOS = items.map(function(item){ return item.modelo; });
-    items.forEach(function(item){ _stockPrecios[item.modelo] = item.precio || 0; });
-  })
-  .catch(function(){});
+var _stockCargado = false;
+
+function cargarStockModelos() {
+  return fetch(API_URL + '/api/stock?tipo=' + TIPO_ORDEN)
+    .then(function(r){ return r.json(); })
+    .then(function(items){
+      MODELOS_STOCK = items;
+      MODELOS = items.map(function(item){ return item.modelo; });
+      items.forEach(function(item){ _stockPrecios[item.modelo] = item.precio || 0; });
+      _stockCargado = true;
+    })
+    .catch(function(){ _stockCargado = true; });
+}
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', function() {
@@ -476,7 +481,10 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(function(d){ document.getElementById('nro-orden').value = d.numero_completo; })
     .catch(function(){ document.getElementById('nro-orden').value = '00002 - ????????'; });
 
-  for (var i = 0; i < 5; i++) agregarFila();
+  // Cargar modelos del stock y después crear las filas iniciales
+  cargarStockModelos().then(function() {
+    for (var i = 0; i < 5; i++) agregarFila();
+  });
 
   // Preseleccionar vendedor según usuario logueado
   setTimeout(function() {
