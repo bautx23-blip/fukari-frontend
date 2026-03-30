@@ -172,7 +172,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <input type="date" id="filtro-desde" onchange="cargarOrdenes()" style="max-width:150px;">
     <label style="font-size:11px;color:#6b7280;font-weight:600;">Hasta</label>
     <input type="date" id="filtro-hasta" onchange="cargarOrdenes()" style="max-width:150px;">
-    <select id="filtro-estado" onchange="filtrar();calcularStats()"><option value="activas">Órdenes activas</option><option value="todas">Todas las órdenes</option><option value="anuladas">Órdenes anuladas</option></select>
+    <select id="filtro-estado" onchange="cargarOrdenes()"><option value="activas">Órdenes activas</option><option value="todas">Todas las órdenes</option><option value="anuladas">Órdenes anuladas</option></select>
     <select id="filtro-origen" onchange="cargarOrdenes()"><option value="app" selected>Creadas desde app</option><option value="importadas">Históricas (importadas)</option><option value="todas">Todas las fuentes</option></select>
     <button class="btn-refresh" onclick="cargarOrdenes()">&#8635; Actualizar</button>
     <a href="/yaku-orden-instalacion.html" class="btn-refresh" style="background:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Orden Alquiler</a>
@@ -300,9 +300,11 @@ async function cargarOrdenes() {
     var desde = document.getElementById('filtro-desde').value;
     var hasta = document.getElementById('filtro-hasta').value;
     var origen = document.getElementById('filtro-origen').value;
+    var estado = document.getElementById('filtro-estado').value;
     if (desde) params.push('desde=' + desde);
     if (hasta) params.push('hasta=' + hasta);
     if (origen) params.push('origen=' + origen);
+    if (estado === 'anuladas' || estado === 'todas') params.push('incluir_anuladas=true');
     var url = API_URL + '/api/ordenes' + (params.length ? '?' + params.join('&') : '');
     var res = await fetch(url);
     if (!res.ok) throw new Error('Error ' + res.status);
