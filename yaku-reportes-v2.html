@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reportes — Yaku Filtros</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;background:#f1f5f9;min-height:100vh;color:#111827;visibility:hidden;}
+body.ready{visibility:visible;}
+
+/* ── TOPBAR ── */
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.topbar-logos img.yaku{height:36px;}
+.topbar-logos .fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
+.topbar-logos img.fuk{height:26px;}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:0.3px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-right span{color:#9ca3af;font-size:12px;}
+.btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.15s;text-decoration:none;}
+.btn-logout:hover{border-color:#9ca3af;color:#fff;}
+
+/* ── CONTENT ── */
+.contenido{padding:28px 32px;max-width:1200px;margin:0 auto;}
+
+/* ── LOADING ── */
+.loading-overlay{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:#6b7280;gap:16px;}
+.spinner{width:36px;height:36px;border:3.5px solid #e5e7eb;border-top-color:#1a1a2e;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
+
+/* ── SECTION ── */
+.report-section{margin-bottom:40px;}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-left:0;}
+.section-header .bar{width:4px;height:32px;border-radius:2px;flex-shrink:0;}
+.section-header h2{font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.section-header .bar.blue{background:#2563eb;}
+.section-header h2.blue{color:#2563eb;}
+.section-header .bar.red{background:#c0392b;}
+.section-header h2.red{color:#c0392b;}
+.section-header .bar.green{background:#27ae60;}
+.section-header h2.green{color:#27ae60;}
+
+/* ── CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:#fff;border-radius:8px;padding:16px 22px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:3px solid #e5e7eb;}
+.stat-card.blue{border-top-color:#2563eb;}
+.stat-card.red{border-top-color:#c0392b;}
+.stat-card.green{border-top-color:#27ae60;}
+.stat-card .label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.stat-card .value{font-size:26px;font-weight:700;color:#1a1a2e;margin-top:4px;}
+
+/* ── TABLES ── */
+.tabla-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:hidden;margin-bottom:20px;}
+.tabla-header{padding:16px 20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;}
+.tabla-header h3{font-size:14px;font-weight:600;color:#374151;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:#f9fafb;padding:10px 16px;text-align:left;font-size:11.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e5e7eb;}
+thead th.right{text-align:right;}
+tbody tr{border-bottom:1px solid #f3f4f6;transition:background 0.1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f9fafb;}
+tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
+tbody td.right{text-align:right;font-variant-numeric:tabular-nums;}
+tbody td.bold{font-weight:600;}
+tbody td.money{font-weight:600;color:#16a34a;}
+
+/* ── CHART WRAP ── */
+.chart-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:hidden;margin-bottom:20px;}
+.chart-header{padding:16px 20px;border-bottom:1px solid #f3f4f6;}
+.chart-header h3{font-size:14px;font-weight:600;color:#374151;}
+.chart-body{padding:20px;position:relative;height:300px;}
+
+/* ── FILTROS BAR ── */
+.filtros-bar{background:#fff;border-radius:8px;padding:14px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.filtros-bar label{font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;}
+.filtros-bar input[type="date"]{padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;max-width:160px;}
+.periodo-btns{display:flex;gap:6px;margin-left:8px;}
+.periodo-btn{padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:6px;background:#fff;font-family:inherit;font-size:11.5px;font-weight:600;color:#6b7280;cursor:pointer;transition:all 0.15s;}
+.periodo-btn:hover{border-color:#2563eb;color:#2563eb;}
+.periodo-btn.active{background:#2563eb;color:#fff;border-color:#2563eb;}
+.btn-export-pdf{margin-left:auto;padding:8px 16px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
+.btn-export-pdf:hover{background:#2d2d4e;}
+
+/* ── RESPONSIVE ── */
+@media (max-width:768px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .contenido{padding:16px;}
+  .filtros-bar{padding:12px;}
+  .topbar{padding:10px 16px;flex-wrap:wrap;gap:8px;}
+  .topbar-title{font-size:13px;}
+  .chart-body{height:250px;}
+}
+
+/* ── PRINT ── */
+@media print{
+  .topbar,.filtros-bar{display:none!important;}
+  .contenido{padding:0!important;max-width:100%!important;}
+  body{visibility:visible!important;background:#fff!important;}
+  .chart-body{height:280px!important;}
+  .report-section{page-break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yaku">
+    <div class="fuk-wrap"><img class="fuk" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
+  </div>
+  <span class="topbar-title">Reportes — Yaku Filtros</span>
+  <div class="topbar-right">
+    <span id="topbar-fecha"></span>
+    <a href="/hub.html" class="btn-logout">&#8592; Inicio</a>
+    <button class="btn-logout" onclick="logout()">Cerrar sesion</button>
+  </div>
+</div>
+
+<div style="padding:20px 32px 0;max-width:1200px;margin:0 auto;">
+  <div class="filtros-bar">
+    <label>Desde</label>
+    <input type="date" id="filtro-desde" onchange="onFechaManual()">
+    <label>Hasta</label>
+    <input type="date" id="filtro-hasta" onchange="onFechaManual()">
+    <div class="periodo-btns">
+      <button class="periodo-btn" onclick="setPeriodo('mes', this)">Este mes</button>
+      <button class="periodo-btn" onclick="setPeriodo('trimestre', this)">Trimestre</button>
+      <button class="periodo-btn active" onclick="setPeriodo('todo', this)">Todo</button>
+    </div>
+    <button class="btn-export-pdf" onclick="window.print()">&#128196; Exportar PDF</button>
+  </div>
+</div>
+
+<div class="contenido" id="contenido">
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <span>Cargando datos...</span>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+var API_URL = 'https://fukari-backend-production.up.railway.app';
+var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+sb.auth.getSession().then(function(result) {
+  var session = result.data.session;
+  if (!session) { window.location.href = '/index.html'; return; }
+  document.body.classList.add('ready');
+  iniciar();
+});
+
+function logout() {
+  sb.auth.signOut().then(function() { window.location.href = '/index.html'; });
+}
+
+function iniciar() {
+  var ahora = new Date();
+  document.getElementById('topbar-fecha').textContent = ahora.toLocaleDateString('es-AR', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  cargarDatos();
+}
+
+/* ── HELPERS ── */
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('es-AR');
+}
+
+function mesLabel(key) {
+  var parts = key.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+  var l = d.toLocaleDateString('es-AR', {month:'short', year:'2-digit'});
+  return l.charAt(0).toUpperCase() + l.slice(1);
+}
+
+function mesLabelLargo(key) {
+  var parts = key.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+  var l = d.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
+  return l.charAt(0).toUpperCase() + l.slice(1);
+}
+
+function pct(n) { return n + '%'; }
+
+function buildQueryString() {
+  var desde = document.getElementById('filtro-desde').value;
+  var hasta = document.getElementById('filtro-hasta').value;
+  var params = [];
+  if (desde) params.push('desde=' + desde);
+  if (hasta) params.push('hasta=' + hasta);
+  return params.length > 0 ? '?' + params.join('&') : '';
+}
+
+/* ── DATA LOADING ── */
+var _chartInstances = [];
+
+function destroyCharts() {
+  _chartInstances.forEach(function(c) { c.destroy(); });
+  _chartInstances = [];
+}
+
+function cargarDatos() {
+  var qs = buildQueryString();
+  document.getElementById('loading').style.display = 'flex';
+
+  Promise.all([
+    fetch(API_URL + '/api/reportes/resumen' + qs).then(function(r){ if(!r.ok) throw new Error('resumen '+r.status); return r.json(); }),
+    fetch(API_URL + '/api/reportes/instalaciones' + qs).then(function(r){ if(!r.ok) throw new Error('instalaciones '+r.status); return r.json(); }),
+    fetch(API_URL + '/api/reportes/bajas' + qs).then(function(r){ if(!r.ok) throw new Error('bajas '+r.status); return r.json(); }),
+    fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); })
+  ]).then(function(results) {
+    destroyCharts();
+    document.getElementById('loading').style.display = 'none';
+    renderAll(results[0], results[1], results[2], results[3]);
+  }).catch(function(err) {
+    document.getElementById('loading').innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
+  });
+}
+
+/* ── RENDER ALL ── */
+function renderAll(resumen, instalaciones, bajas, clientes) {
+  var contenido = document.getElementById('contenido');
+  var html = '';
+  html += renderResumen(resumen, instalaciones);
+  html += renderInstalaciones(instalaciones);
+  html += renderBajas(bajas, resumen);
+  html += renderClientes(clientes);
+  contenido.innerHTML = html;
+
+  // Render Chart.js charts after DOM is ready
+  setTimeout(function() {
+    renderChartFacturadoMes(instalaciones.por_mes);
+    renderChartMotivos(bajas.por_motivo);
+  }, 50);
+}
+
+/* ══════════════════════════════════════════
+   RESUMEN EJECUTIVO
+   ══════════════════════════════════════════ */
+function renderResumen(resumen, instalaciones) {
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar blue"></div><h2 class="blue">Resumen ejecutivo</h2></div>';
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card blue"><div class="label">Equipos activos</div><div class="value">' + resumen.equipos_activos.toLocaleString('es-AR') + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Facturado sin IVA</div><div class="value">' + fmt(resumen.facturado_sin_iva) + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Ticket promedio</div><div class="value">' + fmt(instalaciones.totales.ticket_promedio) + '</div></div>';
+  html += '</div></div>';
+  return html;
+}
+
+/* ══════════════════════════════════════════
+   ORDENES DE INSTALACION
+   ══════════════════════════════════════════ */
+function renderInstalaciones(data) {
+  var t = data.totales;
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar blue"></div><h2 class="blue">Ordenes de instalacion</h2></div>';
+
+  // Cards
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card blue"><div class="label">Total activas</div><div class="value">' + t.activas + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Total anuladas</div><div class="value">' + t.anuladas + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Facturado sin IVA</div><div class="value">' + fmt(t.facturado_sin_iva) + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Ticket promedio</div><div class="value">' + fmt(t.ticket_promedio) + '</div></div>';
+  html += '</div>';
+
+  // Chart placeholder
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Facturado por mes (sin IVA) — Ultimos 12 meses</h3></div>';
+  html += '<div class="chart-body"><canvas id="chart-facturado-mes"></canvas></div></div>';
+
+  // Tabla vendedores
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Facturado por vendedor</h3></div>';
+  html += '<table><thead><tr><th>Vendedor</th><th class="right">Ordenes</th><th class="right">Total facturado sin IVA</th></tr></thead><tbody>';
+  data.por_vendedor.forEach(function(v) {
+    html += '<tr><td class="bold">' + v.vendedor + '</td><td class="right">' + v.ordenes + '</td><td class="right money">' + fmt(v.facturado) + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Tabla productos
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Productos mas vendidos</h3></div>';
+  html += '<table><thead><tr><th>Modelo</th><th class="right">Cantidad total</th><th class="right">Aparece en ordenes</th></tr></thead><tbody>';
+  data.top_productos.forEach(function(p) {
+    html += '<tr><td class="bold">' + p.modelo + '</td><td class="right">' + p.cantidad_total + '</td><td class="right">' + p.aparece_en_ordenes + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Tabla top clientes
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Top 10 clientes por facturado</h3></div>';
+  html += '<table><thead><tr><th>Razon Social</th><th>CUIT</th><th class="right">Ordenes</th><th class="right">Total facturado</th></tr></thead><tbody>';
+  data.top_clientes.forEach(function(c) {
+    html += '<tr><td class="bold">' + c.razon_social + '</td><td>' + c.cuit + '</td><td class="right">' + c.ordenes + '</td><td class="right money">' + fmt(c.total_facturado) + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  html += '</div>';
+  return html;
+}
+
+/* ══════════════════════════════════════════
+   ORDENES DE BAJA
+   ══════════════════════════════════════════ */
+function renderBajas(data, resumen) {
+  var t = data.totales;
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar red"></div><h2 class="red">Ordenes de baja</h2></div>';
+
+  // Cards
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card red"><div class="label">Total bajas</div><div class="value">' + t.total_bajas + '</div></div>';
+  html += '<div class="stat-card red"><div class="label">Bajas totales</div><div class="value">' + t.bajas_totales + '</div></div>';
+  html += '<div class="stat-card red"><div class="label">Bajas parciales</div><div class="value">' + t.bajas_parciales + '</div></div>';
+  html += '<div class="stat-card red"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div></div>';
+  html += '</div>';
+
+  // Chart motivos placeholder
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Motivos de baja</h3></div>';
+  html += '<div class="chart-body"><canvas id="chart-motivos"></canvas></div></div>';
+
+  // Tabla vendedores
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Bajas por vendedor</h3></div>';
+  html += '<table><thead><tr><th>Vendedor</th><th class="right">Cantidad</th></tr></thead><tbody>';
+  data.por_vendedor.forEach(function(v) {
+    html += '<tr><td class="bold">' + v.vendedor + '</td><td class="right">' + v.cantidad + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Tabla por mes (solo si hay mas de 1 mes)
+  if (data.por_mes.length > 1) {
+    html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Bajas por mes</h3></div>';
+    html += '<table><thead><tr><th>Mes</th><th class="right">Total</th><th class="right">Totales</th><th class="right">Parciales</th></tr></thead><tbody>';
+    data.por_mes.forEach(function(m) {
+      html += '<tr><td class="bold">' + mesLabelLargo(m.mes) + '</td><td class="right">' + m.total + '</td><td class="right">' + m.totales + '</td><td class="right">' + m.parciales + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+/* ══════════════════════════════════════════
+   CLIENTES
+   ══════════════════════════════════════════ */
+function renderClientes(data) {
+  var t = data.totales;
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar green"></div><h2 class="green">Clientes</h2></div>';
+
+  // Cards
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card green"><div class="label">Total activos</div><div class="value">' + t.activos + '</div></div>';
+  html += '<div class="stat-card green"><div class="label">Total inactivos</div><div class="value">' + t.inactivos + '</div></div>';
+  html += '<div class="stat-card green"><div class="label">% activos</div><div class="value">' + pct(t.porcentaje_activos) + '</div></div>';
+  html += '<div class="stat-card green"><div class="label">Con equipos</div><div class="value">' + t.con_equipos + '</div></div>';
+  html += '</div>';
+
+  // Top 10 clientes
+  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Top 10 clientes por cantidad de equipos activos</h3></div>';
+  html += '<table><thead><tr><th>Razon Social</th><th>CUIT</th><th class="right">Equipos</th><th class="right">Cantidad total</th></tr></thead><tbody>';
+  data.top_clientes.forEach(function(c) {
+    html += '<tr><td class="bold">' + c.razon_social + '</td><td>' + c.cuit + '</td><td class="right">' + c.equipos + '</td><td class="right">' + c.cantidad_total + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  html += '</div>';
+  return html;
+}
+
+/* ══════════════════════════════════════════
+   CHART.JS — Facturado por mes
+   ══════════════════════════════════════════ */
+function renderChartFacturadoMes(porMes) {
+  var canvas = document.getElementById('chart-facturado-mes');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  var labels = porMes.map(function(m) { return mesLabel(m.mes); });
+  var values = porMes.map(function(m) { return m.facturado; });
+
+  var chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Facturado sin IVA',
+        data: values,
+        backgroundColor: '#2563eb',
+        borderRadius: 4,
+        maxBarThickness: 48
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return fmt(ctx.parsed.y); }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(val) { return '$' + (val / 1000).toLocaleString('es-AR') + 'k'; },
+            font: { size: 11 }
+          },
+          grid: { color: '#f3f4f6' }
+        },
+        x: {
+          ticks: { font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+  _chartInstances.push(chart);
+}
+
+/* ══════════════════════════════════════════
+   CHART.JS — Motivos de baja (horizontal bar)
+   ══════════════════════════════════════════ */
+function renderChartMotivos(porMotivo) {
+  var canvas = document.getElementById('chart-motivos');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  var labels = porMotivo.map(function(m) { return m.motivo; });
+  var values = porMotivo.map(function(m) { return m.cantidad; });
+  var pcts = porMotivo.map(function(m) { return m.porcentaje; });
+
+  var chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Cantidad',
+        data: values,
+        backgroundColor: '#c0392b',
+        borderRadius: 4,
+        maxBarThickness: 32
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              var idx = ctx.dataIndex;
+              return ctx.parsed.x + ' (' + pcts[idx] + '%)';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { font: { size: 11 }, stepSize: 1 },
+          grid: { color: '#f3f4f6' }
+        },
+        y: {
+          ticks: { font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+  _chartInstances.push(chart);
+}
+
+/* ── PERIODO PRESETS ── */
+function setPeriodo(tipo, btn) {
+  var ahora = new Date();
+  var desde = '';
+  var hasta = ahora.toISOString().split('T')[0];
+
+  if (tipo === 'mes') {
+    desde = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-01';
+  } else if (tipo === 'trimestre') {
+    var d = new Date(ahora.getFullYear(), ahora.getMonth() - 2, 1);
+    desde = d.toISOString().split('T')[0];
+  } else {
+    desde = '';
+    hasta = '';
+  }
+
+  document.getElementById('filtro-desde').value = desde;
+  document.getElementById('filtro-hasta').value = hasta;
+
+  var btns = document.querySelectorAll('.periodo-btn');
+  btns.forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+
+  cargarDatos();
+}
+
+function onFechaManual() {
+  var btns = document.querySelectorAll('.periodo-btn');
+  btns.forEach(function(b) { b.classList.remove('active'); });
+  cargarDatos();
+}
+</script>
+</body>
+</html>
