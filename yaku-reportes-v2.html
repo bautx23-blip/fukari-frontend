@@ -247,11 +247,19 @@ function renderResumen(resumen, instalaciones) {
   var html = '<div class="report-section">';
   html += '<div class="section-header"><div class="bar blue"></div><h2 class="blue">Resumen ejecutivo</h2></div>';
   html += '<div class="stats-row">';
-  html += '<div class="stat-card blue"><div class="label">Equipos activos</div><div class="value">' + resumen.equipos_activos.toLocaleString('es-AR') + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Equipos activos</div><div class="value">' + (resumen.equipos_activos || 0).toLocaleString('es-AR') + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Instalados - dados de baja</div></div>';
   html += '<div class="stat-card blue"><div class="label">Facturado sin IVA</div><div class="value">' + fmt(resumen.facturado_sin_iva) + '</div></div>';
-  html += '<div class="stat-card blue"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;line-height:1.4">Porcentaje de equipos dados de baja sobre el total de equipos activos en el periodo</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;line-height:1.4">Equipos dados de baja / equipos instalados</div></div>';
   html += '<div class="stat-card blue"><div class="label">Ticket promedio</div><div class="value">' + fmt(instalaciones.totales.ticket_promedio) + '</div></div>';
-  html += '</div></div>';
+  html += '</div>';
+  // Segunda fila: equipos y bajas
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card blue"><div class="label">Equipos instalados</div><div class="value">' + (resumen.equipos_instalados || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Unidades en ' + resumen.total_instalaciones + ' ordenes</div></div>';
+  html += '<div class="stat-card red"><div class="label">Equipos dados de baja</div><div class="value">' + (resumen.equipos_baja || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Unidades retiradas</div></div>';
+  html += '<div class="stat-card red"><div class="label">Solicitudes de baja</div><div class="value">' + (resumen.total_bajas || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Ordenes de baja activas</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Ordenes de instalacion</div><div class="value">' + (resumen.total_instalaciones || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Solicitadas en el periodo</div></div>';
+  html += '</div>';
+  html += '</div>';
   return html;
 }
 
