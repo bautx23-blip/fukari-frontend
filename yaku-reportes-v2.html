@@ -236,6 +236,7 @@ function renderAll(resumen, instalaciones, bajas, clientes) {
   setTimeout(function() {
     renderChartFacturadoMes(instalaciones.por_mes);
     renderChartOrdenesMes2026(instalaciones.por_mes);
+    renderChartBajasMes2026(bajas.por_mes);
     renderChartMotivos(bajas.por_motivo);
   }, 50);
 }
@@ -329,6 +330,10 @@ function renderBajas(data, resumen) {
   html += '<div class="stat-card red"><div class="label">Equipos dados de baja</div><div class="value">' + (t.equipos_baja || 0) + '</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">unidades retiradas</div></div>';
   html += '<div class="stat-card red"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;line-height:1.4">Equipos dados de baja sobre total activos</div></div>';
   html += '</div>';
+
+  // Chart bajas por mes 2026
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Bajas por mes — 2026</h3></div>';
+  html += '<div class="chart-body"><canvas id="chart-bajas-mes-2026"></canvas></div></div>';
 
   // Chart motivos placeholder
   html += '<div class="chart-wrap"><div class="chart-header"><h3>Motivos de baja</h3></div>';
@@ -519,6 +524,71 @@ function renderChartOrdenesMes2026(porMes) {
       });
       _chartInstances.push(chart);
     });
+}
+
+/* ══════════════════════════════════════════
+   CHART.JS — Bajas por mes 2026 (equipos + ordenes)
+   ══════════════════════════════════════════ */
+function renderChartBajasMes2026(porMes) {
+  var canvas = document.getElementById('chart-bajas-mes-2026');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  var mesesNombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var mesesKeys = [];
+  var mesesLabels = [];
+  for (var i = 0; i < 12; i++) {
+    mesesKeys.push('2026-' + String(i + 1).padStart(2, '0'));
+    mesesLabels.push(mesesNombres[i] + ' 26');
+  }
+
+  var mesMap = {};
+  porMes.forEach(function(m) { mesMap[m.mes] = m; });
+
+  var equiposData = mesesKeys.map(function(k) { return mesMap[k] ? (mesMap[k].equipos || 0) : 0; });
+  var ordenesData = mesesKeys.map(function(k) { return mesMap[k] ? mesMap[k].total : 0; });
+
+  var chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: mesesLabels,
+      datasets: [
+        {
+          label: 'Equipos dados de baja',
+          data: equiposData,
+          backgroundColor: '#c0392b',
+          borderRadius: 4,
+          maxBarThickness: 36
+        },
+        {
+          label: 'Ordenes de baja',
+          data: ordenesData,
+          backgroundColor: '#d97706',
+          borderRadius: 4,
+          maxBarThickness: 36
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { font: { size: 11 } } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { font: { size: 11 }, stepSize: 1 },
+          grid: { color: '#f3f4f6' }
+        },
+        x: {
+          ticks: { font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+  _chartInstances.push(chart);
 }
 
 /* ══════════════════════════════════════════
