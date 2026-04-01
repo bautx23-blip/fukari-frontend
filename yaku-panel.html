@@ -293,24 +293,23 @@ function iniciarPanel() {
   cargarOrdenes();
 }
 
-async function toggleCompletada(id, completada, fechaActual) {
+async function toggleCompletada(id, completada, fechaOrden) {
   try {
-    var fecha_completada = null;
-    if (completada) {
-      fecha_completada = fechaActual || prompt('Fecha de completada (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
-      if (!fecha_completada) return cargarOrdenes(); // canceló el prompt
-    }
     var res = await fetch(API_URL + '/api/ordenes/' + id + '/completada', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ completada: completada, fecha_completada: fecha_completada })
+      body: JSON.stringify({ completada: completada, fecha_completada: completada ? (fechaOrden || new Date().toISOString().split('T')[0]) : null })
     });
-    if (!res.ok) throw new Error('Error al actualizar');
+    if (!res.ok) {
+      var err = await res.json();
+      throw new Error(err.error || 'Error al actualizar');
+    }
+    var data = await res.json();
     // Actualizar el objeto local
     var orden = todasLasOrdenes.find(function(o){ return o.id === id; });
     if (orden) {
-      orden.completada = completada;
-      orden.fecha_completada = fecha_completada;
+      orden.completada = data.completada;
+      orden.fecha_completada = data.fecha_completada;
     }
     filtrar();
     calcularStats();
@@ -445,9 +444,10 @@ function renderTabla() {
     if (esAdmin) {
       var checked = o.completada ? ' checked' : '';
       var fechaComp = o.fecha_completada || '';
+      var fechaOrd = o.fecha_orden || '';
       completadaCell = '<td style="text-align:center">' +
-        '<input type="checkbox" ' + checked + ' onchange="toggleCompletada(\'' + o.id + '\', this.checked, \'' + fechaComp + '\')" style="cursor:pointer;width:16px;height:16px;" title="' + (fechaComp ? 'Completada: ' + fechaComp : 'No completada') + '">' +
-        (fechaComp ? '<div style="font-size:10px;color:#6b7280;margin-top:2px">' + new Date(fechaComp + 'T12:00:00').toLocaleDateString('es-AR') + '</div>' : '') +
+        '<input type="checkbox" ' + checked + ' onchange="toggleCompletada(\'' + o.id + '\', this.checked, \'' + fechaOrd + '\')" style="cursor:pointer;width:16px;height:16px;" title="' + (fechaComp ? 'Completada: ' + fechaComp : 'No completada') + '">' +
+        (fechaComp ? '<div style="font-size:10px;color:#16a34a;margin-top:2px">' + new Date(fechaComp + 'T12:00:00').toLocaleDateString('es-AR') + '</div>' : '') +
       '</td>';
     }
     html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + tipoBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td>' + completadaCell + '<td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + editBtn + deleteBtn + '</div></td></tr>';
