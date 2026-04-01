@@ -371,7 +371,7 @@ function localidadesUnicas(o) {
 function calcularStats() {
   var noAnuladas = ordenesFiltradas.filter(function(o){ return !o.anulada; });
   var completadas = noAnuladas.filter(function(o){ return o.completada; });
-  var totalFact = noAnuladas.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
+  var totalFact = completadas.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
   var totalSinIVA = totalFact / 1.21;
   var desde = document.getElementById('filtro-desde').value;
   var hasta = document.getElementById('filtro-hasta').value;
