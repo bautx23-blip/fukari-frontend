@@ -95,8 +95,11 @@ tbody tr.fuera-stock .modelo-name{text-decoration:line-through;color:#9ca3af;}
   <div class="tabs">
     <button class="tab active" id="tab-alquiler" onclick="cambiarTab('alquiler')">Alquiler</button>
     <button class="tab" id="tab-venta" onclick="cambiarTab('venta')">Venta</button>
+    <button class="tab" id="tab-promos" onclick="cambiarTab('promos')" style="color:#16a34a;border-bottom-color:transparent;">Promociones (Alquiler)</button>
   </div>
 
+  <!-- Sección stock normal -->
+  <div id="seccion-stock">
   <div class="tabla-wrap">
     <div class="tabla-header">
       <h3 id="tabla-titulo">Modelos — Alquiler</h3>
@@ -114,6 +117,52 @@ tbody tr.fuera-stock .modelo-name{text-decoration:line-through;color:#9ca3af;}
         <tr><td colspan="2" class="loading">Cargando modelos...</td></tr>
       </tbody>
     </table>
+  </div>
+  </div>
+
+  <!-- Sección promociones -->
+  <div id="seccion-promos" style="display:none;">
+    <div class="tabla-wrap" style="margin-bottom:16px;">
+      <div class="tabla-header">
+        <h3 style="color:#16a34a;">Agregar promoción</h3>
+      </div>
+      <div style="padding:16px 20px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Modelo</label>
+          <select id="promo-modelo" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;min-width:200px;"></select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Precio promoción</label>
+          <input type="number" id="promo-precio" min="0" step="0.01" placeholder="0.00" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:130px;">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Precio post-promoción</label>
+          <input type="number" id="promo-post-precio" min="0" step="0.01" placeholder="0.00" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:130px;">
+        </div>
+        <button onclick="crearPromocion()" style="padding:8px 16px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">+ Agregar</button>
+      </div>
+    </div>
+    <div class="tabla-wrap">
+      <div class="tabla-header">
+        <h3 style="color:#16a34a;">Promociones activas</h3>
+        <span id="total-promos"></span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th style="text-align:right;">Precio normal</th>
+            <th style="text-align:right;">Precio promo</th>
+            <th style="text-align:right;">Precio post-promo</th>
+            <th style="text-align:center;">Estado</th>
+            <th style="text-align:center;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="promos-body">
+          <tr><td colspan="6" class="loading">Cargando promociones...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -155,8 +204,19 @@ function cambiarTab(tipo) {
   _tabActual = tipo;
   document.getElementById('tab-alquiler').className = 'tab' + (tipo === 'alquiler' ? ' active' : '');
   document.getElementById('tab-venta').className = 'tab' + (tipo === 'venta' ? ' active-venta' : '');
-  document.getElementById('tabla-titulo').textContent = 'Modelos — ' + (tipo === 'alquiler' ? 'Alquiler' : 'Venta');
-  cargarStock(tipo);
+  document.getElementById('tab-promos').className = 'tab' + (tipo === 'promos' ? ' active' : '');
+  if (tipo === 'promos') {
+    document.getElementById('tab-promos').style.borderBottomColor = '#16a34a';
+    document.getElementById('seccion-stock').style.display = 'none';
+    document.getElementById('seccion-promos').style.display = 'block';
+    cargarPromos();
+  } else {
+    document.getElementById('tab-promos').style.borderBottomColor = 'transparent';
+    document.getElementById('seccion-stock').style.display = 'block';
+    document.getElementById('seccion-promos').style.display = 'none';
+    document.getElementById('tabla-titulo').textContent = 'Modelos — ' + (tipo === 'alquiler' ? 'Alquiler' : 'Venta');
+    cargarStock(tipo);
+  }
 }
 
 async function cargarStock(tipo) {
@@ -226,6 +286,96 @@ async function guardarPrecio(id) {
     btn.disabled = false;
     showToast('Error: ' + err.message);
   }
+}
+
+// ── PROMOCIONES ──
+
+async function cargarPromos() {
+  try {
+    // Cargar modelos de alquiler para el select
+    var resStock = await fetch(API_URL + '/api/stock?tipo=alquiler');
+    var stockItems = await resStock.json();
+    var sel = document.getElementById('promo-modelo');
+    sel.innerHTML = '<option value="">-- Elegir modelo --</option>' +
+      stockItems.filter(function(i){ return i.activo !== false; }).map(function(i) {
+        return '<option value="' + i.id + '" data-precio="' + (i.precio||0) + '">' + i.modelo + ' ($' + Number(i.precio||0).toLocaleString('es-AR') + ')</option>';
+      }).join('');
+
+    // Cargar promociones
+    var res = await fetch(API_URL + '/api/stock/promociones');
+    if (!res.ok) throw new Error('Error al cargar');
+    var promos = await res.json();
+    var tbody = document.getElementById('promos-body');
+    document.getElementById('total-promos').textContent = promos.length + ' promociones';
+
+    if (promos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="loading">Sin promociones activas</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = promos.map(function(p) {
+      var modelo = p.stock ? p.stock.modelo : '—';
+      var precioNormal = p.stock ? '$' + Number(p.stock.precio||0).toLocaleString('es-AR') : '—';
+      var precioPromo = '$' + Number(p.precio_promocion||0).toLocaleString('es-AR');
+      var precioPost = '$' + Number(p.precio_post_promocion||0).toLocaleString('es-AR');
+      var estadoBadge = p.activa
+        ? '<span style="display:inline-block;background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">ACTIVA</span>'
+        : '<span style="display:inline-block;background:#fee2e2;color:#dc2626;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">INACTIVA</span>';
+      return '<tr>' +
+        '<td class="modelo-name">' + modelo + '</td>' +
+        '<td style="text-align:right;color:#9ca3af;">' + precioNormal + '</td>' +
+        '<td style="text-align:right;color:#16a34a;font-weight:600;">' + precioPromo + '</td>' +
+        '<td style="text-align:right;">' + precioPost + '</td>' +
+        '<td style="text-align:center;">' + estadoBadge + '</td>' +
+        '<td style="text-align:center;">' +
+          '<button class="btn-toggle ' + (p.activa ? 'desactivar' : 'activar') + '" onclick="togglePromo(' + p.id + ')">' + (p.activa ? 'Desactivar' : 'Activar') + '</button> ' +
+          '<button style="padding:4px 8px;background:#dc2626;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer;" onclick="eliminarPromo(' + p.id + ')">Eliminar</button>' +
+        '</td></tr>';
+    }).join('');
+  } catch(err) {
+    document.getElementById('promos-body').innerHTML =
+      '<tr><td colspan="6" class="loading">Error: ' + err.message + '</td></tr>';
+  }
+}
+
+async function crearPromocion() {
+  var stockId = document.getElementById('promo-modelo').value;
+  var precioPromo = document.getElementById('promo-precio').value;
+  var precioPost = document.getElementById('promo-post-precio').value;
+  if (!stockId || !precioPromo || !precioPost) { showToast('Completá todos los campos'); return; }
+  try {
+    var res = await fetch(API_URL + '/api/stock/promociones', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stock_id: stockId, precio_promocion: precioPromo, precio_post_promocion: precioPost })
+    });
+    if (!res.ok) { var err = await res.json(); throw new Error(err.error || 'Error'); }
+    showToast('Promoción creada');
+    document.getElementById('promo-precio').value = '';
+    document.getElementById('promo-post-precio').value = '';
+    cargarPromos();
+  } catch(err) {
+    showToast('Error: ' + err.message);
+  }
+}
+
+async function togglePromo(id) {
+  try {
+    var res = await fetch(API_URL + '/api/stock/promociones/' + id + '/toggle', { method: 'PATCH' });
+    if (!res.ok) throw new Error('Error');
+    showToast('Estado actualizado');
+    cargarPromos();
+  } catch(err) { showToast('Error: ' + err.message); }
+}
+
+async function eliminarPromo(id) {
+  if (!confirm('¿Eliminar esta promoción?')) return;
+  try {
+    var res = await fetch(API_URL + '/api/stock/promociones/' + id, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Error');
+    showToast('Promoción eliminada');
+    cargarPromos();
+  } catch(err) { showToast('Error: ' + err.message); }
 }
 </script>
 </body>

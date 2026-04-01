@@ -446,6 +446,7 @@ const LOCALIDADES = [{"nombre":"Acebal","departamento":"Rosario"},{"nombre":"Agu
 
 // ── STOCK PRECIOS ──
 var _stockPrecios = {};
+var _stockPromos = {}; // modelo → { precio_promocion, precio_post_promocion }
 var _stockCargado = false;
 
 function cargarStockModelos() {
@@ -454,7 +455,15 @@ function cargarStockModelos() {
     .then(function(items){
       MODELOS_STOCK = items;
       MODELOS = items.map(function(item){ return item.modelo; });
-      items.forEach(function(item){ _stockPrecios[item.modelo] = item.precio || 0; });
+      items.forEach(function(item){
+        _stockPrecios[item.modelo] = item.precio || 0;
+        if (item.en_promocion) {
+          _stockPromos[item.modelo] = {
+            precio_promocion: item.precio_promocion,
+            precio_post_promocion: item.precio_post_promocion,
+          };
+        }
+      });
       _stockCargado = true;
     })
     .catch(function(){ _stockCargado = true; });
@@ -642,8 +651,9 @@ function agregarFila() {
   tr.id = 'fila-' + id;
   var opts = MODELOS_STOCK.map(function(item){
     var activo = item.activo !== false;
-    var label = activo ? item.modelo : item.modelo + ' — FUERA DE STOCK';
-    var style = activo ? '' : ' style="color:#dc2626;font-style:italic"';
+    var enPromo = item.en_promocion && activo;
+    var label = !activo ? item.modelo + ' — FUERA DE STOCK' : (enPromo ? item.modelo + ' ★ PROMO' : item.modelo);
+    var style = !activo ? ' style="color:#dc2626;font-style:italic"' : (enPromo ? ' style="color:#16a34a;font-weight:600"' : '');
     var disabled = activo ? '' : ' disabled';
     return '<option value="' + item.modelo + '"' + disabled + style + '>' + label + '</option>';
   }).join('');
@@ -673,8 +683,13 @@ function aplicarPrecioStock(id) {
   var modelo = sel.value;
   if (modelo && _stockPrecios[modelo] !== undefined) {
     var precioInput = tr.querySelectorAll('input[type="number"]')[1];
+    // Si tiene promo activa, usar precio promo; sino precio normal
+    var precio = _stockPrecios[modelo];
+    if (_stockPromos[modelo]) {
+      precio = _stockPromos[modelo].precio_promocion;
+    }
     if (precioInput && !precioInput.value) {
-      precioInput.value = _stockPrecios[modelo];
+      precioInput.value = precio;
     }
   }
 }
@@ -719,6 +734,34 @@ function formatPeso(n) {
 }
 
 // ── GUARDAR ──
+function generarAclaracionesConPromo() {
+  var aclaraciones = document.getElementById('aclaraciones').value.trim();
+  // Buscar productos con promo en la tabla
+  var productosConPromo = [];
+  document.querySelectorAll('#productos-body tr').forEach(function(tr) {
+    var sel = tr.querySelector('select');
+    if (sel && sel.value && _stockPromos[sel.value]) {
+      productosConPromo.push({
+        modelo: sel.value,
+        promo: _stockPromos[sel.value]
+      });
+    }
+  });
+  if (productosConPromo.length === 0) return aclaraciones;
+
+  // Generar texto de promo
+  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var ahora = new Date();
+  var mesActual = meses[ahora.getMonth()] + ' ' + ahora.getFullYear();
+
+  var textoPromo = productosConPromo.map(function(p) {
+    var precioPost = '$' + Number(p.promo.precio_post_promocion).toLocaleString('es-AR');
+    return 'Precio promocional a ' + mesActual + ' IVA incluido. Durante los siguientes cuatro meses el abono costará ' + precioPost + ' por mes.';
+  }).join(' ');
+
+  return aclaraciones ? aclaraciones + '\n' + textoPromo : textoPromo;
+}
+
 function recolectarDatos() {
   var productos = [];
   document.querySelectorAll('#productos-body tr').forEach(function(tr) {
@@ -771,7 +814,7 @@ function recolectarDatos() {
     plano: document.getElementById('plano').value,
     email: document.getElementById('email').value,
     plazo_mantenimiento: document.getElementById('plazo').value,
-    aclaraciones: document.getElementById('aclaraciones').value,
+    aclaraciones: generarAclaracionesConPromo(),
     cobrar: document.getElementById('cobrar').value,
     fecha_orden: fecha,
     productos: productos,
