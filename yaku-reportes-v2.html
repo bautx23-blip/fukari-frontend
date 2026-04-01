@@ -44,7 +44,7 @@ body.ready{visibility:visible;}
 .section-header h2.green{color:#27ae60;}
 
 /* ── CARDS ── */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
 .stat-card{background:#fff;border-radius:8px;padding:16px 22px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:3px solid #e5e7eb;}
 .stat-card.blue{border-top-color:#2563eb;}
 .stat-card.red{border-top-color:#c0392b;}
@@ -206,7 +206,8 @@ function destroyCharts() {
 
 function cargarDatos() {
   var qs = buildQueryString();
-  document.getElementById('loading').style.display = 'flex';
+  var contenido = document.getElementById('contenido');
+  contenido.innerHTML = '<div class="loading-overlay" id="loading"><div class="spinner"></div><span>Cargando datos...</span></div>';
 
   Promise.all([
     fetch(API_URL + '/api/reportes/resumen' + qs).then(function(r){ if(!r.ok) throw new Error('resumen '+r.status); return r.json(); }),
@@ -215,10 +216,9 @@ function cargarDatos() {
     fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); })
   ]).then(function(results) {
     destroyCharts();
-    document.getElementById('loading').style.display = 'none';
     renderAll(results[0], results[1], results[2], results[3]);
   }).catch(function(err) {
-    document.getElementById('loading').innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
+    contenido.innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
   });
 }
 
@@ -317,10 +317,9 @@ function renderBajas(data, resumen) {
 
   // Cards
   html += '<div class="stats-row">';
-  html += '<div class="stat-card red"><div class="label">Total bajas</div><div class="value">' + t.total_bajas + '</div></div>';
-  html += '<div class="stat-card red"><div class="label">Bajas totales</div><div class="value">' + t.bajas_totales + '</div></div>';
-  html += '<div class="stat-card red"><div class="label">Bajas parciales</div><div class="value">' + t.bajas_parciales + '</div></div>';
-  html += '<div class="stat-card red"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div></div>';
+  html += '<div class="stat-card red"><div class="label">Solicitudes de baja</div><div class="value">' + t.total_bajas + '</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">' + t.bajas_totales + ' totales / ' + t.bajas_parciales + ' parciales</div></div>';
+  html += '<div class="stat-card red"><div class="label">Equipos dados de baja</div><div class="value">' + (t.equipos_baja || 0) + '</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">unidades retiradas</div></div>';
+  html += '<div class="stat-card red"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;line-height:1.4">Equipos dados de baja sobre total activos</div></div>';
   html += '</div>';
 
   // Chart motivos placeholder
