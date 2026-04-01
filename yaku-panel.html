@@ -293,12 +293,13 @@ function iniciarPanel() {
   cargarOrdenes();
 }
 
-async function toggleCompletada(id, completada, fechaOrden) {
+async function toggleCompletada(id, completada) {
   try {
+    var hoy = new Date().toISOString().split('T')[0];
     var res = await fetch(API_URL + '/api/ordenes/' + id + '/completada', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ completada: completada, fecha_completada: completada ? (fechaOrden || new Date().toISOString().split('T')[0]) : null })
+      body: JSON.stringify({ completada: completada, fecha_completada: completada ? hoy : null })
     });
     if (!res.ok) {
       var err = await res.json();
@@ -445,9 +446,8 @@ function renderTabla() {
     if (esAdmin) {
       var checked = o.completada ? ' checked' : '';
       var fechaComp = o.fecha_completada || '';
-      var fechaOrd = o.fecha_orden || '';
       completadaCell = '<td style="text-align:center">' +
-        '<input type="checkbox" id="chk-' + o.id + '" ' + checked + ' onclick="toggleCompletada(' + o.id + ', document.getElementById(\'chk-' + o.id + '\').checked, \'' + fechaOrd + '\')" style="cursor:pointer;width:16px;height:16px;" title="' + (fechaComp ? 'Completada: ' + fechaComp : 'No completada') + '">' +
+        '<input type="checkbox" id="chk-' + o.id + '" ' + checked + ' onclick="toggleCompletada(' + o.id + ', document.getElementById(\'chk-' + o.id + '\').checked)" style="cursor:pointer;width:16px;height:16px;" title="' + (fechaComp ? 'Completada: ' + fechaComp : 'No completada') + '">' +
         (fechaComp ? '<div style="font-size:10px;color:#16a34a;margin-top:2px">' + new Date(fechaComp + 'T12:00:00').toLocaleDateString('es-AR') + '</div>' : '') +
       '</td>';
     }
