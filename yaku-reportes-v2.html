@@ -264,8 +264,8 @@ function renderInstalaciones(data) {
 
   // Cards
   html += '<div class="stats-row">';
-  html += '<div class="stat-card blue"><div class="label">Total activas</div><div class="value">' + t.activas + '</div></div>';
-  html += '<div class="stat-card blue"><div class="label">Total anuladas</div><div class="value">' + t.anuladas + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Solicitadas</div><div class="value">' + t.activas + '</div></div>';
+  html += '<div class="stat-card green"><div class="label">Completadas</div><div class="value">' + (t.completadas || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">' + (t.completadas || 0) + ' de ' + t.activas + ' solicitadas</div></div>';
   html += '<div class="stat-card blue"><div class="label">Facturado sin IVA</div><div class="value">' + fmt(t.facturado_sin_iva) + '</div></div>';
   html += '<div class="stat-card blue"><div class="label">Ticket promedio</div><div class="value">' + fmt(t.ticket_promedio) + '</div></div>';
   html += '</div>';

@@ -159,8 +159,8 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 
 <div class="contenido">
   <div class="stats-row">
-    <div class="stat-card"><div class="label">Total órdenes</div><div class="value" id="stat-total">—</div><div class="sub" id="stat-total-sub">en el rango</div></div>
-    <div class="stat-card"><div class="label">No anuladas</div><div class="value" id="stat-mes">—</div><div class="sub" id="stat-mes-label">en el rango</div></div>
+    <div class="stat-card"><div class="label">Solicitadas</div><div class="value" id="stat-mes">—</div><div class="sub" id="stat-mes-label">no anuladas en el rango</div></div>
+    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="label">Completadas</div><div class="value" style="color:#16a34a" id="stat-completadas">—</div><div class="sub" id="stat-completadas-sub">en el rango</div></div>
     <div class="stat-card"><div class="label">Última orden</div><div class="value" id="stat-ultima">—</div><div class="sub">número</div></div>
     <div class="stat-card"><div class="label">Total facturado (sin IVA)</div><div class="value" id="stat-monto">—</div><div class="sub" id="stat-monto-sub">en el rango</div></div>
   </div>
@@ -306,7 +306,7 @@ async function toggleCompletada(id, completada, fechaOrden) {
     }
     var data = await res.json();
     // Actualizar el objeto local
-    var orden = todasLasOrdenes.find(function(o){ return o.id === id; });
+    var orden = todasLasOrdenes.find(function(o){ return o.id == id; });
     if (orden) {
       orden.completada = data.completada;
       orden.fecha_completada = data.fecha_completada;
@@ -368,19 +368,20 @@ function localidadesUnicas(o) {
 }
 
 function calcularStats() {
-  // Stats se calculan sobre ordenesFiltradas (respetan TODOS los filtros activos)
   var noAnuladas = ordenesFiltradas.filter(function(o){ return !o.anulada; });
+  var completadas = noAnuladas.filter(function(o){ return o.completada; });
   var totalFact = noAnuladas.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
   var totalSinIVA = totalFact / 1.21;
-  document.getElementById('stat-total').textContent = ordenesFiltradas.length;
-  document.getElementById('stat-mes').textContent = noAnuladas.length;
   var desde = document.getElementById('filtro-desde').value;
   var hasta = document.getElementById('filtro-hasta').value;
   var rangoLabel = (desde && hasta) ? desde + ' a ' + hasta : 'en el rango';
+
+  document.getElementById('stat-mes').textContent = noAnuladas.length;
   document.getElementById('stat-mes-label').textContent = rangoLabel;
-  document.getElementById('stat-total-sub').textContent = rangoLabel;
-  document.getElementById('stat-monto-sub').textContent = rangoLabel;
+  document.getElementById('stat-completadas').textContent = completadas.length;
+  document.getElementById('stat-completadas-sub').textContent = completadas.length + ' de ' + noAnuladas.length + ' solicitadas';
   document.getElementById('stat-ultima').textContent = ordenesFiltradas.length > 0 ? ordenesFiltradas[0].numero_completo : '—';
+  document.getElementById('stat-monto-sub').textContent = rangoLabel;
   document.getElementById('stat-monto').textContent = totalSinIVA > 0 ? '$' + totalSinIVA.toLocaleString('es-AR', {minimumFractionDigits:0}) : '$0';
 }
 
@@ -446,7 +447,7 @@ function renderTabla() {
       var fechaComp = o.fecha_completada || '';
       var fechaOrd = o.fecha_orden || '';
       completadaCell = '<td style="text-align:center">' +
-        '<input type="checkbox" ' + checked + ' onchange="toggleCompletada(\'' + o.id + '\', this.checked, \'' + fechaOrd + '\')" style="cursor:pointer;width:16px;height:16px;" title="' + (fechaComp ? 'Completada: ' + fechaComp : 'No completada') + '">' +
+        '<input type="checkbox" id="chk-' + o.id + '" ' + checked + ' onclick="toggleCompletada(' + o.id + ', document.getElementById(\'chk-' + o.id + '\').checked, \'' + fechaOrd + '\')" style="cursor:pointer;width:16px;height:16px;" title="' + (fechaComp ? 'Completada: ' + fechaComp : 'No completada') + '">' +
         (fechaComp ? '<div style="font-size:10px;color:#16a34a;margin-top:2px">' + new Date(fechaComp + 'T12:00:00').toLocaleDateString('es-AR') + '</div>' : '') +
       '</td>';
     }
