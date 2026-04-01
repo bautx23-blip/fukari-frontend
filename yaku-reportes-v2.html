@@ -328,7 +328,7 @@ function renderBajas(data, resumen) {
   html += '<div class="stats-row">';
   html += '<div class="stat-card red"><div class="label">Solicitudes de baja</div><div class="value">' + t.total_bajas + '</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">' + t.bajas_totales + ' totales / ' + t.bajas_parciales + ' parciales</div></div>';
   html += '<div class="stat-card red"><div class="label">Equipos dados de baja</div><div class="value">' + (t.equipos_baja || 0) + '</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">unidades retiradas</div></div>';
-  html += '<div class="stat-card red"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;line-height:1.4">Equipos dados de baja sobre total activos</div></div>';
+  html += '<div class="stat-card red"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;line-height:1.4">Equipos dados de baja / equipos instalados</div></div>';
   html += '</div>';
 
   // Chart bajas por mes 2026
