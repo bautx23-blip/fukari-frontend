@@ -140,6 +140,22 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 .btn-guardar-edit:disabled{opacity:0.6;cursor:not-allowed;}
 .btn-cancelar-edit{padding:9px 20px;background:#f3f4f6;color:#374151;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;}
 .btn-cancelar-edit:hover{background:#e5e7eb;}
+/* Rechazos crediticios */
+.rechazos-section{margin-top:28px;}
+.rechazos-toggle{width:100%;padding:14px 20px;background:#fff;border:none;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);font-family:inherit;font-size:14px;font-weight:600;color:#374151;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background 0.15s;}
+.rechazos-toggle:hover{background:#f9fafb;}
+.rechazos-toggle .arrow{transition:transform 0.2s;font-size:12px;color:#9ca3af;}
+.rechazos-toggle.open .arrow{transform:rotate(180deg);}
+.rechazos-content{display:none;margin-top:12px;}
+.rechazos-content.open{display:block;}
+.rechazos-filtros{background:#fff;border-radius:8px;padding:14px 20px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.rechazos-filtros label{font-size:11px;color:#6b7280;font-weight:600;}
+.rechazos-filtros input{padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;max-width:150px;}
+.rechazos-filtros input:focus{border-color:#1a1a2e;}
+.rechazos-stats{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
+.rechazos-stat{background:#fff;border-radius:8px;padding:14px 20px;flex:1;min-width:180px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.rechazos-stat .label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.rechazos-stat .value{font-size:22px;font-weight:700;color:#dc2626;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -190,6 +206,31 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
       <div class="pag-btns">
         <button class="pag-btn" id="btn-prev" onclick="cambiarPagina(-1)" disabled>&#8592; Anterior</button>
         <button class="pag-btn" id="btn-next" onclick="cambiarPagina(1)">Siguiente &#8594;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rechazos Crediticios -->
+  <div class="rechazos-section">
+    <button class="rechazos-toggle" onclick="toggleRechazos()">
+      <span>&#128203; Rechazos Crediticios</span>
+      <span class="arrow">&#9660;</span>
+    </button>
+    <div id="rechazos-content" class="rechazos-content">
+      <div class="rechazos-filtros">
+        <label>Desde</label>
+        <input type="date" id="rechazos-desde" onchange="cargarRechazos()">
+        <label>Hasta</label>
+        <input type="date" id="rechazos-hasta" onchange="cargarRechazos()">
+        <button class="btn-refresh" onclick="cargarRechazos()" style="padding:7px 14px;font-size:12px;">&#8635; Actualizar</button>
+      </div>
+      <div class="rechazos-stats">
+        <div class="rechazos-stat"><div class="label">Rechazos</div><div class="value" id="rechazos-count">0</div></div>
+        <div class="rechazos-stat"><div class="label">Facturaci&#243;n perdida estimada</div><div class="value" id="rechazos-total">$0</div></div>
+      </div>
+      <div class="tabla-wrap">
+        <div class="tabla-header"><h3>Detalle de Rechazos</h3><span id="rechazos-contador"></span></div>
+        <div id="rechazos-tabla-body"><div class="empty-msg">Cargando...</div></div>
       </div>
     </div>
   </div>
@@ -818,6 +859,68 @@ async function guardarEdicion() {
 }
 
 function esc(v) { return (v||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── RECHAZOS CREDITICIOS ──
+function toggleRechazos() {
+  var btn = document.querySelector('.rechazos-toggle');
+  var content = document.getElementById('rechazos-content');
+  btn.classList.toggle('open');
+  content.classList.toggle('open');
+  if (content.classList.contains('open') && !content.dataset.loaded) {
+    initRechazos();
+    content.dataset.loaded = '1';
+  }
+}
+
+function initRechazos() {
+  var hoy = new Date();
+  var desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  document.getElementById('rechazos-desde').value = desde.toISOString().split('T')[0];
+  document.getElementById('rechazos-hasta').value = hoy.toISOString().split('T')[0];
+  cargarRechazos();
+}
+
+async function cargarRechazos() {
+  var desde = document.getElementById('rechazos-desde').value;
+  var hasta = document.getElementById('rechazos-hasta').value;
+  var params = [];
+  if (desde) params.push('fecha_desde=' + desde);
+  if (hasta) params.push('fecha_hasta=' + hasta);
+  var url = API_URL + '/api/rechazos-crediticios' + (params.length ? '?' + params.join('&') : '');
+  try {
+    var res = await fetch(url);
+    var data = await res.json();
+    renderRechazos(data);
+  } catch (err) {
+    document.getElementById('rechazos-tabla-body').innerHTML = '<div class="error-msg">Error al cargar rechazos</div>';
+  }
+}
+
+function renderRechazos(data) {
+  var count = data.length;
+  var total = data.reduce(function(acc, r) { return acc + (parseFloat(r.monto_perdido_estimado) || 0); }, 0);
+  document.getElementById('rechazos-count').textContent = count;
+  document.getElementById('rechazos-total').textContent = '$' + total.toLocaleString('es-AR', { minimumFractionDigits: 2 });
+  document.getElementById('rechazos-contador').textContent = count + ' registro' + (count !== 1 ? 's' : '');
+  if (count === 0) {
+    document.getElementById('rechazos-tabla-body').innerHTML = '<div class="empty-msg">No hay rechazos en el rango seleccionado</div>';
+    return;
+  }
+  var html = '<table><thead><tr><th>Fecha</th><th>Cliente</th><th>Sit. BCRA</th><th>Deuda total (miles $)</th><th>Fact. perdida est.</th><th>Vendedor</th></tr></thead><tbody>';
+  data.forEach(function(r) {
+    var fecha = r.fecha ? r.fecha.split('-').reverse().join('/') : '-';
+    html += '<tr>' +
+      '<td>' + fecha + '</td>' +
+      '<td>' + esc(r.nombre_cliente) + '</td>' +
+      '<td style="text-align:center;"><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-weight:700;font-size:11px;">Sit. ' + r.situacion_bcra + '</span></td>' +
+      '<td style="text-align:right;">$' + (parseFloat(r.deuda_total) || 0).toLocaleString('es-AR') + '</td>' +
+      '<td style="text-align:right;font-weight:600;color:#dc2626;">$' + (parseFloat(r.monto_perdido_estimado) || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 }) + '</td>' +
+      '<td>' + esc(r.vendedor || '-') + '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('rechazos-tabla-body').innerHTML = html;
+}
 </script>
 </body>
 </html>

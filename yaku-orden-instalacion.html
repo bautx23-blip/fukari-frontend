@@ -166,6 +166,15 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 .bcra-btn-ok.disabled-btn{background:#9ca3af;cursor:not-allowed;}
 .bcra-btn-cancel{padding:11px 16px;background:#fff;color:#374151;border:1.5px solid #d1d5db;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
 .bcra-btn-cancel:hover{background:#f9fafb;}
+.bcra-rechazo-wrap{margin-top:14px;padding:14px;background:#fef3c7;border:1px solid #fde68a;border-radius:7px;display:none;}
+.bcra-rechazo-wrap label{font-size:12px;font-weight:600;color:#92400e;display:block;margin-bottom:6px;}
+.bcra-rechazo-wrap input{width:100%;padding:8px 12px;border:1.5px solid #fde68a;border-radius:6px;font-family:inherit;font-size:13px;outline:none;}
+.bcra-rechazo-wrap input:focus{border-color:#d97706;}
+.bcra-rechazo-wrap .bcra-rechazo-actions{display:flex;gap:8px;margin-top:10px;}
+.bcra-btn-informe{padding:9px 14px;background:#d97706;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.bcra-btn-informe:hover{background:#b45309;}
+.bcra-btn-informe:disabled{opacity:0.6;cursor:not-allowed;}
+.bcra-rechazo-ok{font-size:12px;color:#16a34a;font-weight:600;margin-top:8px;display:none;}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -237,8 +246,17 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
         <div id="bcra-fecha-consulta" class="bcra-fecha"></div>
         <div id="bcra-aviso-rojo" class="bcra-aviso-rojo"></div>
         <div class="bcra-actions">
-          <button class="bcra-btn-cancel" onclick="reiniciarBCRA()">← Nueva consulta</button>
-          <button id="bcra-btn-continuar" class="bcra-btn-ok">✓ Continuar</button>
+          <button class="bcra-btn-cancel" onclick="reiniciarBCRA()">&#8592; Nueva consulta</button>
+          <button id="bcra-btn-continuar" class="bcra-btn-ok">&#10003; Continuar</button>
+          <button id="bcra-btn-informe" class="bcra-btn-informe" style="display:none;" onclick="mostrarFormRechazo()">&#128203; Agregar al informe</button>
+        </div>
+        <div id="bcra-rechazo-wrap" class="bcra-rechazo-wrap">
+          <label>Facturaci&#243;n estimada perdida ($)</label>
+          <input type="number" id="bcra-rechazo-monto" min="0" step="0.01" placeholder="Ej: 25000">
+          <div class="bcra-rechazo-actions">
+            <button class="bcra-btn-informe" id="bcra-rechazo-guardar" onclick="guardarRechazo()">Guardar</button>
+          </div>
+          <div id="bcra-rechazo-ok" class="bcra-rechazo-ok">&#10003; Rechazo registrado correctamente</div>
         </div>
       </div>
     </div>
@@ -1537,6 +1555,53 @@ function mostrarResultadoBCRA(data, cuitRaw) {
     btn.onclick = function() { alert('No se puede crear la orden. El cliente tiene situación ' + peorSit + ' en el BCRA. Yakú solo acepta situaciones 1 y 2.'); };
     aviso.innerHTML = '🚫 <strong>Situación ' + peorSit + ':</strong> No se otorga instalación. Supera el límite de riesgo aceptado por Yakú.';
     aviso.style.display = 'block';
+    // Mostrar botón de agregar al informe para situación >= 4
+    if (peorSit >= 4) {
+      document.getElementById('bcra-btn-informe').style.display = '';
+    }
+  }
+}
+
+function mostrarFormRechazo() {
+  document.getElementById('bcra-rechazo-wrap').style.display = 'block';
+  document.getElementById('bcra-btn-informe').style.display = 'none';
+  document.getElementById('bcra-rechazo-monto').focus();
+}
+
+async function guardarRechazo() {
+  var montoInput = document.getElementById('bcra-rechazo-monto');
+  var monto = parseFloat(montoInput.value);
+  if (!monto || monto <= 0) { alert('Ingresá la facturación estimada perdida.'); return; }
+
+  var btnGuardar = document.getElementById('bcra-rechazo-guardar');
+  btnGuardar.disabled = true;
+  btnGuardar.textContent = 'Guardando...';
+
+  try {
+    var vendedorSel = document.getElementById('vendedor-select');
+    var res = await fetch(API_URL + '/api/rechazos-crediticios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fecha: new Date().toISOString().split('T')[0],
+        nombre_cliente: bcraData.denominacion || '',
+        documento: bcraData.cuit || '',
+        situacion_bcra: bcraData.situacion_peor,
+        deuda_total: bcraData.deuda_total_miles || null,
+        monto_perdido_estimado: monto,
+        vendedor: vendedorSel ? vendedorSel.value : '',
+        vendedor_email: window._currentUserEmail || '',
+        detalle_entidades: bcraData.entidades || null,
+      })
+    });
+    if (!res.ok) throw new Error('Error del servidor');
+    document.getElementById('bcra-rechazo-ok').style.display = 'block';
+    montoInput.disabled = true;
+    btnGuardar.style.display = 'none';
+  } catch (err) {
+    alert('Error al guardar el rechazo: ' + err.message);
+    btnGuardar.disabled = false;
+    btnGuardar.textContent = 'Guardar';
   }
 }
 
@@ -1555,6 +1620,17 @@ function reiniciarBCRA() {
   document.getElementById('bcra-step-input').style.display = 'block';
   document.getElementById('bcra-cuit-input').value = '';
   document.getElementById('bcra-btn-continuar').style.display = 'none';
+  // Reset rechazo form
+  document.getElementById('bcra-btn-informe').style.display = 'none';
+  document.getElementById('bcra-rechazo-wrap').style.display = 'none';
+  document.getElementById('bcra-rechazo-ok').style.display = 'none';
+  var montoInput = document.getElementById('bcra-rechazo-monto');
+  montoInput.value = '';
+  montoInput.disabled = false;
+  var btnGuardar = document.getElementById('bcra-rechazo-guardar');
+  btnGuardar.disabled = false;
+  btnGuardar.textContent = 'Guardar';
+  btnGuardar.style.display = '';
 }
 </script>
 </body>
