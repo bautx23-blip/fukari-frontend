@@ -209,26 +209,36 @@ function cargarDatos() {
   var contenido = document.getElementById('contenido');
   contenido.innerHTML = '<div class="loading-overlay" id="loading"><div class="spinner"></div><span>Cargando datos...</span></div>';
 
+  var rechazosQs = '';
+  var desde = document.getElementById('filtro-desde').value;
+  var hasta = document.getElementById('filtro-hasta').value;
+  var rp = [];
+  if (desde) rp.push('fecha_desde=' + desde);
+  if (hasta) rp.push('fecha_hasta=' + hasta);
+  if (rp.length) rechazosQs = '?' + rp.join('&');
+
   Promise.all([
     fetch(API_URL + '/api/reportes/resumen' + qs).then(function(r){ if(!r.ok) throw new Error('resumen '+r.status); return r.json(); }),
     fetch(API_URL + '/api/reportes/instalaciones' + qs).then(function(r){ if(!r.ok) throw new Error('instalaciones '+r.status); return r.json(); }),
     fetch(API_URL + '/api/reportes/bajas' + qs).then(function(r){ if(!r.ok) throw new Error('bajas '+r.status); return r.json(); }),
-    fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); })
+    fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); }),
+    fetch(API_URL + '/api/rechazos-crediticios' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; })
   ]).then(function(results) {
     destroyCharts();
-    renderAll(results[0], results[1], results[2], results[3]);
+    renderAll(results[0], results[1], results[2], results[3], results[4]);
   }).catch(function(err) {
     contenido.innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
   });
 }
 
 /* ── RENDER ALL ── */
-function renderAll(resumen, instalaciones, bajas, clientes) {
+function renderAll(resumen, instalaciones, bajas, clientes, rechazos) {
   var contenido = document.getElementById('contenido');
   var html = '';
   html += renderResumen(resumen, instalaciones);
   html += renderInstalaciones(instalaciones);
   html += renderBajas(bajas, resumen);
+  html += renderRechazos(rechazos || []);
   html += renderClientes(clientes);
   contenido.innerHTML = html;
 
@@ -377,6 +387,46 @@ function renderClientes(data) {
     html += '<tr><td class="bold">' + c.razon_social + '</td><td>' + c.cuit + '</td><td class="right">' + c.equipos + '</td><td class="right">' + c.cantidad_total + '</td></tr>';
   });
   html += '</tbody></table></div>';
+
+  html += '</div>';
+  return html;
+}
+
+/* ══════════════════════════════════════════
+   RECHAZOS CREDITICIOS
+   ══════════════════════════════════════════ */
+function renderRechazos(data) {
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar" style="background:#d97706"></div><h2 style="color:#d97706">Rechazos crediticios</h2></div>';
+
+  var count = data.length;
+  var totalPerdido = data.reduce(function(acc, r) { return acc + (parseFloat(r.monto_perdido_estimado) || 0); }, 0);
+
+  // Cards
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card" style="border-top-color:#d97706"><div class="label">Rechazados</div><div class="value" style="color:#d97706">' + count + '</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#d97706"><div class="label">Facturaci\u00f3n perdida estimada</div><div class="value" style="color:#dc2626">' + fmt(totalPerdido) + '</div></div>';
+  html += '</div>';
+
+  // Tabla
+  if (count > 0) {
+    html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Detalle de rechazos</h3></div>';
+    html += '<table><thead><tr><th>Fecha</th><th>Cliente</th><th>CUIT</th><th class="right">Sit. BCRA</th><th class="right">Facturaci\u00f3n perdida est.</th><th>Vendedor</th></tr></thead><tbody>';
+    data.forEach(function(r) {
+      var fecha = r.fecha ? r.fecha.split('-').reverse().join('/') : '-';
+      html += '<tr>';
+      html += '<td>' + fecha + '</td>';
+      html += '<td class="bold">' + (r.nombre_cliente || '-') + '</td>';
+      html += '<td>' + (r.documento || '-') + '</td>';
+      html += '<td class="right"><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-weight:700;font-size:11px;">Sit. ' + r.situacion_bcra + '</span></td>';
+      html += '<td class="right money" style="color:#dc2626">' + fmt(parseFloat(r.monto_perdido_estimado) || 0) + '</td>';
+      html += '<td>' + (r.vendedor || '-') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += '<div class="tabla-wrap"><div style="padding:32px;text-align:center;color:#9ca3af;font-size:13px">No hay rechazos crediticios en el per\u00edodo</div></div>';
+  }
 
   html += '</div>';
   return html;
