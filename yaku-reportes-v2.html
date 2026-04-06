@@ -259,7 +259,8 @@ function renderResumen(resumen, instalaciones) {
   html += '<div class="section-header"><div class="bar blue"></div><h2 class="blue">Resumen ejecutivo</h2></div>';
   html += '<div class="stats-row">';
   html += '<div class="stat-card" style="border-top-color:#d1d5db;opacity:0.5"><div class="label" style="color:#9ca3af">Equipos activos</div><div class="value" style="color:#d1d5db;font-size:16px;margin-top:8px">Pronto disponible</div></div>';
-  html += '<div class="stat-card blue"><div class="label">Facturado sin IVA</div><div class="value">' + fmt(resumen.facturado_sin_iva) + '</div></div>';
+  var facturadoConIva = Math.round(resumen.facturado_sin_iva * 1.21);
+  html += '<div class="stat-card blue"><div class="label">Facturado con IVA</div><div class="value">' + fmt(facturadoConIva) + '</div></div>';
   html += '<div class="stat-card blue"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;line-height:1.4">Equipos dados de baja / equipos instalados</div></div>';
   html += '<div class="stat-card blue"><div class="label">Ticket promedio</div><div class="value">' + fmt(instalaciones.totales.ticket_promedio) + '</div></div>';
   html += '</div>';
