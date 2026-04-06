@@ -649,14 +649,22 @@ function agregarFila() {
   var tbody = document.getElementById('productos-body');
   var tr = document.createElement('tr');
   tr.id = 'fila-' + id;
-  var opts = MODELOS_STOCK.map(function(item){
+  var opts = [];
+  MODELOS_STOCK.forEach(function(item){
     var activo = item.activo !== false;
     var enPromo = item.en_promocion && activo;
-    var label = !activo ? item.modelo + ' — FUERA DE STOCK' : (enPromo ? item.modelo + ' ★ PROMO' : item.modelo);
-    var style = !activo ? ' style="color:#dc2626;font-style:italic"' : (enPromo ? ' style="color:#16a34a;font-weight:600"' : '');
-    var disabled = activo ? '' : ' disabled';
-    return '<option value="' + item.modelo + '"' + disabled + style + '>' + label + '</option>';
-  }).join('');
+    if (!activo) {
+      opts.push('<option value="' + item.modelo + '" disabled style="color:#dc2626;font-style:italic">' + item.modelo + ' — FUERA DE STOCK</option>');
+    } else if (enPromo) {
+      // Opción con promoción
+      opts.push('<option value="' + item.modelo + '__PROMO" style="color:#16a34a;font-weight:600">' + item.modelo + ' ★ PROMO</option>');
+      // Opción sin promoción (precio normal)
+      opts.push('<option value="' + item.modelo + '">' + item.modelo + '</option>');
+    } else {
+      opts.push('<option value="' + item.modelo + '">' + item.modelo + '</option>');
+    }
+  });
+  opts = opts.join('');
   tr.innerHTML =
     '<td><select onchange="aplicarPrecioStock(' + id + '); recalcularFila(' + id + ')"><option value="">-- Modelo --</option>' + opts + '</select></td>' +
     '<td><input type="number" min="0" step="1" placeholder="0" oninput="recalcularFila(' + id + ')"></td>' +
@@ -680,12 +688,13 @@ function aplicarPrecioStock(id) {
   var tr = document.getElementById('fila-' + id);
   if (!tr) return;
   var sel = tr.querySelector('select');
-  var modelo = sel.value;
+  var rawValue = sel.value;
+  var esPromo = rawValue.endsWith('__PROMO');
+  var modelo = esPromo ? rawValue.replace('__PROMO', '') : rawValue;
   if (modelo && _stockPrecios[modelo] !== undefined) {
     var precioInput = tr.querySelectorAll('input[type="number"]')[1];
-    // Si tiene promo activa, usar precio promo; sino precio normal
     var precio = _stockPrecios[modelo];
-    if (_stockPromos[modelo]) {
+    if (esPromo && _stockPromos[modelo]) {
       precio = _stockPromos[modelo].precio_promocion;
     }
     if (precioInput && !precioInput.value) {
@@ -740,11 +749,14 @@ function generarAclaracionesConPromo() {
   var productosConPromo = [];
   document.querySelectorAll('#productos-body tr').forEach(function(tr) {
     var sel = tr.querySelector('select');
-    if (sel && sel.value && _stockPromos[sel.value]) {
-      productosConPromo.push({
-        modelo: sel.value,
-        promo: _stockPromos[sel.value]
-      });
+    if (sel && sel.value && sel.value.endsWith('__PROMO')) {
+      var modelo = sel.value.replace('__PROMO', '');
+      if (_stockPromos[modelo]) {
+        productosConPromo.push({
+          modelo: modelo,
+          promo: _stockPromos[modelo]
+        });
+      }
     }
   });
   if (productosConPromo.length === 0) return aclaraciones;
@@ -770,8 +782,9 @@ function recolectarDatos() {
     var txts = tr.querySelectorAll('input[type="text"]');
     // txts[0]=total(readonly), txts[1]=domicilio, txts[2]=localidad
     if (sel && sel.value) {
+      var modeloLimpio = sel.value.replace('__PROMO', '');
       productos.push({
-        modelo: sel.value,
+        modelo: modeloLimpio,
         cantidad: nums[0].value || '0',
         precio_unitario: nums[1].value || '0',
         domicilio: txts[1] ? txts[1].value.trim() : '',
@@ -832,7 +845,7 @@ function _recolectarEquiposDeDir(domId) {
     var sel = tr.querySelector('select');
     var nums = tr.querySelectorAll('input[type="number"]');
     if (sel && sel.value && nums[1]) {
-      precios[sel.value] = parseFloat(nums[1].value) || 0;
+      precios[sel.value.replace('__PROMO', '')] = parseFloat(nums[1].value) || 0;
     }
   });
   var lista = [];
@@ -1102,7 +1115,7 @@ function _getProductosActuales() {
     var sel = tr.querySelector('select');
     var nums = tr.querySelectorAll('input[type="number"]');
     if (sel && sel.value) {
-      lista.push({ modelo: sel.value, cantidad: parseInt(nums[0].value) || 0 });
+      lista.push({ modelo: sel.value.replace('__PROMO', ''), cantidad: parseInt(nums[0].value) || 0 });
     }
   });
   return lista;
