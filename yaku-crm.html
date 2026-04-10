@@ -189,6 +189,76 @@ tbody tr:hover{background:#f8fafc;}
 .btn-modal-send{background:#25d366;color:#fff;border:none;padding:8px 18px;border-radius:6px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
 .btn-modal-send:hover{background:#1fb855;}
 
+/* ═══════════════════════════════════════════
+   TEMPLATES SECTION
+   ═══════════════════════════════════════════ */
+.tpl-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.tpl-header h2{font-size:18px;font-weight:700;color:#1a1a2e;}
+.tpl-actions{display:flex;gap:10px;}
+.btn-tpl{padding:8px 16px;border-radius:6px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-tpl-primary{background:#1a1a2e;color:#fff;}
+.btn-tpl-primary:hover{background:#2d2d4e;}
+.btn-tpl-outline{background:transparent;border:1px solid #d1d5db;color:#6b7280;}
+.btn-tpl-outline:hover{border-color:#9ca3af;color:#111827;}
+.btn-tpl-danger{background:transparent;border:1px solid #fca5a5;color:#dc2626;padding:4px 10px;font-size:11px;}
+.btn-tpl-danger:hover{background:#fee2e2;}
+.btn-tpl-send{background:#25d366;color:#fff;padding:4px 10px;font-size:11px;}
+.btn-tpl-send:hover{background:#1fb855;}
+
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.tpl-card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.05);transition:box-shadow .15s;}
+.tpl-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.tpl-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.tpl-card-name{font-size:14px;font-weight:700;color:#1a1a2e;word-break:break-all;}
+.tpl-card-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.tpl-badge-cat{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;}
+.tpl-badge-marketing{background:#ede9fe;color:#7c3aed;}
+.tpl-badge-utility{background:#dbeafe;color:#2563eb;}
+.tpl-badge-authentication{background:#fef3c7;color:#d97706;}
+.tpl-badge-status{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;}
+.tpl-status-approved{background:#dcfce7;color:#16a34a;}
+.tpl-status-pending{background:#fef3c7;color:#d97706;}
+.tpl-status-rejected{background:#fee2e2;color:#dc2626;}
+.tpl-card-body{font-size:12.5px;color:#6b7280;line-height:1.6;margin-bottom:14px;max-height:80px;overflow:hidden;white-space:pre-wrap;}
+.tpl-card-lang{font-size:11px;color:#9ca3af;margin-bottom:10px;}
+.tpl-card-actions{display:flex;gap:8px;justify-content:flex-end;}
+
+/* Template Create Modal */
+.tpl-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:600;display:none;align-items:flex-start;justify-content:center;padding-top:60px;overflow-y:auto;}
+.tpl-modal-bg.open{display:flex;}
+.tpl-create-wrap{display:flex;gap:24px;width:820px;max-width:95vw;background:#fff;border-radius:10px;padding:28px;box-shadow:0 20px 50px rgba(0,0,0,0.15);}
+.tpl-form{flex:1;min-width:0;}
+.tpl-form h3{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:16px;}
+.tpl-form label{font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.tpl-form input,.tpl-form select,.tpl-form textarea{width:100%;font-family:inherit;font-size:13px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:12px;color:#111827;}
+.tpl-form textarea{min-height:90px;resize:vertical;}
+.tpl-form input:focus,.tpl-form select:focus,.tpl-form textarea:focus{outline:none;border-color:#1a1a2e;box-shadow:0 0 0 2px rgba(26,26,46,0.08);}
+.tpl-form .hint{font-size:11px;color:#9ca3af;margin:-8px 0 12px;line-height:1.4;}
+.tpl-buttons-row{display:flex;gap:8px;margin-bottom:12px;}
+.tpl-buttons-row input{flex:1;}
+.btn-add-btn{background:transparent;border:1px dashed #d1d5db;color:#6b7280;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;}
+.btn-remove-btn{background:transparent;border:none;color:#dc2626;cursor:pointer;font-size:14px;padding:0 4px;}
+
+/* Template Preview */
+.tpl-preview{width:260px;flex-shrink:0;}
+.tpl-preview h4{font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;}
+.tpl-preview-phone{background:#efeae2;border-radius:10px;padding:20px 14px;min-height:200px;}
+.tpl-preview-bubble{background:#fff;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#111827;box-shadow:0 1px 1px rgba(0,0,0,0.06);white-space:pre-wrap;word-wrap:break-word;}
+.tpl-preview-bubble .prev-header{font-weight:700;margin-bottom:6px;color:#1a1a2e;}
+.tpl-preview-bubble .prev-footer{font-size:11px;color:#8696a0;margin-top:8px;}
+.tpl-preview-bubble .prev-btn{display:block;text-align:center;padding:8px;margin-top:6px;border-top:1px solid #e5e7eb;color:#2563eb;font-size:12px;font-weight:500;}
+
+/* Send Template Modal */
+.tpl-send-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:600;display:none;align-items:center;justify-content:center;}
+.tpl-send-bg.open{display:flex;}
+.tpl-send-box{background:#fff;border-radius:10px;padding:28px;width:440px;max-width:90vw;box-shadow:0 20px 50px rgba(0,0,0,0.15);}
+.tpl-send-box h3{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:16px;}
+.tpl-send-box label{font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.tpl-send-box input{width:100%;font-family:inherit;font-size:13px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:12px;color:#111827;}
+.tpl-send-box input:focus{outline:none;border-color:#25d366;}
+.tpl-send-preview{background:#efeae2;border-radius:8px;padding:14px;margin-bottom:16px;}
+.tpl-send-preview .prev-bubble{background:#fff;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.5;box-shadow:0 1px 1px rgba(0,0,0,0.06);white-space:pre-wrap;}
+
 /* ── RESPONSIVE ── */
 @media(max-width:900px){
   .btn-hamburger{display:block;}
@@ -243,6 +313,9 @@ tbody tr:hover{background:#f8fafc;}
       <span class="icon"><svg viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></span> WhatsApp
       <span class="sidebar-badge" id="wa-unread-badge"></span>
     </button>
+    <button class="sidebar-link" id="nav-plantillas" onclick="switchView('plantillas')">
+      <span class="icon">&#128196;</span> Plantillas
+    </button>
     <button class="sidebar-link" id="nav-meta" onclick="switchView('meta')">
       <span class="icon">&#128227;</span> Anuncios de Meta
     </button>
@@ -293,6 +366,18 @@ tbody tr:hover{background:#f8fafc;}
     </div>
   </div>
 
+  <!-- VIEW: PLANTILLAS -->
+  <div class="view" id="view-plantillas">
+    <div class="tpl-header">
+      <h2>Plantillas de WhatsApp</h2>
+      <div class="tpl-actions">
+        <button class="btn-tpl btn-tpl-outline" onclick="cargarTemplates(true)">&#8635; Sincronizar</button>
+        <button class="btn-tpl btn-tpl-primary" onclick="abrirCrearTemplate()">+ Nueva plantilla</button>
+      </div>
+    </div>
+    <div id="tpl-grid-contenido"></div>
+  </div>
+
   <!-- VIEW: META ADS -->
   <div class="view" id="view-meta">
     <div class="construction-state">
@@ -322,6 +407,73 @@ tbody tr:hover{background:#f8fafc;}
     <div class="modal-actions">
       <button class="btn-modal-cancel" onclick="cerrarNuevoChat()">Cancelar</button>
       <button class="btn-modal-send" onclick="enviarNuevoChat()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Template Modal -->
+<div class="tpl-modal-bg" id="modal-create-tpl">
+  <div class="tpl-create-wrap">
+    <div class="tpl-form">
+      <h3>Crear plantilla</h3>
+      <label>Nombre</label>
+      <input type="text" id="tpl-name" placeholder="ej: bienvenida_empresa" pattern="[a-z0-9_]+">
+      <div class="hint">Solo minúsculas, números y guiones bajos (_)</div>
+      <label>Categoría</label>
+      <select id="tpl-category">
+        <option value="MARKETING">Marketing</option>
+        <option value="UTILITY">Utilidad</option>
+        <option value="AUTHENTICATION">Autenticación</option>
+      </select>
+      <label>Idioma</label>
+      <select id="tpl-language">
+        <option value="es_AR">Español (Argentina)</option>
+        <option value="es">Español</option>
+        <option value="en_US">Inglés (US)</option>
+        <option value="pt_BR">Portugués (Brasil)</option>
+      </select>
+      <label>Header (opcional)</label>
+      <input type="text" id="tpl-header" placeholder="Texto del header">
+      <label>Body (obligatorio)</label>
+      <textarea id="tpl-body" placeholder="Hola {{1}}, le escribimos de Yakú Agua para informarle sobre..."></textarea>
+      <div class="hint">Usá {{1}}, {{2}}, etc. para variables reemplazables</div>
+      <label>Footer (opcional)</label>
+      <input type="text" id="tpl-footer" placeholder="Yakú Agua Purificada">
+      <label>Botones (opcional, máximo 2)</label>
+      <div id="tpl-buttons-container"></div>
+      <button class="btn-add-btn" onclick="agregarBotonTemplate()">+ Agregar botón</button>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn-tpl btn-tpl-outline" onclick="cerrarCrearTemplate()">Cancelar</button>
+        <button class="btn-tpl btn-tpl-primary" onclick="crearTemplate()">Crear plantilla</button>
+      </div>
+    </div>
+    <div class="tpl-preview">
+      <h4>Vista previa</h4>
+      <div class="tpl-preview-phone">
+        <div class="tpl-preview-bubble" id="tpl-preview-bubble">
+          <div class="prev-header" id="tpl-prev-header" style="display:none;"></div>
+          <div id="tpl-prev-body" style="color:#6b7280;">Escribí el body para ver la vista previa...</div>
+          <div class="prev-footer" id="tpl-prev-footer" style="display:none;"></div>
+          <div id="tpl-prev-buttons"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Send Template Modal -->
+<div class="tpl-send-bg" id="modal-send-tpl">
+  <div class="tpl-send-box">
+    <h3>Enviar plantilla</h3>
+    <label>Teléfono destino</label>
+    <input type="tel" id="tpl-send-tel" placeholder="Ej: 341 1234567">
+    <div id="tpl-send-vars"></div>
+    <div class="tpl-send-preview">
+      <div class="prev-bubble" id="tpl-send-preview-text"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-tpl btn-tpl-outline" onclick="cerrarEnviarTemplate()">Cancelar</button>
+      <button class="btn-tpl btn-tpl-send" style="padding:8px 18px;font-size:12.5px;" onclick="enviarTemplate()">Enviar</button>
     </div>
   </div>
 </div>
@@ -720,6 +872,259 @@ async function pollWhatsApp() {
     }
   } catch (err) { /* silent */ }
 }
+
+// ════════════════════════════════════════════════════════════════════
+// TEMPLATES
+// ════════════════════════════════════════════════════════════════════
+
+var allTemplates = [];
+var _sendTemplateData = null;
+var _tplButtonCount = 0;
+
+async function cargarTemplates(force) {
+  var url = API_URL + '/api/whatsapp/templates' + (force ? '?refresh=true' : '');
+  try {
+    document.getElementById('tpl-grid-contenido').innerHTML = '<div class="empty-state" style="padding:40px;"><p>Cargando plantillas...</p></div>';
+    var res = await fetch(url);
+    if (!res.ok) throw new Error('Error ' + res.status);
+    allTemplates = await res.json();
+    renderTemplates();
+  } catch (err) {
+    document.getElementById('tpl-grid-contenido').innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div><h3>Error al cargar plantillas</h3><p>' + esc(err.message) + '</p></div>';
+  }
+}
+
+function renderTemplates() {
+  if (allTemplates.length === 0) {
+    document.getElementById('tpl-grid-contenido').innerHTML = '<div class="empty-state"><div class="icon">&#128196;</div><h3>No hay plantillas</h3><p>Creá tu primera plantilla para enviar mensajes a tus contactos.</p></div>';
+    return;
+  }
+  var html = '<div class="tpl-grid">';
+  allTemplates.forEach(function(t) {
+    var catCls = 'tpl-badge-utility';
+    if (t.category === 'MARKETING') catCls = 'tpl-badge-marketing';
+    if (t.category === 'AUTHENTICATION') catCls = 'tpl-badge-authentication';
+    var statusCls = 'tpl-status-pending';
+    var statusLabel = t.status;
+    if (t.status === 'APPROVED') { statusCls = 'tpl-status-approved'; statusLabel = 'Aprobada'; }
+    if (t.status === 'PENDING') { statusLabel = 'Pendiente'; }
+    if (t.status === 'REJECTED') { statusCls = 'tpl-status-rejected'; statusLabel = 'Rechazada'; }
+
+    var bodyText = '';
+    if (t.components) {
+      var bodyComp = t.components.find(function(c) { return c.type === 'BODY'; });
+      if (bodyComp) bodyText = bodyComp.text || '';
+    }
+
+    html += '<div class="tpl-card">' +
+      '<div class="tpl-card-header"><span class="tpl-card-name">' + esc(t.name) + '</span></div>' +
+      '<div class="tpl-card-badges">' +
+        '<span class="tpl-badge-cat ' + catCls + '">' + esc(t.category) + '</span>' +
+        '<span class="tpl-badge-status ' + statusCls + '">' + statusLabel + '</span>' +
+      '</div>' +
+      '<div class="tpl-card-lang">' + esc(t.language || '—') + '</div>' +
+      '<div class="tpl-card-body">' + esc(bodyText) + '</div>' +
+      '<div class="tpl-card-actions">' +
+        (t.status === 'APPROVED' ? '<button class="btn-tpl btn-tpl-send" onclick=\'abrirEnviarTemplate(' + JSON.stringify({name:t.name,language:t.language,components:t.components}).replace(/'/g,"&#39;") + ')\'>Enviar</button>' : '') +
+        '<button class="btn-tpl btn-tpl-danger" onclick="eliminarTemplate(\'' + esc(t.name) + '\')">Eliminar</button>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  document.getElementById('tpl-grid-contenido').innerHTML = html;
+}
+
+// ── Create Template ──
+function abrirCrearTemplate() {
+  document.getElementById('modal-create-tpl').classList.add('open');
+  _tplButtonCount = 0;
+  document.getElementById('tpl-buttons-container').innerHTML = '';
+  document.getElementById('tpl-name').value = '';
+  document.getElementById('tpl-header').value = '';
+  document.getElementById('tpl-body').value = '';
+  document.getElementById('tpl-footer').value = '';
+  actualizarPreviewTemplate();
+}
+function cerrarCrearTemplate() { document.getElementById('modal-create-tpl').classList.remove('open'); }
+
+function agregarBotonTemplate() {
+  if (_tplButtonCount >= 2) { alert('Máximo 2 botones'); return; }
+  _tplButtonCount++;
+  var container = document.getElementById('tpl-buttons-container');
+  var div = document.createElement('div');
+  div.className = 'tpl-buttons-row';
+  div.innerHTML = '<input type="text" class="tpl-btn-text" placeholder="Texto del botón ' + _tplButtonCount + '" oninput="actualizarPreviewTemplate()"><button class="btn-remove-btn" onclick="this.parentElement.remove();_tplButtonCount--;actualizarPreviewTemplate();">&times;</button>';
+  container.appendChild(div);
+  actualizarPreviewTemplate();
+}
+
+// Live preview
+document.getElementById('tpl-header').addEventListener('input', actualizarPreviewTemplate);
+document.getElementById('tpl-body').addEventListener('input', actualizarPreviewTemplate);
+document.getElementById('tpl-footer').addEventListener('input', actualizarPreviewTemplate);
+
+function actualizarPreviewTemplate() {
+  var header = document.getElementById('tpl-header').value;
+  var body = document.getElementById('tpl-body').value;
+  var footer = document.getElementById('tpl-footer').value;
+
+  var hEl = document.getElementById('tpl-prev-header');
+  var bEl = document.getElementById('tpl-prev-body');
+  var fEl = document.getElementById('tpl-prev-footer');
+  var btnsEl = document.getElementById('tpl-prev-buttons');
+
+  hEl.style.display = header ? 'block' : 'none';
+  hEl.textContent = header;
+  bEl.textContent = body || 'Escribí el body para ver la vista previa...';
+  bEl.style.color = body ? '#111827' : '#6b7280';
+  fEl.style.display = footer ? 'block' : 'none';
+  fEl.textContent = footer;
+
+  var btns = document.querySelectorAll('.tpl-btn-text');
+  var btnsHtml = '';
+  btns.forEach(function(b) { if (b.value.trim()) btnsHtml += '<div class="prev-btn">' + esc(b.value.trim()) + '</div>'; });
+  btnsEl.innerHTML = btnsHtml;
+}
+
+// Validar nombre al tipear
+document.getElementById('tpl-name').addEventListener('input', function() {
+  this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+});
+
+async function crearTemplate() {
+  var name = document.getElementById('tpl-name').value.trim();
+  var category = document.getElementById('tpl-category').value;
+  var language = document.getElementById('tpl-language').value;
+  var header = document.getElementById('tpl-header').value.trim();
+  var body = document.getElementById('tpl-body').value.trim();
+  var footer = document.getElementById('tpl-footer').value.trim();
+
+  if (!name) { alert('El nombre es obligatorio'); return; }
+  if (!body) { alert('El body es obligatorio'); return; }
+  if (!/^[a-z0-9_]+$/.test(name)) { alert('El nombre solo puede contener minúsculas, números y _'); return; }
+
+  var components = [];
+  if (header) components.push({ type: 'HEADER', format: 'TEXT', text: header });
+  components.push({ type: 'BODY', text: body });
+  if (footer) components.push({ type: 'FOOTER', text: footer });
+
+  var btns = document.querySelectorAll('.tpl-btn-text');
+  var buttons = [];
+  btns.forEach(function(b) { if (b.value.trim()) buttons.push({ type: 'QUICK_REPLY', text: b.value.trim() }); });
+  if (buttons.length > 0) components.push({ type: 'BUTTONS', buttons: buttons });
+
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, category: category, language: language, components: components })
+    });
+    var data = await res.json();
+    if (!res.ok) {
+      var msg = data.detalle?.message || data.error || 'Error al crear';
+      alert('Error: ' + msg);
+      return;
+    }
+    cerrarCrearTemplate();
+    alert('Plantilla enviada a Meta para aprobación. El proceso puede tardar hasta 24 horas.');
+    cargarTemplates(true);
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function eliminarTemplate(name) {
+  if (!confirm('¿Eliminar la plantilla "' + name + '"? Esta acción no se puede deshacer.')) return;
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/templates/' + encodeURIComponent(name), { method: 'DELETE' });
+    if (!res.ok) { var data = await res.json(); throw new Error(data.detalle?.message || data.error || 'Error'); }
+    cargarTemplates(true);
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// ── Send Template ──
+function abrirEnviarTemplate(tplData) {
+  _sendTemplateData = tplData;
+  document.getElementById('modal-send-tpl').classList.add('open');
+  document.getElementById('tpl-send-tel').value = '';
+
+  // Find variables in body
+  var bodyComp = (tplData.components || []).find(function(c) { return c.type === 'BODY'; });
+  var bodyText = bodyComp ? bodyComp.text || '' : '';
+  var vars = bodyText.match(/\{\{\d+\}\}/g) || [];
+  var uniqueVars = [];
+  vars.forEach(function(v) { if (uniqueVars.indexOf(v) === -1) uniqueVars.push(v); });
+
+  var varsHtml = '';
+  uniqueVars.forEach(function(v, i) {
+    varsHtml += '<label>Variable ' + v + '</label><input type="text" class="tpl-send-var" data-var="' + v + '" placeholder="Valor para ' + v + '" oninput="actualizarSendPreview()">';
+  });
+  document.getElementById('tpl-send-vars').innerHTML = varsHtml;
+  _sendTemplateBodyText = bodyText;
+  actualizarSendPreview();
+}
+var _sendTemplateBodyText = '';
+
+function actualizarSendPreview() {
+  var text = _sendTemplateBodyText;
+  document.querySelectorAll('.tpl-send-var').forEach(function(input) {
+    var v = input.dataset.var;
+    var val = input.value || v;
+    text = text.split(v).join(val);
+  });
+  document.getElementById('tpl-send-preview-text').textContent = text;
+}
+
+function cerrarEnviarTemplate() { document.getElementById('modal-send-tpl').classList.remove('open'); _sendTemplateData = null; }
+
+async function enviarTemplate() {
+  if (!_sendTemplateData) return;
+  var tel = document.getElementById('tpl-send-tel').value.trim();
+  if (!tel) { alert('Ingresá el teléfono'); return; }
+
+  // Build components with variable values
+  var bodyVars = [];
+  document.querySelectorAll('.tpl-send-var').forEach(function(input) {
+    bodyVars.push({ type: 'text', text: input.value || input.dataset.var });
+  });
+
+  var components = [];
+  if (bodyVars.length > 0) {
+    components.push({ type: 'body', parameters: bodyVars });
+  }
+
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/templates/enviar-template', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        telefono: tel,
+        template_name: _sendTemplateData.name,
+        template_language: _sendTemplateData.language,
+        components: components.length > 0 ? components : undefined
+      })
+    });
+    var data = await res.json();
+    if (!res.ok) {
+      var msg = data.detalle?.error?.message || data.error || 'Error al enviar';
+      alert('Error: ' + msg);
+      return;
+    }
+    cerrarEnviarTemplate();
+    alert('Template enviado exitosamente');
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// Load templates when switching to view
+var _origSwitchView = switchView;
+switchView = function(view) {
+  _origSwitchView(view);
+  if (view === 'plantillas' && allTemplates.length === 0) cargarTemplates(false);
+};
 </script>
 </body>
 </html>
