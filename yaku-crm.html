@@ -231,6 +231,12 @@ tbody tr:hover{background:#f8fafc;}
 .btn-add-field{padding:9px 14px;border-radius:6px;background:#f1f5f9;border:1px dashed #d1d5db;color:#6b7280;font-family:inherit;font-size:12px;cursor:pointer;width:100%;text-align:center;margin-bottom:12px;transition:all .15s;}
 .btn-add-field:hover{border-color:#9ca3af;color:#111827;}
 
+/* Variable Palette */
+.var-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid #e5e7eb;background:#f8fafc;color:#374151;transition:all .12s;font-family:inherit;}
+.var-chip:hover{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
+.var-chip .var-num{background:#e5e7eb;color:#6b7280;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;font-family:'SF Mono',monospace;}
+.var-chip:hover .var-num{background:rgba(255,255,255,0.2);color:#fff;}
+
 /* ═══════════════════════════════════════════
    TEMPLATES SECTION
    ═══════════════════════════════════════════ */
@@ -553,7 +559,8 @@ tbody tr:hover{background:#f8fafc;}
       <input type="text" id="tpl-header" placeholder="Texto del header">
       <label>Body (obligatorio)</label>
       <textarea id="tpl-body" placeholder="Hola {{1}}, le escribimos de Yakú Agua para informarle sobre..."></textarea>
-      <div class="hint">Usá {{1}}, {{2}}, etc. para variables reemplazables</div>
+      <div class="hint">Hacé click en una variable para insertarla en el body:</div>
+      <div id="tpl-vars-palette" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
       <label>Footer (opcional)</label>
       <input type="text" id="tpl-footer" placeholder="Yakú Agua Purificada">
       <label>Botones (opcional, máximo 2)</label>
@@ -1303,8 +1310,48 @@ function abrirCrearTemplate() {
   document.getElementById('tpl-body').value = '';
   document.getElementById('tpl-footer').value = '';
   actualizarPreviewTemplate();
+  renderVarsPalette();
 }
 function cerrarCrearTemplate() { document.getElementById('modal-create-tpl').classList.remove('open'); }
+
+function renderVarsPalette() {
+  // Load custom fields if not loaded
+  var buildPalette = function() {
+    var fields = [
+      { num: 1, label: 'Nombre' },
+      { num: 2, label: 'Empresa' },
+      { num: 3, label: 'Teléfono' },
+      { num: 4, label: 'Email' }
+    ];
+    var nextNum = 5;
+    camposCustom.forEach(function(f) {
+      fields.push({ num: nextNum, label: f.nombre });
+      nextNum++;
+    });
+    var html = '';
+    fields.forEach(function(f) {
+      html += '<button type="button" class="var-chip" onclick="insertarVariable(' + f.num + ')" title="Insertar {{' + f.num + '}} = ' + esc(f.label) + '"><span class="var-num">{{' + f.num + '}}</span> ' + esc(f.label) + '</button>';
+    });
+    document.getElementById('tpl-vars-palette').innerHTML = html;
+  };
+  if (camposCustom.length === 0) {
+    fetch(API_URL + '/api/contactos/campos/custom').then(function(r){return r.json();}).then(function(d){ camposCustom = d; buildPalette(); }).catch(function(){ buildPalette(); });
+  } else {
+    buildPalette();
+  }
+}
+
+function insertarVariable(num) {
+  var ta = document.getElementById('tpl-body');
+  var varText = '{{' + num + '}}';
+  var start = ta.selectionStart;
+  var end = ta.selectionEnd;
+  var val = ta.value;
+  ta.value = val.substring(0, start) + varText + val.substring(end);
+  ta.selectionStart = ta.selectionEnd = start + varText.length;
+  ta.focus();
+  actualizarPreviewTemplate();
+}
 
 function agregarBotonTemplate() {
   if (_tplButtonCount >= 2) { alert('Máximo 2 botones'); return; }
