@@ -190,6 +190,48 @@ tbody tr:hover{background:#f8fafc;}
 .btn-modal-send:hover{background:#1fb855;}
 
 /* ═══════════════════════════════════════════
+   CONTACTS SECTION
+   ═══════════════════════════════════════════ */
+.ct-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.ct-header h2{font-size:18px;font-weight:700;color:#1a1a2e;}
+.ct-search{display:flex;gap:10px;flex:1;max-width:400px;}
+.ct-search input{flex:1;font-family:inherit;font-size:13px;padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;color:#111827;}
+.ct-search input:focus{outline:none;border-color:#1a1a2e;}
+.ct-table-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow-x:auto;}
+.ct-table{width:100%;border-collapse:collapse;font-size:13px;}
+.ct-table thead th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;}
+.ct-table tbody td{padding:11px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+.ct-table tbody tr:hover{background:#f8fafc;}
+.ct-table .ct-name{font-weight:600;color:#1a1a2e;}
+.ct-table .ct-sub{font-size:11px;color:#9ca3af;}
+.ct-actions-cell{display:flex;gap:6px;}
+.btn-ct{padding:4px 10px;border-radius:5px;font-family:inherit;font-size:11px;cursor:pointer;border:1px solid #e5e7eb;background:transparent;color:#6b7280;transition:all .15s;}
+.btn-ct:hover{border-color:#1a1a2e;color:#1a1a2e;}
+.btn-ct-wa{border-color:#25d366;color:#25d366;}
+.btn-ct-wa:hover{background:#25d366;color:#fff;}
+.btn-ct-del{border-color:#fca5a5;color:#dc2626;}
+.btn-ct-del:hover{background:#fee2e2;}
+.btn-ct-primary{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
+.btn-ct-primary:hover{background:#2d2d4e;}
+
+/* Contact Modal */
+.ct-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:600;display:none;align-items:flex-start;justify-content:center;padding-top:70px;overflow-y:auto;}
+.ct-modal-bg.open{display:flex;}
+.ct-modal{background:#fff;border-radius:10px;padding:28px;width:520px;max-width:95vw;box-shadow:0 20px 50px rgba(0,0,0,0.15);}
+.ct-modal h3{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:18px;}
+.ct-modal label{font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.ct-modal input,.ct-modal select,.ct-modal textarea{width:100%;font-family:inherit;font-size:13px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:12px;color:#111827;}
+.ct-modal input:focus,.ct-modal select:focus,.ct-modal textarea:focus{outline:none;border-color:#1a1a2e;box-shadow:0 0 0 2px rgba(26,26,46,0.08);}
+.ct-modal textarea{min-height:60px;resize:vertical;}
+.ct-section-label{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin:16px 0 10px;padding-top:12px;border-top:1px solid #f1f5f9;}
+
+/* Add Field Mini-Modal */
+.ct-add-field-row{display:flex;gap:8px;margin-bottom:12px;align-items:flex-end;}
+.ct-add-field-row input,.ct-add-field-row select{margin-bottom:0;flex:1;}
+.btn-add-field{padding:9px 14px;border-radius:6px;background:#f1f5f9;border:1px dashed #d1d5db;color:#6b7280;font-family:inherit;font-size:12px;cursor:pointer;width:100%;text-align:center;margin-bottom:12px;transition:all .15s;}
+.btn-add-field:hover{border-color:#9ca3af;color:#111827;}
+
+/* ═══════════════════════════════════════════
    TEMPLATES SECTION
    ═══════════════════════════════════════════ */
 .tpl-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
@@ -313,6 +355,9 @@ tbody tr:hover{background:#f8fafc;}
       <span class="icon"><svg viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></span> WhatsApp
       <span class="sidebar-badge" id="wa-unread-badge"></span>
     </button>
+    <button class="sidebar-link" id="nav-contactos" onclick="switchView('contactos')">
+      <span class="icon">&#128100;</span> Contactos
+    </button>
     <button class="sidebar-link" id="nav-plantillas" onclick="switchView('plantillas')">
       <span class="icon">&#128196;</span> Plantillas
     </button>
@@ -366,6 +411,21 @@ tbody tr:hover{background:#f8fafc;}
     </div>
   </div>
 
+  <!-- VIEW: CONTACTOS -->
+  <div class="view" id="view-contactos">
+    <div class="ct-header">
+      <h2>Contactos</h2>
+      <div class="ct-search">
+        <input type="text" id="ct-buscar" placeholder="Buscar contacto...">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-tpl btn-tpl-outline" onclick="abrirGestionCampos()">&#9881; Campos</button>
+        <button class="btn-tpl btn-tpl-primary" onclick="abrirContactoModal(null)">+ Nuevo contacto</button>
+      </div>
+    </div>
+    <div class="ct-table-wrap"><div id="ct-tabla"></div></div>
+  </div>
+
   <!-- VIEW: PLANTILLAS -->
   <div class="view" id="view-plantillas">
     <div class="tpl-header">
@@ -407,6 +467,63 @@ tbody tr:hover{background:#f8fafc;}
     <div class="modal-actions">
       <button class="btn-modal-cancel" onclick="cerrarNuevoChat()">Cancelar</button>
       <button class="btn-modal-send" onclick="enviarNuevoChat()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal (create/edit) -->
+<div class="ct-modal-bg" id="modal-contacto">
+  <div class="ct-modal">
+    <h3 id="ct-modal-title">Nuevo contacto</h3>
+    <input type="hidden" id="ct-edit-id">
+    <label>Nombre *</label>
+    <input type="text" id="ct-nombre">
+    <label>Teléfono</label>
+    <input type="tel" id="ct-telefono" placeholder="Ej: 341 1234567">
+    <label>Email</label>
+    <input type="email" id="ct-email">
+    <label>Empresa</label>
+    <input type="text" id="ct-empresa">
+    <div class="ct-section-label">Campos personalizados</div>
+    <div id="ct-custom-fields"></div>
+    <button class="btn-add-field" onclick="abrirAgregarCampo()">+ Agregar campo nuevo</button>
+    <div id="ct-add-field-area" style="display:none;">
+      <div class="ct-add-field-row">
+        <div style="flex:2;"><label style="margin-bottom:2px;">Nombre del campo</label><input type="text" id="ct-new-field-name" style="margin-bottom:0;"></div>
+        <div style="flex:1;"><label style="margin-bottom:2px;">Tipo</label><select id="ct-new-field-type" style="margin-bottom:0;"><option value="text">Texto</option><option value="email">Email</option><option value="tel">Teléfono</option><option value="number">Número</option><option value="date">Fecha</option></select></div>
+        <button class="btn-ct btn-ct-primary" style="height:38px;margin-top:auto;" onclick="crearCampoCustom()">Crear</button>
+      </div>
+    </div>
+    <label>Notas</label>
+    <textarea id="ct-notas" placeholder="Notas internas..."></textarea>
+    <div class="hint" style="margin-top:-8px;margin-bottom:12px;font-size:11px;color:#9ca3af;">Los campos de este contacto (nombre, empresa, campos custom) se pueden usar como variables {{1}}, {{2}} en plantillas de WhatsApp.</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-tpl btn-tpl-outline" onclick="cerrarContactoModal()">Cancelar</button>
+      <button class="btn-tpl btn-tpl-primary" onclick="guardarContacto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manage Fields Modal -->
+<div class="ct-modal-bg" id="modal-campos">
+  <div class="ct-modal" style="width:420px;">
+    <h3>Campos personalizados</h3>
+    <p style="font-size:12px;color:#6b7280;margin-bottom:16px;">Estos campos aparecen en todos los contactos y pueden usarse como variables en plantillas de WhatsApp.</p>
+    <div id="campos-list"></div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-tpl btn-tpl-outline" onclick="cerrarGestionCampos()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Send to Contact from WA (select contact) -->
+<div class="ct-modal-bg" id="modal-select-contacto">
+  <div class="ct-modal" style="width:440px;">
+    <h3 id="select-ct-title">Seleccionar contacto</h3>
+    <input type="text" id="select-ct-buscar" placeholder="Buscar contacto..." oninput="renderSelectContacto()">
+    <div id="select-ct-list" style="max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-tpl btn-tpl-outline" onclick="document.getElementById('modal-select-contacto').classList.remove('open')">Cancelar</button>
     </div>
   </div>
 </div>
@@ -465,7 +582,10 @@ tbody tr:hover{background:#f8fafc;}
 <div class="tpl-send-bg" id="modal-send-tpl">
   <div class="tpl-send-box">
     <h3>Enviar plantilla</h3>
-    <label>Teléfono destino</label>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label style="margin-bottom:0;">Teléfono destino</label>
+      <button class="btn-ct" style="font-size:10px;padding:3px 8px;" onclick="seleccionarContactoParaTpl()">&#128100; Desde contacto</button>
+    </div>
     <input type="tel" id="tpl-send-tel" placeholder="Ej: 341 1234567">
     <div id="tpl-send-vars"></div>
     <div class="tpl-send-preview">
@@ -874,6 +994,245 @@ async function pollWhatsApp() {
 }
 
 // ════════════════════════════════════════════════════════════════════
+// CONTACTOS
+// ════════════════════════════════════════════════════════════════════
+
+var allContactos = [];
+var camposCustom = [];
+var _ctSearchTimer = null;
+
+async function cargarCamposCustom() {
+  try {
+    var res = await fetch(API_URL + '/api/contactos/campos/custom');
+    if (!res.ok) throw new Error('Error');
+    camposCustom = await res.json();
+  } catch (err) { camposCustom = []; }
+}
+
+async function cargarContactos() {
+  try {
+    await cargarCamposCustom();
+    var res = await fetch(API_URL + '/api/contactos');
+    if (!res.ok) throw new Error('Error ' + res.status);
+    allContactos = await res.json();
+    renderContactos();
+  } catch (err) {
+    document.getElementById('ct-tabla').innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div><h3>Error</h3><p>' + esc(err.message) + '</p></div>';
+  }
+}
+
+document.getElementById('ct-buscar').addEventListener('input', function() {
+  clearTimeout(_ctSearchTimer);
+  _ctSearchTimer = setTimeout(renderContactos, 250);
+});
+
+function getFilteredContactos() {
+  var q = (document.getElementById('ct-buscar').value || '').toLowerCase().trim();
+  if (!q) return allContactos;
+  return allContactos.filter(function(c) {
+    return (c.nombre||'').toLowerCase().indexOf(q)!==-1 || (c.empresa||'').toLowerCase().indexOf(q)!==-1 || (c.telefono||'').indexOf(q)!==-1 || (c.email||'').toLowerCase().indexOf(q)!==-1;
+  });
+}
+
+function renderContactos() {
+  var list = getFilteredContactos();
+  if (list.length === 0) {
+    document.getElementById('ct-tabla').innerHTML = '<div class="empty-state"><div class="icon">&#128100;</div><h3>No hay contactos</h3><p>Creá tu primer contacto para empezar a enviar mensajes y plantillas.</p></div>';
+    return;
+  }
+  var html = '<table class="ct-table"><thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Empresa</th>';
+  camposCustom.forEach(function(f) { html += '<th>' + esc(f.nombre) + '</th>'; });
+  html += '<th></th></tr></thead><tbody>';
+  list.forEach(function(c) {
+    var custom = c.campos_custom || {};
+    html += '<tr><td class="ct-name">' + esc(c.nombre) + '</td><td class="ct-sub">' + esc(c.telefono||'—') + '</td><td class="ct-sub">' + esc(c.email||'—') + '</td><td class="ct-sub">' + esc(c.empresa||'—') + '</td>';
+    camposCustom.forEach(function(f) { html += '<td class="ct-sub">' + esc(custom[f.slug]||'—') + '</td>'; });
+    html += '<td><div class="ct-actions-cell">' +
+      '<button class="btn-ct btn-ct-wa" onclick="enviarWAContacto(\'' + c.id + '\')">WA</button>' +
+      '<button class="btn-ct" onclick=\'abrirContactoModal(' + JSON.stringify(c).replace(/'/g,"&#39;") + ')\'>Editar</button>' +
+      '<button class="btn-ct btn-ct-del" onclick="eliminarContacto(\'' + c.id + '\')">&#10005;</button>' +
+    '</div></td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('ct-tabla').innerHTML = html;
+}
+
+// ── Contact Modal ──
+function abrirContactoModal(contacto) {
+  document.getElementById('modal-contacto').classList.add('open');
+  document.getElementById('ct-add-field-area').style.display = 'none';
+  var isEdit = contacto && contacto.id;
+  document.getElementById('ct-modal-title').textContent = isEdit ? 'Editar contacto' : 'Nuevo contacto';
+  document.getElementById('ct-edit-id').value = isEdit ? contacto.id : '';
+  document.getElementById('ct-nombre').value = isEdit ? contacto.nombre || '' : '';
+  document.getElementById('ct-telefono').value = isEdit ? contacto.telefono || '' : '';
+  document.getElementById('ct-email').value = isEdit ? contacto.email || '' : '';
+  document.getElementById('ct-empresa').value = isEdit ? contacto.empresa || '' : '';
+  document.getElementById('ct-notas').value = isEdit ? contacto.notas || '' : '';
+  // Custom fields
+  var custom = isEdit ? (contacto.campos_custom || {}) : {};
+  var cfHtml = '';
+  camposCustom.forEach(function(f) {
+    cfHtml += '<label>' + esc(f.nombre) + '</label>';
+    if (f.tipo === 'select' && f.opciones) {
+      var opts = typeof f.opciones === 'string' ? JSON.parse(f.opciones) : f.opciones;
+      cfHtml += '<select id="ct-cf-' + f.slug + '"><option value="">—</option>';
+      (opts||[]).forEach(function(o) { cfHtml += '<option value="' + esc(o) + '"' + (custom[f.slug] === o ? ' selected' : '') + '>' + esc(o) + '</option>'; });
+      cfHtml += '</select>';
+    } else {
+      cfHtml += '<input type="' + (f.tipo || 'text') + '" id="ct-cf-' + f.slug + '" value="' + esc(custom[f.slug] || '') + '">';
+    }
+  });
+  document.getElementById('ct-custom-fields').innerHTML = cfHtml;
+}
+function cerrarContactoModal() { document.getElementById('modal-contacto').classList.remove('open'); }
+
+async function guardarContacto() {
+  var id = document.getElementById('ct-edit-id').value;
+  var nombre = document.getElementById('ct-nombre').value.trim();
+  if (!nombre) { alert('El nombre es obligatorio'); return; }
+  var payload = {
+    nombre: nombre,
+    telefono: document.getElementById('ct-telefono').value.trim() || null,
+    email: document.getElementById('ct-email').value.trim() || null,
+    empresa: document.getElementById('ct-empresa').value.trim() || null,
+    notas: document.getElementById('ct-notas').value.trim() || null,
+    campos_custom: {}
+  };
+  camposCustom.forEach(function(f) {
+    var el = document.getElementById('ct-cf-' + f.slug);
+    if (el && el.value) payload.campos_custom[f.slug] = el.value;
+  });
+  try {
+    var url = API_URL + '/api/contactos' + (id ? '/' + id : '');
+    var res = await fetch(url, {
+      method: id ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) { var e = await res.json(); throw new Error(e.error || 'Error'); }
+    cerrarContactoModal();
+    cargarContactos();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+async function eliminarContacto(id) {
+  if (!confirm('¿Eliminar este contacto?')) return;
+  try {
+    var res = await fetch(API_URL + '/api/contactos/' + id, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Error');
+    cargarContactos();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ── Add custom field inline ──
+function abrirAgregarCampo() {
+  var area = document.getElementById('ct-add-field-area');
+  area.style.display = area.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('ct-new-field-name').value = '';
+}
+
+async function crearCampoCustom() {
+  var nombre = document.getElementById('ct-new-field-name').value.trim();
+  var tipo = document.getElementById('ct-new-field-type').value;
+  if (!nombre) { alert('Ingresá el nombre del campo'); return; }
+  try {
+    var res = await fetch(API_URL + '/api/contactos/campos/custom', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: nombre, tipo: tipo })
+    });
+    if (!res.ok) { var e = await res.json(); throw new Error(e.error || 'Error'); }
+    document.getElementById('ct-add-field-area').style.display = 'none';
+    await cargarCamposCustom();
+    // Re-render custom fields in the modal
+    var currentId = document.getElementById('ct-edit-id').value;
+    var current = currentId ? allContactos.find(function(c){return c.id===currentId;}) : null;
+    abrirContactoModal(current);
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ── Manage fields modal ──
+function abrirGestionCampos() {
+  document.getElementById('modal-campos').classList.add('open');
+  renderCamposList();
+}
+function cerrarGestionCampos() { document.getElementById('modal-campos').classList.remove('open'); }
+
+function renderCamposList() {
+  if (camposCustom.length === 0) {
+    document.getElementById('campos-list').innerHTML = '<p style="color:#9ca3af;font-size:13px;">No hay campos personalizados. Podés crearlos desde el formulario de contacto.</p>';
+    return;
+  }
+  var html = '';
+  camposCustom.forEach(function(f) {
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;">' +
+      '<div><span style="font-weight:600;font-size:13px;color:#1a1a2e;">' + esc(f.nombre) + '</span><span style="font-size:11px;color:#9ca3af;margin-left:8px;">{{' + esc(f.slug) + '}}</span><span style="font-size:10px;color:#6b7280;margin-left:8px;background:#f1f5f9;padding:2px 6px;border-radius:3px;">' + esc(f.tipo) + '</span></div>' +
+      '<button class="btn-ct btn-ct-del" onclick="eliminarCampoCustom(\'' + f.id + '\')">&#10005;</button>' +
+    '</div>';
+  });
+  document.getElementById('campos-list').innerHTML = html;
+}
+
+async function eliminarCampoCustom(id) {
+  if (!confirm('¿Eliminar este campo? Los datos existentes en contactos no se borran.')) return;
+  try {
+    var res = await fetch(API_URL + '/api/contactos/campos/custom/' + id, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Error');
+    await cargarCamposCustom();
+    renderCamposList();
+    renderContactos();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ── Send WA to contact ──
+function enviarWAContacto(contactoId) {
+  var c = allContactos.find(function(x) { return x.id === contactoId; });
+  if (!c || !c.telefono) { alert('Este contacto no tiene teléfono'); return; }
+  // Switch to WhatsApp view and open new chat with pre-filled phone
+  switchView('whatsapp');
+  setTimeout(function() {
+    abrirNuevoChat();
+    document.getElementById('new-chat-tel').value = c.telefono;
+  }, 100);
+}
+
+// ── Select contact for template sending ──
+function abrirSelectContacto(callback) {
+  document.getElementById('modal-select-contacto').classList.add('open');
+  document.getElementById('select-ct-buscar').value = '';
+  window._selectContactoCallback = callback;
+  renderSelectContacto();
+}
+
+function renderSelectContacto() {
+  var q = (document.getElementById('select-ct-buscar').value || '').toLowerCase().trim();
+  var list = allContactos.filter(function(c) {
+    if (!c.telefono) return false;
+    if (!q) return true;
+    return (c.nombre||'').toLowerCase().indexOf(q)!==-1 || (c.empresa||'').toLowerCase().indexOf(q)!==-1 || (c.telefono||'').indexOf(q)!==-1;
+  });
+  if (list.length === 0) {
+    document.getElementById('select-ct-list').innerHTML = '<p style="color:#9ca3af;font-size:13px;text-align:center;padding:20px;">No hay contactos con teléfono</p>';
+    return;
+  }
+  var html = '';
+  list.forEach(function(c) {
+    html += '<div style="padding:10px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .1s;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" onclick="seleccionarContactoParaEnvio(\'' + c.id + '\')">' +
+      '<div><div style="font-weight:600;font-size:13px;color:#1a1a2e;">' + esc(c.nombre) + '</div><div style="font-size:11px;color:#9ca3af;">' + esc(c.telefono) + (c.empresa ? ' · ' + esc(c.empresa) : '') + '</div></div>' +
+      '<span style="color:#25d366;font-size:12px;">Seleccionar</span>' +
+    '</div>';
+  });
+  document.getElementById('select-ct-list').innerHTML = html;
+}
+
+function seleccionarContactoParaEnvio(id) {
+  document.getElementById('modal-select-contacto').classList.remove('open');
+  var c = allContactos.find(function(x) { return x.id === id; });
+  if (c && window._selectContactoCallback) window._selectContactoCallback(c);
+}
+
+// ════════════════════════════════════════════════════════════════════
 // TEMPLATES
 // ════════════════════════════════════════════════════════════════════
 
@@ -1124,7 +1483,38 @@ var _origSwitchView = switchView;
 switchView = function(view) {
   _origSwitchView(view);
   if (view === 'plantillas' && allTemplates.length === 0) cargarTemplates(false);
+  if (view === 'contactos' && allContactos.length === 0) cargarContactos();
 };
+
+// ── Select contact to auto-fill template send ──
+function seleccionarContactoParaTpl() {
+  // Load contacts if not loaded yet
+  if (allContactos.length === 0) {
+    fetch(API_URL + '/api/contactos').then(function(r){return r.json();}).then(function(d){ allContactos = d; _showContactPicker(); });
+    fetch(API_URL + '/api/contactos/campos/custom').then(function(r){return r.json();}).then(function(d){ camposCustom = d; });
+  } else {
+    _showContactPicker();
+  }
+}
+
+function _showContactPicker() {
+  abrirSelectContacto(function(contacto) {
+    // Fill phone
+    document.getElementById('tpl-send-tel').value = contacto.telefono || '';
+    // Build field values array from contact for auto-filling variables
+    var fieldValues = [contacto.nombre, contacto.empresa, contacto.telefono, contacto.email];
+    var custom = contacto.campos_custom || {};
+    camposCustom.forEach(function(f) { if (custom[f.slug]) fieldValues.push(custom[f.slug]); });
+    // Auto-fill variable inputs in order
+    var varInputs = document.querySelectorAll('.tpl-send-var');
+    varInputs.forEach(function(input, i) {
+      if (i < fieldValues.length && fieldValues[i]) {
+        input.value = fieldValues[i];
+      }
+    });
+    actualizarSendPreview();
+  });
+}
 </script>
 </body>
 </html>
