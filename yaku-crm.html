@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fukari — CRM Empresas</title>
+<title>Fukari — CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -12,7 +12,7 @@ body{font-family:'Inter',Arial,sans-serif;min-height:100vh;background:#f1f5f9;co
 body.ready{visibility:visible;}
 
 /* ── TOPBAR ── */
-.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:200;height:56px;}
 .topbar-logos{display:flex;align-items:center;gap:12px;}
 .topbar-logos img.yaku{height:36px;}
 .fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
@@ -22,9 +22,22 @@ body.ready{visibility:visible;}
 .topbar-right span{color:#9ca3af;font-size:12px;}
 .btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.15s;text-decoration:none;}
 .btn-logout:hover{border-color:#9ca3af;color:#fff;}
+.btn-hamburger{display:none;background:transparent;border:none;color:#d1d5db;font-size:20px;cursor:pointer;padding:4px 8px;margin-right:8px;}
 
-/* ── CONTENT ── */
-.contenido{padding:28px 32px;max-width:1320px;margin:0 auto;}
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;top:56px;left:0;bottom:0;width:220px;background:#111827;border-right:1px solid #1f2937;z-index:150;display:flex;flex-direction:column;padding:20px 0;transition:transform .25s cubic-bezier(.16,1,.3,1);}
+.sidebar-section{padding:0 16px;margin-bottom:24px;}
+.sidebar-section-label{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;padding:0 12px;margin-bottom:8px;}
+.sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:#9ca3af;font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;text-decoration:none;border:none;background:none;width:100%;text-align:left;font-family:inherit;}
+.sidebar-link:hover{background:rgba(255,255,255,0.06);color:#e5e7eb;}
+.sidebar-link.active{background:rgba(59,130,246,0.12);color:#60a5fa;}
+.sidebar-link .icon{width:20px;text-align:center;font-size:14px;flex-shrink:0;}
+.sidebar-overlay{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:140;}
+
+/* ── MAIN CONTENT ── */
+.main{margin-left:220px;margin-top:56px;padding:28px 32px;min-height:calc(100vh - 56px);}
+.view{display:none;}
+.view.active{display:block;}
 
 /* ── STATS ── */
 .stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
@@ -52,18 +65,29 @@ tbody tr:hover{background:#f8fafc;}
 .fecha-cell{font-size:12px;color:#6b7280;white-space:nowrap;}
 
 /* ── BADGES ── */
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;position:relative;letter-spacing:0.02em;white-space:nowrap;}
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;position:relative;letter-spacing:0.02em;white-space:nowrap;transition:transform .15s,box-shadow .15s;}
+.badge:hover{transform:scale(1.04);box-shadow:0 2px 8px rgba(0,0,0,0.08);}
 .badge-nuevo{background:#dbeafe;color:#2563eb;}
 .badge-contactado{background:#fef3c7;color:#d97706;}
 .badge-negociacion{background:#ede9fe;color:#7c3aed;}
 .badge-ganado{background:#dcfce7;color:#16a34a;}
 .badge-perdido{background:#fee2e2;color:#dc2626;}
 
-/* ── BADGE DROPDOWN ── */
-.badge-dropdown{position:absolute;top:100%;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:100;padding:4px 0;min-width:150px;margin-top:4px;display:none;}
-.badge-dropdown.open{display:block;}
-.badge-dropdown div{padding:7px 14px;font-size:12px;cursor:pointer;transition:background .1s;}
-.badge-dropdown div:hover{background:#f1f5f9;}
+/* ── STATUS POPOVER ── */
+.status-cell{position:relative;}
+.status-popover{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 12px 36px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);z-index:300;padding:6px;min-width:170px;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .15s,transform .15s;}
+.status-popover.open{opacity:1;transform:translateY(0);pointer-events:auto;}
+.status-option{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:5px;cursor:pointer;transition:background .1s;}
+.status-option:hover{background:#f1f5f9;}
+.status-option .opt-badge{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.status-option .opt-label{font-size:12.5px;font-weight:500;color:#374151;flex:1;}
+.status-option .opt-check{font-size:13px;color:#2563eb;opacity:0;transition:opacity .1s;}
+.status-option.current .opt-check{opacity:1;}
+.dot-nuevo{background:#2563eb;}
+.dot-contactado{background:#d97706;}
+.dot-negociacion{background:#7c3aed;}
+.dot-ganado{background:#16a34a;}
+.dot-perdido{background:#dc2626;}
 
 /* ── BUTTONS ── */
 .btn-ver{background:transparent;border:1px solid #e5e7eb;color:#6b7280;padding:5px 12px;border-radius:5px;font-family:inherit;font-size:11.5px;cursor:pointer;transition:all .15s;}
@@ -74,6 +98,12 @@ tbody tr:hover{background:#f8fafc;}
 .empty-state .icon{font-size:48px;margin-bottom:16px;}
 .empty-state h3{font-size:16px;color:#6b7280;font-weight:600;margin-bottom:8px;}
 .empty-state p{font-size:13px;}
+
+/* ── CONSTRUCTION STATE ── */
+.construction-state{text-align:center;padding:120px 20px;color:#9ca3af;}
+.construction-state .cs-icon{font-size:56px;margin-bottom:20px;opacity:0.7;}
+.construction-state h2{font-size:20px;color:#374151;font-weight:700;margin-bottom:10px;}
+.construction-state p{font-size:14px;color:#6b7280;max-width:380px;margin:0 auto;line-height:1.6;}
 
 /* ── SIDE PANEL ── */
 .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:500;opacity:0;pointer-events:none;transition:opacity .2s;}
@@ -93,24 +123,38 @@ tbody tr:hover{background:#f8fafc;}
 .btn-save{background:#1a1a2e;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
 .btn-save:hover{background:#2d2d4e;}
 
-@media(max-width:768px){
-  .contenido{padding:16px;}
-  .stats-row{gap:8px;}
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .btn-hamburger{display:block;}
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.open{display:block;}
+  .main{margin-left:0;}
   .stat-card{min-width:100px;padding:12px 14px;}
   .stat-card .value{font-size:20px;}
   .filters-bar input{width:100%;}
+  .contenido{padding:16px;}
   .side-panel{width:100vw;}
+}
+@media(max-width:600px){
+  .stats-row{gap:8px;}
+  .topbar{padding:12px 16px;}
+  .main{padding:16px;}
 }
 </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div class="topbar">
-  <div class="topbar-logos">
-    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
-    <div class="fuk-wrap"><img src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
+  <div style="display:flex;align-items:center;gap:4px;">
+    <button class="btn-hamburger" id="btn-hamburger" onclick="toggleSidebar()">&#9776;</button>
+    <div class="topbar-logos">
+      <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
+      <div class="fuk-wrap"><img src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
+    </div>
   </div>
-  <span class="topbar-title">CRM Empresas</span>
+  <span class="topbar-title">CRM</span>
   <div class="topbar-right">
     <span id="topbar-fecha"></span>
     <a href="/hub.html" class="btn-logout">&#8592; Inicio</a>
@@ -118,31 +162,58 @@ tbody tr:hover{background:#f8fafc;}
   </div>
 </div>
 
-<div class="contenido">
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Módulos</div>
+    <button class="sidebar-link active" id="nav-empresas" onclick="switchView('empresas')">
+      <span class="icon">&#127970;</span> Empresas
+    </button>
+    <button class="sidebar-link" id="nav-meta" onclick="switchView('meta')">
+      <span class="icon">&#128227;</span> Anuncios de Meta
+    </button>
+  </div>
+</nav>
 
-  <div class="stats-row">
-    <div class="stat-card"><div class="label">Total leads</div><div class="value" id="s-total">—</div></div>
-    <div class="stat-card" style="border-left:3px solid #2563eb"><div class="label">Nuevos</div><div class="value" style="color:#2563eb" id="s-nuevo">—</div></div>
-    <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Contactados</div><div class="value" style="color:#d97706" id="s-contactado">—</div></div>
-    <div class="stat-card" style="border-left:3px solid #7c3aed"><div class="label">En negociación</div><div class="value" style="color:#7c3aed" id="s-negociacion">—</div></div>
-    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="label">Ganados</div><div class="value" style="color:#16a34a" id="s-ganado">—</div></div>
+<!-- MAIN -->
+<div class="main">
+
+  <!-- VIEW: EMPRESAS -->
+  <div class="view active" id="view-empresas">
+    <div class="stats-row">
+      <div class="stat-card"><div class="label">Total leads</div><div class="value" id="s-total">—</div></div>
+      <div class="stat-card" style="border-left:3px solid #2563eb"><div class="label">Nuevos</div><div class="value" style="color:#2563eb" id="s-nuevo">—</div></div>
+      <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Contactados</div><div class="value" style="color:#d97706" id="s-contactado">—</div></div>
+      <div class="stat-card" style="border-left:3px solid #7c3aed"><div class="label">En negociación</div><div class="value" style="color:#7c3aed" id="s-negociacion">—</div></div>
+      <div class="stat-card" style="border-left:3px solid #16a34a"><div class="label">Ganados</div><div class="value" style="color:#16a34a" id="s-ganado">—</div></div>
+    </div>
+
+    <div class="filters-bar">
+      <select id="filtro-estado">
+        <option value="">Todos los estados</option>
+        <option value="nuevo">Nuevo</option>
+        <option value="contactado">Contactado</option>
+        <option value="en negociacion">En negociación</option>
+        <option value="ganado">Ganado</option>
+        <option value="perdido">Perdido</option>
+      </select>
+      <input type="text" id="filtro-buscar" placeholder="Buscar empresa, contacto o email...">
+      <button class="btn-clear" onclick="limpiarFiltros()">Limpiar filtros</button>
+    </div>
+
+    <div class="table-wrap">
+      <div id="tabla-contenido"></div>
+    </div>
   </div>
 
-  <div class="filters-bar">
-    <select id="filtro-estado">
-      <option value="">Todos los estados</option>
-      <option value="nuevo">Nuevo</option>
-      <option value="contactado">Contactado</option>
-      <option value="en negociacion">En negociación</option>
-      <option value="ganado">Ganado</option>
-      <option value="perdido">Perdido</option>
-    </select>
-    <input type="text" id="filtro-buscar" placeholder="Buscar empresa, contacto o email...">
-    <button class="btn-clear" onclick="limpiarFiltros()">Limpiar filtros</button>
-  </div>
-
-  <div class="table-wrap">
-    <div id="tabla-contenido"></div>
+  <!-- VIEW: META ADS -->
+  <div class="view" id="view-meta">
+    <div class="construction-state">
+      <div class="cs-icon">&#128679;</div>
+      <h2>En construcción</h2>
+      <p>El módulo de Anuncios de Meta estará disponible próximamente. Acá vas a poder ver los leads que lleguen por campañas de Meta Ads.</p>
+    </div>
   </div>
 
 </div>
@@ -168,6 +239,7 @@ var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 var allLeads = [];
 var _debounceTimer = null;
+var _openPopoverId = null;
 
 // ── Auth ──
 sb.auth.getSession().then(function(result) {
@@ -182,6 +254,21 @@ sb.auth.getSession().then(function(result) {
 });
 
 async function logout() { await sb.auth.signOut(); window.location.href = '/index.html'; }
+
+// ── Sidebar ──
+function switchView(view) {
+  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-link').forEach(function(l) { l.classList.remove('active'); });
+  document.getElementById('view-' + view).classList.add('active');
+  document.getElementById('nav-' + view).classList.add('active');
+  // Close sidebar on mobile
+  if (window.innerWidth <= 900) toggleSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
 
 // ── Load leads ──
 async function cargarLeads() {
@@ -235,15 +322,15 @@ function getFiltered() {
 
 // ── Estado helpers ──
 var ESTADOS = [
-  { value: 'nuevo', label: 'Nuevo', cls: 'badge-nuevo' },
-  { value: 'contactado', label: 'Contactado', cls: 'badge-contactado' },
-  { value: 'en negociacion', label: 'En negociación', cls: 'badge-negociacion' },
-  { value: 'ganado', label: 'Ganado', cls: 'badge-ganado' },
-  { value: 'perdido', label: 'Perdido', cls: 'badge-perdido' }
+  { value: 'nuevo', label: 'Nuevo', cls: 'badge-nuevo', dot: 'dot-nuevo' },
+  { value: 'contactado', label: 'Contactado', cls: 'badge-contactado', dot: 'dot-contactado' },
+  { value: 'en negociacion', label: 'En negociación', cls: 'badge-negociacion', dot: 'dot-negociacion' },
+  { value: 'ganado', label: 'Ganado', cls: 'badge-ganado', dot: 'dot-ganado' },
+  { value: 'perdido', label: 'Perdido', cls: 'badge-perdido', dot: 'dot-perdido' }
 ];
 
 function estadoInfo(val) {
-  return ESTADOS.find(function(e) { return e.value === val; }) || { value: val, label: val, cls: 'badge-nuevo' };
+  return ESTADOS.find(function(e) { return e.value === val; }) || { value: val, label: val, cls: 'badge-nuevo', dot: 'dot-nuevo' };
 }
 
 function formatFecha(iso) {
@@ -273,6 +360,18 @@ function renderTabla() {
   leads.forEach(function(l) {
     var ei = estadoInfo(l.estado);
     var desafioText = DESAFIOS[l.desafio] || l.desafio || '—';
+
+    var popoverHtml = '<div class="status-popover" id="pop-' + l.id + '">';
+    ESTADOS.forEach(function(e) {
+      var isCurrent = e.value === l.estado ? ' current' : '';
+      popoverHtml += '<div class="status-option' + isCurrent + '" onclick="cambiarEstado(event,\'' + l.id + '\',\'' + e.value + '\')">' +
+        '<span class="opt-badge ' + e.dot + '"></span>' +
+        '<span class="opt-label">' + e.label + '</span>' +
+        '<span class="opt-check">&#10003;</span>' +
+      '</div>';
+    });
+    popoverHtml += '</div>';
+
     html += '<tr>' +
       '<td class="empresa-name">' + esc(l.empresa) + '</td>' +
       '<td>' + esc(l.contacto_nombre) + (l.cargo ? '<div class="contacto-cargo">' + esc(l.cargo) + '</div>' : '') + '</td>' +
@@ -280,11 +379,9 @@ function renderTabla() {
       '<td>' + esc(l.cantidad_empleados || '—') + '</td>' +
       '<td class="desafio-cell" title="' + esc(desafioText) + '">' + esc(desafioText) + '</td>' +
       '<td class="fecha-cell">' + formatFecha(l.created_at) + '</td>' +
-      '<td style="position:relative;">' +
-        '<span class="badge ' + ei.cls + '" onclick="toggleEstadoDD(event,\'' + l.id + '\')">' + esc(ei.label) + '</span>' +
-        '<div class="badge-dropdown" id="dd-' + l.id + '">' + ESTADOS.map(function(e) {
-          return '<div onclick="cambiarEstado(event,\'' + l.id + '\',\'' + e.value + '\')">' + e.label + '</div>';
-        }).join('') + '</div>' +
+      '<td class="status-cell">' +
+        '<span class="badge ' + ei.cls + '" id="badge-' + l.id + '" onclick="togglePopover(event,\'' + l.id + '\')">' + esc(ei.label) + '</span>' +
+        popoverHtml +
       '</td>' +
       '<td><button class="btn-ver" onclick=\'abrirPanel(' + JSON.stringify(l).replace(/'/g, '&#39;') + ')\'>Ver</button></td>' +
     '</tr>';
@@ -296,21 +393,47 @@ function renderTabla() {
 
 function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-// ── Estado dropdown ──
-function toggleEstadoDD(e, id) {
+// ── Status popover ──
+function togglePopover(e, id) {
   e.stopPropagation();
-  document.querySelectorAll('.badge-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
-  var dd = document.getElementById('dd-' + id);
-  dd.classList.toggle('open');
+  closeAllPopovers();
+  var pop = document.getElementById('pop-' + id);
+  if (pop) {
+    pop.classList.add('open');
+    _openPopoverId = id;
+    // Reposition if overflowing right
+    requestAnimationFrame(function() {
+      var rect = pop.getBoundingClientRect();
+      if (rect.right > window.innerWidth - 10) {
+        pop.style.left = 'auto';
+        pop.style.right = '0';
+      }
+    });
+  }
 }
 
-document.addEventListener('click', function() {
-  document.querySelectorAll('.badge-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+function closeAllPopovers() {
+  document.querySelectorAll('.status-popover.open').forEach(function(p) { p.classList.remove('open'); p.style.left = ''; p.style.right = ''; });
+  _openPopoverId = null;
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.status-cell')) closeAllPopovers();
 });
 
 async function cambiarEstado(e, id, nuevoEstado) {
   e.stopPropagation();
-  document.querySelectorAll('.badge-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+  closeAllPopovers();
+
+  // Optimistic badge update
+  var badgeEl = document.getElementById('badge-' + id);
+  if (badgeEl) {
+    var newInfo = estadoInfo(nuevoEstado);
+    badgeEl.className = 'badge ' + newInfo.cls;
+    badgeEl.textContent = newInfo.label;
+    badgeEl.style.transition = 'all .25s ease';
+  }
+
   try {
     var res = await fetch(API_URL + '/api/leads/' + id, {
       method: 'PATCH',
@@ -323,9 +446,11 @@ async function cambiarEstado(e, id, nuevoEstado) {
       if (allLeads[i].id === id) { allLeads[i] = updated; break; }
     }
     actualizarMetricas();
+    // Re-render only the popover options, table is already visually updated
     renderTabla();
   } catch (err) {
     alert('Error al cambiar estado');
+    renderTabla();
   }
 }
 
