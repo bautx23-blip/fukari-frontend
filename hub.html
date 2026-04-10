@@ -275,6 +275,18 @@
       </div>
     </a>
 
+    <a href="/yaku-crm.html" class="task-card clientes" id="card-crm" style="display:none;">
+      <div class="task-icon">&#127919;</div>
+      <div class="task-body">
+        <div class="task-title">CRM Empresas</div>
+        <div class="task-desc">Gestioná los leads corporativos de la landing de empresas. Estado, notas y seguimiento.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge">Activo</span>
+        <span class="task-arrow">&rarr;</span>
+      </div>
+    </a>
+
     <a href="/yaku-papelera.html" class="task-card papelera" id="card-papelera" style="display:none;">
       <div class="task-icon" style="font-size:20px;">&#128465;</div>
       <div class="task-body">
@@ -307,6 +319,7 @@
     document.getElementById('user-email').textContent = email;
     if (email === 'renebiagioni@yakuagua.com.ar') {
       document.getElementById('card-papelera').style.display = '';
+      document.getElementById('card-crm').style.display = '';
     }
     // Pia: solo ve Órdenes de Instalación y Órdenes de Baja
     if (email === 'ventas@yakuagua.com.ar') {

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fukari — CRM Empresas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;min-height:100vh;background:#f1f5f9;color:#111827;visibility:hidden;}
+body.ready{visibility:visible;}
+
+/* ── TOPBAR ── */
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.topbar-logos img.yaku{height:36px;}
+.fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
+.fuk-wrap img{height:26px;}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:0.3px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-right span{color:#9ca3af;font-size:12px;}
+.btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.15s;text-decoration:none;}
+.btn-logout:hover{border-color:#9ca3af;color:#fff;}
+
+/* ── CONTENT ── */
+.contenido{padding:28px 32px;max-width:1320px;margin:0 auto;}
+
+/* ── STATS ── */
+.stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+.stat-card{background:#fff;border-radius:8px;padding:16px 22px;flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.stat-card .label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.stat-card .value{font-size:26px;font-weight:700;color:#1a1a2e;margin-top:4px;}
+
+/* ── FILTERS ── */
+.filters-bar{display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;}
+.filters-bar select,.filters-bar input{font-family:inherit;font-size:13px;padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;color:#111827;}
+.filters-bar input{width:260px;}
+.btn-clear{background:transparent;border:1px solid #d1d5db;color:#6b7280;padding:8px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
+.btn-clear:hover{border-color:#9ca3af;color:#111827;}
+
+/* ── TABLE ── */
+.table-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;}
+tbody td{padding:12px 14px;border-bottom:1px solid #f1f5f9;vertical-align:top;}
+tbody tr:hover{background:#f8fafc;}
+.empresa-name{font-weight:600;color:#1a1a2e;}
+.contacto-cargo{font-size:11px;color:#9ca3af;margin-top:2px;}
+.contacto-detail{font-size:11.5px;color:#6b7280;line-height:1.5;}
+.desafio-cell{max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fecha-cell{font-size:12px;color:#6b7280;white-space:nowrap;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;position:relative;letter-spacing:0.02em;white-space:nowrap;}
+.badge-nuevo{background:#dbeafe;color:#2563eb;}
+.badge-contactado{background:#fef3c7;color:#d97706;}
+.badge-negociacion{background:#ede9fe;color:#7c3aed;}
+.badge-ganado{background:#dcfce7;color:#16a34a;}
+.badge-perdido{background:#fee2e2;color:#dc2626;}
+
+/* ── BADGE DROPDOWN ── */
+.badge-dropdown{position:absolute;top:100%;left:0;background:#fff;border:1px solid #e5e7eb;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:100;padding:4px 0;min-width:150px;margin-top:4px;display:none;}
+.badge-dropdown.open{display:block;}
+.badge-dropdown div{padding:7px 14px;font-size:12px;cursor:pointer;transition:background .1s;}
+.badge-dropdown div:hover{background:#f1f5f9;}
+
+/* ── BUTTONS ── */
+.btn-ver{background:transparent;border:1px solid #e5e7eb;color:#6b7280;padding:5px 12px;border-radius:5px;font-family:inherit;font-size:11.5px;cursor:pointer;transition:all .15s;}
+.btn-ver:hover{border-color:#1a1a2e;color:#1a1a2e;}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:80px 20px;color:#9ca3af;}
+.empty-state .icon{font-size:48px;margin-bottom:16px;}
+.empty-state h3{font-size:16px;color:#6b7280;font-weight:600;margin-bottom:8px;}
+.empty-state p{font-size:13px;}
+
+/* ── SIDE PANEL ── */
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:500;opacity:0;pointer-events:none;transition:opacity .2s;}
+.overlay.open{opacity:1;pointer-events:auto;}
+.side-panel{position:fixed;top:0;right:0;width:420px;max-width:90vw;height:100vh;background:#fff;z-index:501;box-shadow:-8px 0 30px rgba(0,0,0,0.12);transform:translateX(100%);transition:transform .25s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;}
+.side-panel.open{transform:translateX(0);}
+.panel-header{padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;}
+.panel-header h3{font-size:16px;font-weight:700;color:#1a1a2e;}
+.btn-close-panel{background:transparent;border:none;font-size:20px;color:#9ca3af;cursor:pointer;padding:4px 8px;}
+.btn-close-panel:hover{color:#111827;}
+.panel-body{padding:24px;flex:1;overflow-y:auto;}
+.panel-field{margin-bottom:18px;}
+.panel-field .pf-label{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:4px;}
+.panel-field .pf-value{font-size:14px;color:#111827;}
+.panel-field textarea{width:100%;min-height:100px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;resize:vertical;color:#111827;}
+.panel-field textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
+.btn-save{background:#1a1a2e;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-save:hover{background:#2d2d4e;}
+
+@media(max-width:768px){
+  .contenido{padding:16px;}
+  .stats-row{gap:8px;}
+  .stat-card{min-width:100px;padding:12px 14px;}
+  .stat-card .value{font-size:20px;}
+  .filters-bar input{width:100%;}
+  .side-panel{width:100vw;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
+    <div class="fuk-wrap"><img src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
+  </div>
+  <span class="topbar-title">CRM Empresas</span>
+  <div class="topbar-right">
+    <span id="topbar-fecha"></span>
+    <a href="/hub.html" class="btn-logout">&#8592; Inicio</a>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="contenido">
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="label">Total leads</div><div class="value" id="s-total">—</div></div>
+    <div class="stat-card" style="border-left:3px solid #2563eb"><div class="label">Nuevos</div><div class="value" style="color:#2563eb" id="s-nuevo">—</div></div>
+    <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Contactados</div><div class="value" style="color:#d97706" id="s-contactado">—</div></div>
+    <div class="stat-card" style="border-left:3px solid #7c3aed"><div class="label">En negociación</div><div class="value" style="color:#7c3aed" id="s-negociacion">—</div></div>
+    <div class="stat-card" style="border-left:3px solid #16a34a"><div class="label">Ganados</div><div class="value" style="color:#16a34a" id="s-ganado">—</div></div>
+  </div>
+
+  <div class="filters-bar">
+    <select id="filtro-estado">
+      <option value="">Todos los estados</option>
+      <option value="nuevo">Nuevo</option>
+      <option value="contactado">Contactado</option>
+      <option value="en negociacion">En negociación</option>
+      <option value="ganado">Ganado</option>
+      <option value="perdido">Perdido</option>
+    </select>
+    <input type="text" id="filtro-buscar" placeholder="Buscar empresa, contacto o email...">
+    <button class="btn-clear" onclick="limpiarFiltros()">Limpiar filtros</button>
+  </div>
+
+  <div class="table-wrap">
+    <div id="tabla-contenido"></div>
+  </div>
+
+</div>
+
+<!-- Side Panel -->
+<div class="overlay" id="overlay" onclick="cerrarPanel()"></div>
+<div class="side-panel" id="side-panel">
+  <div class="panel-header">
+    <h3>Detalle del Lead</h3>
+    <button class="btn-close-panel" onclick="cerrarPanel()">&times;</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var API_URL = 'https://fukari-backend-production.up.railway.app';
+var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+
+var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var allLeads = [];
+var _debounceTimer = null;
+
+// ── Auth ──
+sb.auth.getSession().then(function(result) {
+  var session = result.data.session;
+  if (!session) { window.location.href = '/index.html'; return; }
+  var email = session.user.email;
+  if (email !== ADMIN_EMAIL) { window.location.href = '/hub.html'; return; }
+  document.body.classList.add('ready');
+  var d = new Date();
+  document.getElementById('topbar-fecha').textContent = d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+  cargarLeads();
+});
+
+async function logout() { await sb.auth.signOut(); window.location.href = '/index.html'; }
+
+// ── Load leads ──
+async function cargarLeads() {
+  try {
+    var res = await fetch(API_URL + '/api/leads');
+    if (!res.ok) throw new Error('Error ' + res.status);
+    allLeads = await res.json();
+    actualizarMetricas();
+    renderTabla();
+  } catch (err) {
+    document.getElementById('tabla-contenido').innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div><h3>Error al cargar leads</h3><p>' + err.message + '</p></div>';
+  }
+}
+
+// ── Metrics ──
+function actualizarMetricas() {
+  document.getElementById('s-total').textContent = allLeads.length;
+  document.getElementById('s-nuevo').textContent = allLeads.filter(function(l) { return l.estado === 'nuevo'; }).length;
+  document.getElementById('s-contactado').textContent = allLeads.filter(function(l) { return l.estado === 'contactado'; }).length;
+  document.getElementById('s-negociacion').textContent = allLeads.filter(function(l) { return l.estado === 'en negociacion'; }).length;
+  document.getElementById('s-ganado').textContent = allLeads.filter(function(l) { return l.estado === 'ganado'; }).length;
+}
+
+// ── Filters ──
+document.getElementById('filtro-estado').addEventListener('change', renderTabla);
+document.getElementById('filtro-buscar').addEventListener('input', function() {
+  clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(renderTabla, 300);
+});
+
+function limpiarFiltros() {
+  document.getElementById('filtro-estado').value = '';
+  document.getElementById('filtro-buscar').value = '';
+  renderTabla();
+}
+
+function getFiltered() {
+  var estado = document.getElementById('filtro-estado').value;
+  var buscar = document.getElementById('filtro-buscar').value.toLowerCase().trim();
+  return allLeads.filter(function(l) {
+    if (estado && l.estado !== estado) return false;
+    if (buscar) {
+      var hay = (l.empresa || '').toLowerCase().indexOf(buscar) !== -1 ||
+                (l.contacto_nombre || '').toLowerCase().indexOf(buscar) !== -1 ||
+                (l.contacto_email || '').toLowerCase().indexOf(buscar) !== -1;
+      if (!hay) return false;
+    }
+    return true;
+  });
+}
+
+// ── Estado helpers ──
+var ESTADOS = [
+  { value: 'nuevo', label: 'Nuevo', cls: 'badge-nuevo' },
+  { value: 'contactado', label: 'Contactado', cls: 'badge-contactado' },
+  { value: 'en negociacion', label: 'En negociación', cls: 'badge-negociacion' },
+  { value: 'ganado', label: 'Ganado', cls: 'badge-ganado' },
+  { value: 'perdido', label: 'Perdido', cls: 'badge-perdido' }
+];
+
+function estadoInfo(val) {
+  return ESTADOS.find(function(e) { return e.value === val; }) || { value: val, label: val, cls: 'badge-nuevo' };
+}
+
+function formatFecha(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  return d.getDate() + ' ' + d.toLocaleDateString('es-AR', { month: 'short' }).replace('.', '');
+}
+
+var DESAFIOS = {
+  '1': 'Agua purificada certificada',
+  '2': 'Optimizar tiempos muertos',
+  '3': 'Agua térmica (frío/calor)',
+  '4': 'Reemplazo bidones',
+  '5': 'Otro'
+};
+
+// ── Render table ──
+function renderTabla() {
+  var leads = getFiltered();
+  if (leads.length === 0) {
+    document.getElementById('tabla-contenido').innerHTML = '<div class="empty-state"><div class="icon">&#128203;</div><h3>No hay leads</h3><p>Cuando lleguen solicitudes desde la landing, aparecerán acá.</p></div>';
+    return;
+  }
+
+  var html = '<table><thead><tr><th>Empresa</th><th>Contacto</th><th>Tel / Email</th><th>Empleados</th><th>Desafío</th><th>Ingreso</th><th>Estado</th><th></th></tr></thead><tbody>';
+
+  leads.forEach(function(l) {
+    var ei = estadoInfo(l.estado);
+    var desafioText = DESAFIOS[l.desafio] || l.desafio || '—';
+    html += '<tr>' +
+      '<td class="empresa-name">' + esc(l.empresa) + '</td>' +
+      '<td>' + esc(l.contacto_nombre) + (l.cargo ? '<div class="contacto-cargo">' + esc(l.cargo) + '</div>' : '') + '</td>' +
+      '<td class="contacto-detail">' + esc(l.contacto_telefono) + '<br>' + esc(l.contacto_email) + '</td>' +
+      '<td>' + esc(l.cantidad_empleados || '—') + '</td>' +
+      '<td class="desafio-cell" title="' + esc(desafioText) + '">' + esc(desafioText) + '</td>' +
+      '<td class="fecha-cell">' + formatFecha(l.created_at) + '</td>' +
+      '<td style="position:relative;">' +
+        '<span class="badge ' + ei.cls + '" onclick="toggleEstadoDD(event,\'' + l.id + '\')">' + esc(ei.label) + '</span>' +
+        '<div class="badge-dropdown" id="dd-' + l.id + '">' + ESTADOS.map(function(e) {
+          return '<div onclick="cambiarEstado(event,\'' + l.id + '\',\'' + e.value + '\')">' + e.label + '</div>';
+        }).join('') + '</div>' +
+      '</td>' +
+      '<td><button class="btn-ver" onclick=\'abrirPanel(' + JSON.stringify(l).replace(/'/g, '&#39;') + ')\'>Ver</button></td>' +
+    '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('tabla-contenido').innerHTML = html;
+}
+
+function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ── Estado dropdown ──
+function toggleEstadoDD(e, id) {
+  e.stopPropagation();
+  document.querySelectorAll('.badge-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+  var dd = document.getElementById('dd-' + id);
+  dd.classList.toggle('open');
+}
+
+document.addEventListener('click', function() {
+  document.querySelectorAll('.badge-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+});
+
+async function cambiarEstado(e, id, nuevoEstado) {
+  e.stopPropagation();
+  document.querySelectorAll('.badge-dropdown.open').forEach(function(d) { d.classList.remove('open'); });
+  try {
+    var res = await fetch(API_URL + '/api/leads/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: nuevoEstado })
+    });
+    if (!res.ok) throw new Error('Error');
+    var updated = await res.json();
+    for (var i = 0; i < allLeads.length; i++) {
+      if (allLeads[i].id === id) { allLeads[i] = updated; break; }
+    }
+    actualizarMetricas();
+    renderTabla();
+  } catch (err) {
+    alert('Error al cambiar estado');
+  }
+}
+
+// ── Side Panel ──
+function abrirPanel(lead) {
+  var ei = estadoInfo(lead.estado);
+  var desafioText = DESAFIOS[lead.desafio] || lead.desafio || '—';
+  var html =
+    '<div class="panel-field"><div class="pf-label">Empresa</div><div class="pf-value">' + esc(lead.empresa) + '</div></div>' +
+    '<div class="panel-field"><div class="pf-label">Contacto</div><div class="pf-value">' + esc(lead.contacto_nombre) + '</div></div>' +
+    '<div class="panel-field"><div class="pf-label">Email</div><div class="pf-value">' + esc(lead.contacto_email) + '</div></div>' +
+    '<div class="panel-field"><div class="pf-label">Teléfono</div><div class="pf-value">' + esc(lead.contacto_telefono) + '</div></div>' +
+    (lead.cargo ? '<div class="panel-field"><div class="pf-label">Cargo</div><div class="pf-value">' + esc(lead.cargo) + '</div></div>' : '') +
+    (lead.cantidad_empleados ? '<div class="panel-field"><div class="pf-label">Empleados</div><div class="pf-value">' + esc(lead.cantidad_empleados) + '</div></div>' : '') +
+    '<div class="panel-field"><div class="pf-label">Desafío</div><div class="pf-value">' + esc(desafioText) + '</div></div>' +
+    '<div class="panel-field"><div class="pf-label">Estado</div><div class="pf-value"><span class="badge ' + ei.cls + '">' + esc(ei.label) + '</span></div></div>' +
+    '<div class="panel-field"><div class="pf-label">Ingreso</div><div class="pf-value">' + (lead.created_at ? new Date(lead.created_at).toLocaleString('es-AR') : '—') + '</div></div>' +
+    '<div class="panel-field"><div class="pf-label">Notas</div><textarea id="panel-notas">' + esc(lead.notas || '') + '</textarea></div>' +
+    '<button class="btn-save" onclick="guardarNotas(\'' + lead.id + '\')">Guardar notas</button>';
+
+  document.getElementById('panel-body').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('side-panel').classList.add('open');
+}
+
+function cerrarPanel() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('side-panel').classList.remove('open');
+}
+
+async function guardarNotas(id) {
+  var notas = document.getElementById('panel-notas').value;
+  try {
+    var res = await fetch(API_URL + '/api/leads/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notas: notas })
+    });
+    if (!res.ok) throw new Error('Error');
+    var updated = await res.json();
+    for (var i = 0; i < allLeads.length; i++) {
+      if (allLeads[i].id === id) { allLeads[i] = updated; break; }
+    }
+    cerrarPanel();
+    renderTabla();
+  } catch (err) {
+    alert('Error al guardar notas');
+  }
+}
+</script>
+</body>
+</html>
