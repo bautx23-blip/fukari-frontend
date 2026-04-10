@@ -75,7 +75,7 @@ tbody tr:hover{background:#f8fafc;}
 
 /* ── STATUS POPOVER ── */
 .status-cell{position:relative;}
-.status-popover{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 12px 36px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);z-index:300;padding:6px;min-width:170px;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .15s,transform .15s;}
+.status-popover{position:fixed;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 12px 36px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);z-index:300;padding:6px;min-width:170px;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .15s,transform .15s;}
 .status-popover.open{opacity:1;transform:translateY(0);pointer-events:auto;}
 .status-option{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:5px;cursor:pointer;transition:background .1s;}
 .status-option:hover{background:#f1f5f9;}
@@ -397,23 +397,29 @@ function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.te
 function togglePopover(e, id) {
   e.stopPropagation();
   closeAllPopovers();
+  var badge = document.getElementById('badge-' + id);
   var pop = document.getElementById('pop-' + id);
-  if (pop) {
+  if (pop && badge) {
+    var rect = badge.getBoundingClientRect();
+    pop.style.top = (rect.bottom + 6) + 'px';
+    pop.style.left = rect.left + 'px';
     pop.classList.add('open');
     _openPopoverId = id;
-    // Reposition if overflowing right
+    // Reposition if overflowing right or bottom
     requestAnimationFrame(function() {
-      var rect = pop.getBoundingClientRect();
-      if (rect.right > window.innerWidth - 10) {
-        pop.style.left = 'auto';
-        pop.style.right = '0';
+      var popRect = pop.getBoundingClientRect();
+      if (popRect.right > window.innerWidth - 10) {
+        pop.style.left = (window.innerWidth - popRect.width - 10) + 'px';
+      }
+      if (popRect.bottom > window.innerHeight - 10) {
+        pop.style.top = (rect.top - popRect.height - 6) + 'px';
       }
     });
   }
 }
 
 function closeAllPopovers() {
-  document.querySelectorAll('.status-popover.open').forEach(function(p) { p.classList.remove('open'); p.style.left = ''; p.style.right = ''; });
+  document.querySelectorAll('.status-popover.open').forEach(function(p) { p.classList.remove('open'); });
   _openPopoverId = null;
 }
 
