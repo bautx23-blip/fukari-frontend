@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fukari — CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;min-height:100vh;background:#f1f5f9;color:#111827;visibility:hidden;}
+body.ready{visibility:visible;}
+
+/* ── TOPBAR ── */
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:200;height:56px;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.topbar-logos img.yaku{height:36px;}
+.fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
+.fuk-wrap img{height:26px;}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:0.3px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-right span{color:#9ca3af;font-size:12px;}
+.btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.15s;text-decoration:none;}
+.btn-logout:hover{border-color:#9ca3af;color:#fff;}
+.btn-hamburger{display:none;background:transparent;border:none;color:#d1d5db;font-size:20px;cursor:pointer;padding:4px 8px;margin-right:8px;}
+
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;top:56px;left:0;bottom:0;width:220px;background:#111827;border-right:1px solid #1f2937;z-index:150;display:flex;flex-direction:column;padding:20px 0;transition:transform .25s cubic-bezier(.16,1,.3,1);}
+.sidebar-section{padding:0 16px;margin-bottom:24px;}
+.sidebar-section-label{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;padding:0 12px;margin-bottom:8px;}
+.sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:#9ca3af;font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;text-decoration:none;border:none;background:none;width:100%;text-align:left;font-family:inherit;}
+.sidebar-link:hover{background:rgba(255,255,255,0.06);color:#e5e7eb;}
+.sidebar-link.active{background:rgba(59,130,246,0.12);color:#60a5fa;}
+.sidebar-link .icon{width:20px;text-align:center;font-size:14px;flex-shrink:0;}
+.sidebar-link .icon svg{width:16px;height:16px;vertical-align:middle;}
+.sidebar-overlay{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:140;}
+.sidebar-badge{background:#25d366;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;margin-left:auto;}
+.sidebar-badge:empty{display:none;}
+
+/* ── MAIN CONTENT ── */
+.main{margin-left:220px;margin-top:56px;padding:28px 32px;min-height:calc(100vh - 56px);}
+.view{display:none;}
+.view.active{display:block;}
+
+/* ── STATS ── */
+.stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+.stat-card{background:#fff;border-radius:8px;padding:16px 22px;flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.stat-card .label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.stat-card .value{font-size:26px;font-weight:700;color:#1a1a2e;margin-top:4px;}
+
+/* ── FILTERS ── */
+.filters-bar{display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap;}
+.filters-bar select,.filters-bar input{font-family:inherit;font-size:13px;padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;color:#111827;}
+.filters-bar input{width:260px;}
+.btn-clear{background:transparent;border:1px solid #d1d5db;color:#6b7280;padding:8px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;}
+.btn-clear:hover{border-color:#9ca3af;color:#111827;}
+
+/* ── TABLE ── */
+.table-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;}
+tbody td{padding:12px 14px;border-bottom:1px solid #f1f5f9;vertical-align:top;}
+tbody tr:hover{background:#f8fafc;}
+.empresa-name{font-weight:600;color:#1a1a2e;}
+.contacto-cargo{font-size:11px;color:#9ca3af;margin-top:2px;}
+.contacto-detail{font-size:11.5px;color:#6b7280;line-height:1.5;}
+.desafio-cell{max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fecha-cell{font-size:12px;color:#6b7280;white-space:nowrap;}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;position:relative;letter-spacing:0.02em;white-space:nowrap;transition:transform .15s,box-shadow .15s;}
+.badge:hover{transform:scale(1.04);box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.badge-nuevo{background:#dbeafe;color:#2563eb;}
+.badge-contactado{background:#fef3c7;color:#d97706;}
+.badge-negociacion{background:#ede9fe;color:#7c3aed;}
+.badge-ganado{background:#dcfce7;color:#16a34a;}
+.badge-perdido{background:#fee2e2;color:#dc2626;}
+
+/* ── STATUS POPOVER ── */
+.status-cell{position:relative;}
+.status-popover{position:fixed;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 12px 36px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);z-index:300;padding:6px;min-width:170px;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .15s,transform .15s;}
+.status-popover.open{opacity:1;transform:translateY(0);pointer-events:auto;}
+.status-option{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:5px;cursor:pointer;transition:background .1s;}
+.status-option:hover{background:#f1f5f9;}
+.status-option .opt-badge{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.status-option .opt-label{font-size:12.5px;font-weight:500;color:#374151;flex:1;}
+.status-option .opt-check{font-size:13px;color:#2563eb;opacity:0;transition:opacity .1s;}
+.status-option.current .opt-check{opacity:1;}
+.dot-nuevo{background:#2563eb;}
+.dot-contactado{background:#d97706;}
+.dot-negociacion{background:#7c3aed;}
+.dot-ganado{background:#16a34a;}
+.dot-perdido{background:#dc2626;}
+
+/* ── BUTTONS ── */
+.btn-ver{background:transparent;border:1px solid #e5e7eb;color:#6b7280;padding:5px 12px;border-radius:5px;font-family:inherit;font-size:11.5px;cursor:pointer;transition:all .15s;}
+.btn-ver:hover{border-color:#1a1a2e;color:#1a1a2e;}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:80px 20px;color:#9ca3af;}
+.empty-state .icon{font-size:48px;margin-bottom:16px;}
+.empty-state h3{font-size:16px;color:#6b7280;font-weight:600;margin-bottom:8px;}
+.empty-state p{font-size:13px;}
+
+/* ── CONSTRUCTION STATE ── */
+.construction-state{text-align:center;padding:120px 20px;color:#9ca3af;}
+.construction-state .cs-icon{font-size:56px;margin-bottom:20px;opacity:0.7;}
+.construction-state h2{font-size:20px;color:#374151;font-weight:700;margin-bottom:10px;}
+.construction-state p{font-size:14px;color:#6b7280;max-width:380px;margin:0 auto;line-height:1.6;}
+
+/* ── SIDE PANEL ── */
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:500;opacity:0;pointer-events:none;transition:opacity .2s;}
+.overlay.open{opacity:1;pointer-events:auto;}
+.side-panel{position:fixed;top:0;right:0;width:420px;max-width:90vw;height:100vh;background:#fff;z-index:501;box-shadow:-8px 0 30px rgba(0,0,0,0.12);transform:translateX(100%);transition:transform .25s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;}
+.side-panel.open{transform:translateX(0);}
+.panel-header{padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;}
+.panel-header h3{font-size:16px;font-weight:700;color:#1a1a2e;}
+.btn-close-panel{background:transparent;border:none;font-size:20px;color:#9ca3af;cursor:pointer;padding:4px 8px;}
+.btn-close-panel:hover{color:#111827;}
+.panel-body{padding:24px;flex:1;overflow-y:auto;}
+.panel-field{margin-bottom:18px;}
+.panel-field .pf-label{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:4px;}
+.panel-field .pf-value{font-size:14px;color:#111827;}
+.panel-field textarea{width:100%;min-height:100px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;resize:vertical;color:#111827;}
+.panel-field textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
+.btn-save{background:#1a1a2e;color:#fff;border:none;padding:10px 20px;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-save:hover{background:#2d2d4e;}
+
+/* ═══════════════════════════════════════════
+   WHATSAPP SECTION
+   ═══════════════════════════════════════════ */
+#view-whatsapp{height:calc(100vh - 56px - 56px);}
+#view-whatsapp.active{display:flex;}
+.wa-container{display:flex;width:100%;height:100%;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:hidden;}
+
+/* ── Left: Conversation List ── */
+.wa-list{width:35%;min-width:280px;max-width:400px;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;background:#fff;}
+.wa-list-header{padding:14px 16px;border-bottom:1px solid #e5e7eb;display:flex;gap:10px;align-items:center;}
+.wa-list-header input{flex:1;font-family:inherit;font-size:12.5px;padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:#f8fafc;color:#111827;}
+.wa-list-header input:focus{outline:none;border-color:#25d366;}
+.btn-new-chat{background:#25d366;color:#fff;border:none;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.btn-new-chat:hover{background:#1fb855;}
+.wa-convos{flex:1;overflow-y:auto;}
+.wa-conv-item{padding:14px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .1s;display:flex;gap:12px;align-items:flex-start;}
+.wa-conv-item:hover{background:#f8fafc;}
+.wa-conv-item.active{background:#ecfdf5;}
+.wa-avatar{width:40px;height:40px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:700;color:#6b7280;}
+.wa-conv-body{flex:1;min-width:0;}
+.wa-conv-name{font-size:13px;font-weight:600;color:#1a1a2e;display:flex;justify-content:space-between;align-items:center;}
+.wa-conv-name .time{font-size:10.5px;font-weight:400;color:#9ca3af;}
+.wa-conv-empresa{font-size:11px;color:#9ca3af;margin-top:1px;}
+.wa-conv-preview{font-size:12px;color:#6b7280;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.wa-unread{background:#25d366;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0;margin-top:2px;}
+
+/* ── Right: Chat Area ── */
+.wa-chat{flex:1;display:flex;flex-direction:column;background:#f0f2f5;}
+.wa-chat-header{padding:12px 20px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;min-height:56px;}
+.wa-chat-header-info h4{font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:2px;}
+.wa-chat-header-info span{font-size:11.5px;color:#6b7280;}
+.btn-ver-lead{background:transparent;border:1px solid #2563eb;color:#2563eb;padding:5px 12px;border-radius:5px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-ver-lead:hover{background:#2563eb;color:#fff;}
+.wa-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:6px;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e5e7eb' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") #efeae2;}
+.wa-msg{max-width:70%;padding:8px 12px;border-radius:8px;font-size:13px;line-height:1.5;position:relative;word-wrap:break-word;}
+.wa-msg.entrante{background:#fff;align-self:flex-start;border-top-left-radius:2px;box-shadow:0 1px 1px rgba(0,0,0,0.06);}
+.wa-msg.saliente{background:#d9fdd3;align-self:flex-end;border-top-right-radius:2px;box-shadow:0 1px 1px rgba(0,0,0,0.06);}
+.wa-msg .msg-time{font-size:10px;color:#8696a0;text-align:right;margin-top:4px;}
+.wa-msg.saliente .msg-time{color:#6b8e5e;}
+.wa-placeholder{flex:1;display:flex;align-items:center;justify-content:center;background:#f0f2f5;color:#9ca3af;font-size:14px;text-align:center;padding:20px;}
+
+/* ── Input Area ── */
+.wa-input-area{padding:10px 16px;background:#fff;border-top:1px solid #e5e7eb;display:flex;gap:10px;align-items:flex-end;}
+.wa-input-area textarea{flex:1;font-family:inherit;font-size:13px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;resize:none;max-height:120px;min-height:40px;color:#111827;line-height:1.4;}
+.wa-input-area textarea:focus{outline:none;border-color:#25d366;}
+.btn-wa-send{background:#25d366;color:#fff;border:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s;}
+.btn-wa-send:hover{background:#1fb855;}
+.btn-wa-send svg{width:18px;height:18px;fill:#fff;}
+
+/* ── New Chat Modal ── */
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:600;display:none;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal-box{background:#fff;border-radius:10px;padding:28px;width:380px;max-width:90vw;box-shadow:0 20px 50px rgba(0,0,0,0.15);}
+.modal-box h3{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:16px;}
+.modal-box label{font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.modal-box input,.modal-box textarea{width:100%;font-family:inherit;font-size:13px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:14px;color:#111827;}
+.modal-box textarea{min-height:80px;resize:vertical;}
+.modal-box input:focus,.modal-box textarea:focus{outline:none;border-color:#25d366;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+.btn-modal-cancel{background:transparent;border:1px solid #d1d5db;color:#6b7280;padding:8px 18px;border-radius:6px;font-family:inherit;font-size:12.5px;cursor:pointer;}
+.btn-modal-send{background:#25d366;color:#fff;border:none;padding:8px 18px;border-radius:6px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+.btn-modal-send:hover{background:#1fb855;}
+
+/* ═══════════════════════════════════════════
+   CONTACTS SECTION
+   ═══════════════════════════════════════════ */
+.ct-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.ct-header h2{font-size:18px;font-weight:700;color:#1a1a2e;}
+.ct-search{display:flex;gap:10px;flex:1;max-width:400px;}
+.ct-search input{flex:1;font-family:inherit;font-size:13px;padding:8px 12px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;color:#111827;}
+.ct-search input:focus{outline:none;border-color:#1a1a2e;}
+.ct-table-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow-x:auto;}
+.ct-table{width:100%;border-collapse:collapse;font-size:13px;}
+.ct-table thead th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-bottom:1px solid #e5e7eb;white-space:nowrap;}
+.ct-table tbody td{padding:11px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+.ct-table tbody tr:hover{background:#f8fafc;}
+.ct-table .ct-name{font-weight:600;color:#1a1a2e;}
+.ct-table .ct-sub{font-size:11px;color:#9ca3af;}
+.ct-actions-cell{display:flex;gap:6px;}
+.btn-ct{padding:4px 10px;border-radius:5px;font-family:inherit;font-size:11px;cursor:pointer;border:1px solid #e5e7eb;background:transparent;color:#6b7280;transition:all .15s;}
+.btn-ct:hover{border-color:#1a1a2e;color:#1a1a2e;}
+.btn-ct-wa{border-color:#25d366;color:#25d366;}
+.btn-ct-wa:hover{background:#25d366;color:#fff;}
+.btn-ct-del{border-color:#fca5a5;color:#dc2626;}
+.btn-ct-del:hover{background:#fee2e2;}
+.btn-ct-primary{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
+.btn-ct-primary:hover{background:#2d2d4e;}
+
+/* Contact Modal */
+.ct-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:600;display:none;align-items:flex-start;justify-content:center;padding-top:70px;overflow-y:auto;}
+.ct-modal-bg.open{display:flex;}
+.ct-modal{background:#fff;border-radius:10px;padding:28px;width:520px;max-width:95vw;box-shadow:0 20px 50px rgba(0,0,0,0.15);}
+.ct-modal h3{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:18px;}
+.ct-modal label{font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.ct-modal input,.ct-modal select,.ct-modal textarea{width:100%;font-family:inherit;font-size:13px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:12px;color:#111827;}
+.ct-modal input:focus,.ct-modal select:focus,.ct-modal textarea:focus{outline:none;border-color:#1a1a2e;box-shadow:0 0 0 2px rgba(26,26,46,0.08);}
+.ct-modal textarea{min-height:60px;resize:vertical;}
+.ct-section-label{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.08em;margin:16px 0 10px;padding-top:12px;border-top:1px solid #f1f5f9;}
+
+/* Add Field Mini-Modal */
+.ct-add-field-row{display:flex;gap:8px;margin-bottom:12px;align-items:flex-end;}
+.ct-add-field-row input,.ct-add-field-row select{margin-bottom:0;flex:1;}
+.btn-add-field{padding:9px 14px;border-radius:6px;background:#f1f5f9;border:1px dashed #d1d5db;color:#6b7280;font-family:inherit;font-size:12px;cursor:pointer;width:100%;text-align:center;margin-bottom:12px;transition:all .15s;}
+.btn-add-field:hover{border-color:#9ca3af;color:#111827;}
+
+/* Variable Palette */
+.var-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid #e5e7eb;background:#f8fafc;color:#374151;transition:all .12s;font-family:inherit;}
+.var-chip:hover{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
+.var-chip .var-num{background:#e5e7eb;color:#6b7280;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:700;font-family:'SF Mono',monospace;}
+.var-chip:hover .var-num{background:rgba(255,255,255,0.2);color:#fff;}
+
+/* ═══════════════════════════════════════════
+   TEMPLATES SECTION
+   ═══════════════════════════════════════════ */
+.tpl-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.tpl-header h2{font-size:18px;font-weight:700;color:#1a1a2e;}
+.tpl-actions{display:flex;gap:10px;}
+.btn-tpl{padding:8px 16px;border-radius:6px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-tpl-primary{background:#1a1a2e;color:#fff;}
+.btn-tpl-primary:hover{background:#2d2d4e;}
+.btn-tpl-outline{background:transparent;border:1px solid #d1d5db;color:#6b7280;}
+.btn-tpl-outline:hover{border-color:#9ca3af;color:#111827;}
+.btn-tpl-danger{background:transparent;border:1px solid #fca5a5;color:#dc2626;padding:4px 10px;font-size:11px;}
+.btn-tpl-danger:hover{background:#fee2e2;}
+.btn-tpl-send{background:#25d366;color:#fff;padding:4px 10px;font-size:11px;}
+.btn-tpl-send:hover{background:#1fb855;}
+
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.tpl-card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.05);transition:box-shadow .15s;}
+.tpl-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.tpl-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.tpl-card-name{font-size:14px;font-weight:700;color:#1a1a2e;word-break:break-all;}
+.tpl-card-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.tpl-badge-cat{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;}
+.tpl-badge-marketing{background:#ede9fe;color:#7c3aed;}
+.tpl-badge-utility{background:#dbeafe;color:#2563eb;}
+.tpl-badge-authentication{background:#fef3c7;color:#d97706;}
+.tpl-badge-status{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;}
+.tpl-status-approved{background:#dcfce7;color:#16a34a;}
+.tpl-status-pending{background:#fef3c7;color:#d97706;}
+.tpl-status-rejected{background:#fee2e2;color:#dc2626;}
+.tpl-card-body{font-size:12.5px;color:#6b7280;line-height:1.6;margin-bottom:14px;max-height:80px;overflow:hidden;white-space:pre-wrap;}
+.tpl-card-lang{font-size:11px;color:#9ca3af;margin-bottom:10px;}
+.tpl-card-actions{display:flex;gap:8px;justify-content:flex-end;}
+
+/* Template Create Modal */
+.tpl-modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:600;display:none;align-items:flex-start;justify-content:center;padding-top:60px;overflow-y:auto;}
+.tpl-modal-bg.open{display:flex;}
+.tpl-create-wrap{display:flex;gap:24px;width:820px;max-width:95vw;background:#fff;border-radius:10px;padding:28px;box-shadow:0 20px 50px rgba(0,0,0,0.15);}
+.tpl-form{flex:1;min-width:0;}
+.tpl-form h3{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:16px;}
+.tpl-form label{font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.tpl-form input,.tpl-form select,.tpl-form textarea{width:100%;font-family:inherit;font-size:13px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:12px;color:#111827;}
+.tpl-form textarea{min-height:90px;resize:vertical;}
+.tpl-form input:focus,.tpl-form select:focus,.tpl-form textarea:focus{outline:none;border-color:#1a1a2e;box-shadow:0 0 0 2px rgba(26,26,46,0.08);}
+.tpl-form .hint{font-size:11px;color:#9ca3af;margin:-8px 0 12px;line-height:1.4;}
+.tpl-buttons-row{display:flex;gap:8px;margin-bottom:12px;}
+.tpl-buttons-row input{flex:1;}
+.btn-add-btn{background:transparent;border:1px dashed #d1d5db;color:#6b7280;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;}
+.btn-remove-btn{background:transparent;border:none;color:#dc2626;cursor:pointer;font-size:14px;padding:0 4px;}
+
+/* Template Preview */
+.tpl-preview{width:260px;flex-shrink:0;}
+.tpl-preview h4{font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;}
+.tpl-preview-phone{background:#efeae2;border-radius:10px;padding:20px 14px;min-height:200px;}
+.tpl-preview-bubble{background:#fff;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#111827;box-shadow:0 1px 1px rgba(0,0,0,0.06);white-space:pre-wrap;word-wrap:break-word;}
+.tpl-preview-bubble .prev-header{font-weight:700;margin-bottom:6px;color:#1a1a2e;}
+.tpl-preview-bubble .prev-footer{font-size:11px;color:#8696a0;margin-top:8px;}
+.tpl-preview-bubble .prev-btn{display:block;text-align:center;padding:8px;margin-top:6px;border-top:1px solid #e5e7eb;color:#2563eb;font-size:12px;font-weight:500;}
+
+/* Send Template Modal */
+.tpl-send-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:600;display:none;align-items:center;justify-content:center;}
+.tpl-send-bg.open{display:flex;}
+.tpl-send-box{background:#fff;border-radius:10px;padding:28px;width:440px;max-width:90vw;box-shadow:0 20px 50px rgba(0,0,0,0.15);}
+.tpl-send-box h3{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:16px;}
+.tpl-send-box label{font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}
+.tpl-send-box input{width:100%;font-family:inherit;font-size:13px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:12px;color:#111827;}
+.tpl-send-box input:focus{outline:none;border-color:#25d366;}
+.tpl-send-preview{background:#efeae2;border-radius:8px;padding:14px;margin-bottom:16px;}
+.tpl-send-preview .prev-bubble{background:#fff;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.5;box-shadow:0 1px 1px rgba(0,0,0,0.06);white-space:pre-wrap;}
+
+/* ═══════════════════════════════════════════
+   BOT KNOWLEDGE SECTION
+   ═══════════════════════════════════════════ */
+.bot-wrap{display:flex;gap:20px;height:calc(100vh - 56px - 56px);}
+.bot-sections{width:320px;flex-shrink:0;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);padding:18px;display:flex;flex-direction:column;}
+.bot-sections h3{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:6px;}
+.bot-progress-wrap{margin-bottom:14px;}
+.bot-progress-bar{height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;}
+.bot-progress-fill{height:100%;background:#16a34a;transition:width .3s;}
+.bot-progress-text{font-size:11px;color:#6b7280;margin-top:5px;}
+.bot-section-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.bot-section-item{padding:11px 12px;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .12s;}
+.bot-section-item:hover{border-color:#1a1a2e;background:#f8fafc;}
+.bot-section-item.active{border-color:#1a1a2e;background:#f1f5f9;}
+.bot-section-icon{font-size:18px;flex-shrink:0;}
+.bot-section-info{flex:1;min-width:0;}
+.bot-section-name{font-size:12.5px;font-weight:600;color:#1a1a2e;}
+.bot-section-status{font-size:10.5px;color:#9ca3af;margin-top:1px;}
+.bot-section-status.completa{color:#16a34a;font-weight:600;}
+.bot-section-status.en_progreso{color:#d97706;font-weight:600;}
+.bot-actions-admin{padding-top:14px;border-top:1px solid #f1f5f9;margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+.btn-bot{padding:9px 12px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#374151;transition:all .15s;text-align:center;}
+.btn-bot:hover{border-color:#1a1a2e;color:#1a1a2e;}
+.btn-bot-primary{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
+.btn-bot-primary:hover{background:#2d2d4e;color:#fff;}
+
+.bot-chat{flex:1;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);display:flex;flex-direction:column;min-width:0;}
+.bot-chat-header{padding:18px 22px;border-bottom:1px solid #e5e7eb;}
+.bot-chat-header h3{font-size:15px;font-weight:700;color:#1a1a2e;display:flex;align-items:center;gap:8px;}
+.bot-chat-header p{font-size:12px;color:#6b7280;margin-top:3px;}
+.bot-chat-msgs{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:14px;}
+.bot-msg{max-width:80%;padding:11px 15px;border-radius:10px;font-size:13px;line-height:1.55;}
+.bot-msg.bot{background:#f1f5f9;color:#1a1a2e;align-self:flex-start;border-top-left-radius:3px;}
+.bot-msg.user{background:#1a1a2e;color:#fff;align-self:flex-end;border-top-right-radius:3px;}
+.bot-msg .who{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;opacity:0.6;margin-bottom:4px;}
+.bot-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;text-align:center;padding:40px;}
+.bot-input-area{padding:14px 22px;border-top:1px solid #e5e7eb;display:flex;gap:10px;align-items:flex-end;}
+.bot-input-area textarea{flex:1;font-family:inherit;font-size:13px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;resize:none;max-height:120px;min-height:42px;color:#111827;line-height:1.4;}
+.bot-input-area textarea:focus{outline:none;border-color:#1a1a2e;box-shadow:0 0 0 2px rgba(26,26,46,0.06);}
+.btn-bot-send{background:#1a1a2e;color:#fff;border:none;padding:0 18px;height:42px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;flex-shrink:0;}
+.btn-bot-send:hover{background:#2d2d4e;}
+.btn-bot-send:disabled{opacity:0.5;cursor:not-allowed;}
+.bot-resumen{margin-top:14px;padding:14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;font-size:12px;color:#065f46;white-space:pre-wrap;}
+
+@media(max-width:900px){
+  .bot-wrap{flex-direction:column;height:auto;}
+  .bot-sections{width:100%;}
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .btn-hamburger{display:block;}
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.open{display:block;}
+  .main{margin-left:0;}
+  .stat-card{min-width:100px;padding:12px 14px;}
+  .stat-card .value{font-size:20px;}
+  .filters-bar input{width:100%;}
+  .side-panel{width:100vw;}
+  .wa-list{width:100%;max-width:none;}
+  .wa-chat{display:none;}
+  .wa-container.chat-open .wa-list{display:none;}
+  .wa-container.chat-open .wa-chat{display:flex;}
+}
+@media(max-width:600px){
+  .stats-row{gap:8px;}
+  .topbar{padding:12px 16px;}
+  .main{padding:16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:4px;">
+    <button class="btn-hamburger" id="btn-hamburger" onclick="toggleSidebar()">&#9776;</button>
+    <div class="topbar-logos">
+      <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
+      <div class="fuk-wrap"><img src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
+    </div>
+  </div>
+  <span class="topbar-title">CRM</span>
+  <div class="topbar-right">
+    <span id="topbar-fecha"></span>
+    <a href="/hub.html" class="btn-logout">&#8592; Inicio</a>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Módulos</div>
+    <button class="sidebar-link active" id="nav-empresas" onclick="switchView('empresas')">
+      <span class="icon">&#127970;</span> Empresas
+    </button>
+    <button class="sidebar-link" id="nav-whatsapp" onclick="switchView('whatsapp')">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></span> WhatsApp
+      <span class="sidebar-badge" id="wa-unread-badge"></span>
+    </button>
+    <button class="sidebar-link" id="nav-contactos" onclick="switchView('contactos')">
+      <span class="icon">&#128100;</span> Contactos
+    </button>
+    <button class="sidebar-link" id="nav-plantillas" onclick="switchView('plantillas')">
+      <span class="icon">&#128196;</span> Plantillas
+    </button>
+    <button class="sidebar-link" id="nav-meta" onclick="switchView('meta')">
+      <span class="icon">&#128227;</span> Anuncios de Meta
+    </button>
+  </div>
+  <div class="sidebar-section" id="sidebar-config" style="display:none;">
+    <div class="sidebar-section-label">Configuración</div>
+    <button class="sidebar-link" id="nav-bot" onclick="switchView('bot')">
+      <span class="icon">&#129504;</span> Conocimiento del Bot
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- VIEW: EMPRESAS -->
+  <div class="view active" id="view-empresas">
+    <div class="stats-row">
+      <div class="stat-card"><div class="label">Total leads</div><div class="value" id="s-total">—</div></div>
+      <div class="stat-card" style="border-left:3px solid #2563eb"><div class="label">Nuevos</div><div class="value" style="color:#2563eb" id="s-nuevo">—</div></div>
+      <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Contactados</div><div class="value" style="color:#d97706" id="s-contactado">—</div></div>
+      <div class="stat-card" style="border-left:3px solid #7c3aed"><div class="label">En negociación</div><div class="value" style="color:#7c3aed" id="s-negociacion">—</div></div>
+      <div class="stat-card" style="border-left:3px solid #16a34a"><div class="label">Ganados</div><div class="value" style="color:#16a34a" id="s-ganado">—</div></div>
+    </div>
+    <div class="filters-bar">
+      <select id="filtro-estado"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="contactado">Contactado</option><option value="en negociacion">En negociación</option><option value="ganado">Ganado</option><option value="perdido">Perdido</option></select>
+      <input type="text" id="filtro-buscar" placeholder="Buscar empresa, contacto o email...">
+      <button class="btn-clear" onclick="limpiarFiltros()">Limpiar filtros</button>
+    </div>
+    <div class="table-wrap"><div id="tabla-contenido"></div></div>
+  </div>
+
+  <!-- VIEW: WHATSAPP -->
+  <div class="view" id="view-whatsapp">
+    <div class="wa-container" id="wa-container">
+      <div class="wa-list">
+        <div class="wa-list-header">
+          <input type="text" id="wa-search" placeholder="Buscar conversación...">
+          <button class="btn-new-chat" onclick="abrirNuevoChat()">+ Nuevo</button>
+        </div>
+        <div class="wa-convos" id="wa-convos"></div>
+      </div>
+      <div class="wa-chat" id="wa-chat">
+        <div class="wa-placeholder" id="wa-placeholder">Seleccioná una conversación para ver los mensajes</div>
+        <div class="wa-chat-header" id="wa-chat-header" style="display:none;">
+          <div class="wa-chat-header-info" id="wa-chat-header-info"></div>
+        </div>
+        <div class="wa-messages" id="wa-messages" style="display:none;"></div>
+        <div class="wa-input-area" id="wa-input-area" style="display:none;">
+          <textarea id="wa-input" rows="1" placeholder="Escribí un mensaje..."></textarea>
+          <button class="btn-wa-send" onclick="enviarMensaje()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: CONTACTOS -->
+  <div class="view" id="view-contactos">
+    <div class="ct-header">
+      <h2>Contactos</h2>
+      <div class="ct-search">
+        <input type="text" id="ct-buscar" placeholder="Buscar contacto...">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-tpl btn-tpl-outline" onclick="abrirGestionCampos()">&#9881; Campos</button>
+        <button class="btn-tpl btn-tpl-primary" onclick="abrirContactoModal(null)">+ Nuevo contacto</button>
+      </div>
+    </div>
+    <div class="ct-table-wrap"><div id="ct-tabla"></div></div>
+  </div>
+
+  <!-- VIEW: PLANTILLAS -->
+  <div class="view" id="view-plantillas">
+    <div class="tpl-header">
+      <h2>Plantillas de WhatsApp</h2>
+      <div class="tpl-actions">
+        <button class="btn-tpl btn-tpl-outline" onclick="cargarTemplates(true)">&#8635; Sincronizar</button>
+        <button class="btn-tpl btn-tpl-primary" onclick="abrirCrearTemplate()">+ Nueva plantilla</button>
+      </div>
+    </div>
+    <div id="tpl-grid-contenido"></div>
+  </div>
+
+  <!-- VIEW: META ADS -->
+  <div class="view" id="view-meta">
+    <div class="construction-state">
+      <div class="cs-icon">&#128679;</div>
+      <h2>En construcción</h2>
+      <p>El módulo de Anuncios de Meta estará disponible próximamente. Acá vas a poder ver los leads que lleguen por campañas de Meta Ads.</p>
+    </div>
+  </div>
+
+  <!-- VIEW: BOT KNOWLEDGE -->
+  <div class="view" id="view-bot">
+    <div class="bot-wrap">
+      <aside class="bot-sections">
+        <h3>Conocimiento del Bot</h3>
+        <div class="bot-progress-wrap">
+          <div class="bot-progress-bar"><div class="bot-progress-fill" id="bot-progress-fill" style="width:0%"></div></div>
+          <div class="bot-progress-text" id="bot-progress-text">0/6 secciones completas</div>
+        </div>
+        <div class="bot-section-list" id="bot-section-list"></div>
+        <div class="bot-actions-admin" id="bot-actions-admin" style="display:none;">
+          <button class="btn-bot" onclick="exportarConocimiento()">&#128229; Exportar conocimiento</button>
+          <button class="btn-bot btn-bot-primary" onclick="integrarConocimiento()">&#128640; Integrar al sistema</button>
+        </div>
+      </aside>
+      <div class="bot-chat">
+        <div class="bot-chat-header">
+          <h3 id="bot-chat-title">Seleccioná una sección</h3>
+          <p id="bot-chat-subtitle">Elegí una sección de la izquierda para comenzar la entrevista</p>
+        </div>
+        <div class="bot-chat-msgs" id="bot-chat-msgs">
+          <div class="bot-empty" id="bot-empty">Seleccioná una sección para comenzar</div>
+        </div>
+        <div class="bot-input-area" id="bot-input-area" style="display:none;">
+          <textarea id="bot-input" rows="1" placeholder="Escribí tu respuesta..."></textarea>
+          <button class="btn-bot-send" id="btn-bot-send" onclick="enviarMensajeBot()">Enviar</button>
+          <button class="btn-bot" id="btn-bot-completar" onclick="marcarCompleta()" style="display:none;">Marcar completa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Side Panel (leads) -->
+<div class="overlay" id="overlay" onclick="cerrarPanel()"></div>
+<div class="side-panel" id="side-panel">
+  <div class="panel-header"><h3>Detalle del Lead</h3><button class="btn-close-panel" onclick="cerrarPanel()">&times;</button></div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+
+<!-- New Chat Modal -->
+<div class="modal-bg" id="modal-new-chat">
+  <div class="modal-box">
+    <h3>Nuevo mensaje</h3>
+    <label>Teléfono</label>
+    <input type="tel" id="new-chat-tel" placeholder="Ej: 341 1234567">
+    <label>Mensaje</label>
+    <textarea id="new-chat-msg" placeholder="Escribí tu mensaje..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="cerrarNuevoChat()">Cancelar</button>
+      <button class="btn-modal-send" onclick="enviarNuevoChat()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal (create/edit) -->
+<div class="ct-modal-bg" id="modal-contacto">
+  <div class="ct-modal">
+    <h3 id="ct-modal-title">Nuevo contacto</h3>
+    <input type="hidden" id="ct-edit-id">
+    <label>Nombre *</label>
+    <input type="text" id="ct-nombre">
+    <label>Teléfono</label>
+    <input type="tel" id="ct-telefono" placeholder="Ej: 341 1234567">
+    <label>Email</label>
+    <input type="email" id="ct-email">
+    <label>Empresa</label>
+    <input type="text" id="ct-empresa">
+    <div class="ct-section-label">Campos personalizados</div>
+    <div id="ct-custom-fields"></div>
+    <button class="btn-add-field" onclick="abrirAgregarCampo()">+ Agregar campo nuevo</button>
+    <div id="ct-add-field-area" style="display:none;">
+      <div class="ct-add-field-row">
+        <div style="flex:2;"><label style="margin-bottom:2px;">Nombre del campo</label><input type="text" id="ct-new-field-name" style="margin-bottom:0;"></div>
+        <div style="flex:1;"><label style="margin-bottom:2px;">Tipo</label><select id="ct-new-field-type" style="margin-bottom:0;"><option value="text">Texto</option><option value="email">Email</option><option value="tel">Teléfono</option><option value="number">Número</option><option value="date">Fecha</option></select></div>
+        <button class="btn-ct btn-ct-primary" style="height:38px;margin-top:auto;" onclick="crearCampoCustom()">Crear</button>
+      </div>
+    </div>
+    <label>Notas</label>
+    <textarea id="ct-notas" placeholder="Notas internas..."></textarea>
+    <div class="hint" style="margin-top:-8px;margin-bottom:12px;font-size:11px;color:#9ca3af;">Los campos de este contacto (nombre, empresa, campos custom) se pueden usar como variables {{1}}, {{2}} en plantillas de WhatsApp.</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-tpl btn-tpl-outline" onclick="cerrarContactoModal()">Cancelar</button>
+      <button class="btn-tpl btn-tpl-primary" onclick="guardarContacto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manage Fields Modal -->
+<div class="ct-modal-bg" id="modal-campos">
+  <div class="ct-modal" style="width:420px;">
+    <h3>Campos personalizados</h3>
+    <p style="font-size:12px;color:#6b7280;margin-bottom:16px;">Estos campos aparecen en todos los contactos y pueden usarse como variables en plantillas de WhatsApp.</p>
+    <div id="campos-list"></div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-tpl btn-tpl-outline" onclick="cerrarGestionCampos()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Send to Contact from WA (select contact) -->
+<div class="ct-modal-bg" id="modal-select-contacto">
+  <div class="ct-modal" style="width:440px;">
+    <h3 id="select-ct-title">Seleccionar contacto</h3>
+    <input type="text" id="select-ct-buscar" placeholder="Buscar contacto..." oninput="renderSelectContacto()">
+    <div id="select-ct-list" style="max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-tpl btn-tpl-outline" onclick="document.getElementById('modal-select-contacto').classList.remove('open')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Template Modal -->
+<div class="tpl-modal-bg" id="modal-create-tpl">
+  <div class="tpl-create-wrap">
+    <div class="tpl-form">
+      <h3>Crear plantilla</h3>
+      <label>Nombre</label>
+      <input type="text" id="tpl-name" placeholder="ej: bienvenida_empresa" pattern="[a-z0-9_]+">
+      <div class="hint">Solo minúsculas, números y guiones bajos (_)</div>
+      <label>Categoría</label>
+      <select id="tpl-category">
+        <option value="MARKETING">Marketing</option>
+        <option value="UTILITY">Utilidad</option>
+        <option value="AUTHENTICATION">Autenticación</option>
+      </select>
+      <label>Idioma</label>
+      <select id="tpl-language">
+        <option value="es_AR">Español (Argentina)</option>
+        <option value="es">Español</option>
+        <option value="en_US">Inglés (US)</option>
+        <option value="pt_BR">Portugués (Brasil)</option>
+      </select>
+      <label>Header (opcional)</label>
+      <input type="text" id="tpl-header" placeholder="Texto del header">
+      <label>Body (obligatorio)</label>
+      <textarea id="tpl-body" placeholder="Hola {{1}}, le escribimos de Yakú Agua para informarle sobre..."></textarea>
+      <div class="hint">Hacé click en una variable para insertarla en el body:</div>
+      <div id="tpl-vars-palette" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+      <label>Footer (opcional)</label>
+      <input type="text" id="tpl-footer" placeholder="Yakú Agua Purificada">
+      <label>Botones (opcional, máximo 2)</label>
+      <div id="tpl-buttons-container"></div>
+      <button class="btn-add-btn" onclick="agregarBotonTemplate()">+ Agregar botón</button>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <button class="btn-tpl btn-tpl-outline" onclick="cerrarCrearTemplate()">Cancelar</button>
+        <button class="btn-tpl btn-tpl-primary" onclick="crearTemplate()">Crear plantilla</button>
+      </div>
+    </div>
+    <div class="tpl-preview">
+      <h4>Vista previa</h4>
+      <div class="tpl-preview-phone">
+        <div class="tpl-preview-bubble" id="tpl-preview-bubble">
+          <div class="prev-header" id="tpl-prev-header" style="display:none;"></div>
+          <div id="tpl-prev-body" style="color:#6b7280;">Escribí el body para ver la vista previa...</div>
+          <div class="prev-footer" id="tpl-prev-footer" style="display:none;"></div>
+          <div id="tpl-prev-buttons"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Send Template Modal -->
+<div class="tpl-send-bg" id="modal-send-tpl">
+  <div class="tpl-send-box">
+    <h3>Enviar plantilla</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <label style="margin-bottom:0;">Teléfono destino</label>
+      <button class="btn-ct" style="font-size:10px;padding:3px 8px;" onclick="seleccionarContactoParaTpl()">&#128100; Desde contacto</button>
+    </div>
+    <input type="tel" id="tpl-send-tel" placeholder="Ej: 341 1234567">
+    <div id="tpl-send-vars"></div>
+    <div class="tpl-send-preview">
+      <div class="prev-bubble" id="tpl-send-preview-text"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-tpl btn-tpl-outline" onclick="cerrarEnviarTemplate()">Cancelar</button>
+      <button class="btn-tpl btn-tpl-send" style="padding:8px 18px;font-size:12.5px;" onclick="enviarTemplate()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var API_URL = 'https://fukari-backend-production-92f1.up.railway.app';
+var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+var INTEGRATOR_EMAIL = 'bautx23@gmail.com';
+var BOT_ALLOWED_EMAILS = [ADMIN_EMAIL, INTEGRATOR_EMAIL];
+var _currentUserEmail = '';
+var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var allLeads = [];
+var _debounceTimer = null;
+var _openPopoverId = null;
+
+// WhatsApp state
+var waConversaciones = [];
+var waConvActual = null;
+var waMensajes = [];
+var _waPollingInterval = null;
+var _waSearchTimer = null;
+
+// ── Auth ──
+sb.auth.getSession().then(function(result) {
+  var session = result.data.session;
+  if (!session) { window.location.href = '/index.html'; return; }
+  var email = session.user.email;
+  _currentUserEmail = email;
+  if (email !== ADMIN_EMAIL && email !== INTEGRATOR_EMAIL) { window.location.href = '/hub.html'; return; }
+  document.body.classList.add('ready');
+  var d = new Date();
+  document.getElementById('topbar-fecha').textContent = d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+  // Mostrar sección Configuración a usuarios autorizados
+  if (BOT_ALLOWED_EMAILS.indexOf(email) !== -1) {
+    document.getElementById('sidebar-config').style.display = '';
+  }
+  // Botones de admin (exportar/integrar) solo para INTEGRATOR_EMAIL
+  if (email === INTEGRATOR_EMAIL) {
+    document.getElementById('bot-actions-admin').style.display = '';
+  }
+  cargarLeads();
+  cargarConversacionesWA();
+  _waPollingInterval = setInterval(pollWhatsApp, 10000);
+});
+
+async function logout() { await sb.auth.signOut(); window.location.href = '/index.html'; }
+
+// ── Sidebar ──
+function switchView(view) {
+  document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-link').forEach(function(l) { l.classList.remove('active'); });
+  document.getElementById('view-' + view).classList.add('active');
+  document.getElementById('nav-' + view).classList.add('active');
+  if (window.innerWidth <= 900) toggleSidebar();
+  if (view === 'whatsapp') cargarConversacionesWA();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// EMPRESAS (existing code preserved exactly)
+// ════════════════════════════════════════════════════════════════════
+
+async function cargarLeads() {
+  try {
+    var res = await fetch(API_URL + '/api/leads');
+    if (!res.ok) throw new Error('Error ' + res.status);
+    allLeads = await res.json();
+    actualizarMetricas();
+    renderTabla();
+  } catch (err) {
+    document.getElementById('tabla-contenido').innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div><h3>Error al cargar leads</h3><p>' + err.message + '</p></div>';
+  }
+}
+
+function actualizarMetricas() {
+  document.getElementById('s-total').textContent = allLeads.length;
+  document.getElementById('s-nuevo').textContent = allLeads.filter(function(l) { return l.estado === 'nuevo'; }).length;
+  document.getElementById('s-contactado').textContent = allLeads.filter(function(l) { return l.estado === 'contactado'; }).length;
+  document.getElementById('s-negociacion').textContent = allLeads.filter(function(l) { return l.estado === 'en negociacion'; }).length;
+  document.getElementById('s-ganado').textContent = allLeads.filter(function(l) { return l.estado === 'ganado'; }).length;
+}
+
+document.getElementById('filtro-estado').addEventListener('change', renderTabla);
+document.getElementById('filtro-buscar').addEventListener('input', function() {
+  clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(renderTabla, 300);
+});
+
+function limpiarFiltros() {
+  document.getElementById('filtro-estado').value = '';
+  document.getElementById('filtro-buscar').value = '';
+  renderTabla();
+}
+
+function getFiltered() {
+  var estado = document.getElementById('filtro-estado').value;
+  var buscar = document.getElementById('filtro-buscar').value.toLowerCase().trim();
+  return allLeads.filter(function(l) {
+    if (estado && l.estado !== estado) return false;
+    if (buscar) {
+      var hay = (l.empresa || '').toLowerCase().indexOf(buscar) !== -1 ||
+                (l.contacto_nombre || '').toLowerCase().indexOf(buscar) !== -1 ||
+                (l.contacto_email || '').toLowerCase().indexOf(buscar) !== -1;
+      if (!hay) return false;
+    }
+    return true;
+  });
+}
+
+var ESTADOS = [
+  { value: 'nuevo', label: 'Nuevo', cls: 'badge-nuevo', dot: 'dot-nuevo' },
+  { value: 'contactado', label: 'Contactado', cls: 'badge-contactado', dot: 'dot-contactado' },
+  { value: 'en negociacion', label: 'En negociación', cls: 'badge-negociacion', dot: 'dot-negociacion' },
+  { value: 'ganado', label: 'Ganado', cls: 'badge-ganado', dot: 'dot-ganado' },
+  { value: 'perdido', label: 'Perdido', cls: 'badge-perdido', dot: 'dot-perdido' }
+];
+
+function estadoInfo(val) { return ESTADOS.find(function(e) { return e.value === val; }) || { value: val, label: val, cls: 'badge-nuevo', dot: 'dot-nuevo' }; }
+function formatFecha(iso) { if (!iso) return '—'; var d = new Date(iso); return d.getDate() + ' ' + d.toLocaleDateString('es-AR', { month: 'short' }).replace('.', ''); }
+var DESAFIOS = { '1': 'Agua purificada certificada', '2': 'Optimizar tiempos muertos', '3': 'Agua térmica (frío/calor)', '4': 'Reemplazo bidones', '5': 'Otro' };
+
+function renderTabla() {
+  var leads = getFiltered();
+  if (leads.length === 0) { document.getElementById('tabla-contenido').innerHTML = '<div class="empty-state"><div class="icon">&#128203;</div><h3>No hay leads</h3><p>Cuando lleguen solicitudes desde la landing, aparecerán acá.</p></div>'; return; }
+  var html = '<table><thead><tr><th>Empresa</th><th>Contacto</th><th>Tel / Email</th><th>Empleados</th><th>Desafío</th><th>Ingreso</th><th>Estado</th><th></th></tr></thead><tbody>';
+  leads.forEach(function(l) {
+    var ei = estadoInfo(l.estado);
+    var desafioText = DESAFIOS[l.desafio] || l.desafio || '—';
+    var popoverHtml = '<div class="status-popover" id="pop-' + l.id + '">';
+    ESTADOS.forEach(function(e) { var isCurrent = e.value === l.estado ? ' current' : ''; popoverHtml += '<div class="status-option' + isCurrent + '" onclick="cambiarEstado(event,\'' + l.id + '\',\'' + e.value + '\')"><span class="opt-badge ' + e.dot + '"></span><span class="opt-label">' + e.label + '</span><span class="opt-check">&#10003;</span></div>'; });
+    popoverHtml += '</div>';
+    html += '<tr><td class="empresa-name">' + esc(l.empresa) + '</td><td>' + esc(l.contacto_nombre) + (l.cargo ? '<div class="contacto-cargo">' + esc(l.cargo) + '</div>' : '') + '</td><td class="contacto-detail">' + esc(l.contacto_telefono) + '<br>' + esc(l.contacto_email) + '</td><td>' + esc(l.cantidad_empleados || '—') + '</td><td class="desafio-cell" title="' + esc(desafioText) + '">' + esc(desafioText) + '</td><td class="fecha-cell">' + formatFecha(l.created_at) + '</td><td class="status-cell"><span class="badge ' + ei.cls + '" id="badge-' + l.id + '" onclick="togglePopover(event,\'' + l.id + '\')">' + esc(ei.label) + '</span>' + popoverHtml + '</td><td><button class="btn-ver" onclick=\'abrirPanel(' + JSON.stringify(l).replace(/'/g, '&#39;') + ')\'>Ver</button></td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('tabla-contenido').innerHTML = html;
+}
+
+function esc(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function togglePopover(e, id) {
+  e.stopPropagation(); closeAllPopovers();
+  var badge = document.getElementById('badge-' + id); var pop = document.getElementById('pop-' + id);
+  if (pop && badge) { var rect = badge.getBoundingClientRect(); pop.style.top = (rect.bottom + 6) + 'px'; pop.style.left = rect.left + 'px'; pop.classList.add('open'); _openPopoverId = id;
+    requestAnimationFrame(function() { var popRect = pop.getBoundingClientRect(); if (popRect.right > window.innerWidth - 10) pop.style.left = (window.innerWidth - popRect.width - 10) + 'px'; if (popRect.bottom > window.innerHeight - 10) pop.style.top = (rect.top - popRect.height - 6) + 'px'; });
+  }
+}
+function closeAllPopovers() { document.querySelectorAll('.status-popover.open').forEach(function(p) { p.classList.remove('open'); }); _openPopoverId = null; }
+document.addEventListener('click', function(e) { if (!e.target.closest('.status-cell')) closeAllPopovers(); });
+
+async function cambiarEstado(e, id, nuevoEstado) {
+  e.stopPropagation(); closeAllPopovers();
+  var badgeEl = document.getElementById('badge-' + id);
+  if (badgeEl) { var newInfo = estadoInfo(nuevoEstado); badgeEl.className = 'badge ' + newInfo.cls; badgeEl.textContent = newInfo.label; }
+  try { var res = await fetch(API_URL + '/api/leads/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: nuevoEstado }) }); if (!res.ok) throw new Error('Error'); var updated = await res.json(); for (var i = 0; i < allLeads.length; i++) { if (allLeads[i].id === id) { allLeads[i] = updated; break; } } actualizarMetricas(); renderTabla(); } catch (err) { alert('Error al cambiar estado'); renderTabla(); }
+}
+
+function abrirPanel(lead) {
+  var ei = estadoInfo(lead.estado); var desafioText = DESAFIOS[lead.desafio] || lead.desafio || '—';
+  var html = '<div class="panel-field"><div class="pf-label">Empresa</div><div class="pf-value">' + esc(lead.empresa) + '</div></div><div class="panel-field"><div class="pf-label">Contacto</div><div class="pf-value">' + esc(lead.contacto_nombre) + '</div></div><div class="panel-field"><div class="pf-label">Email</div><div class="pf-value">' + esc(lead.contacto_email) + '</div></div><div class="panel-field"><div class="pf-label">Teléfono</div><div class="pf-value">' + esc(lead.contacto_telefono) + '</div></div>' + (lead.cargo ? '<div class="panel-field"><div class="pf-label">Cargo</div><div class="pf-value">' + esc(lead.cargo) + '</div></div>' : '') + (lead.cantidad_empleados ? '<div class="panel-field"><div class="pf-label">Empleados</div><div class="pf-value">' + esc(lead.cantidad_empleados) + '</div></div>' : '') + '<div class="panel-field"><div class="pf-label">Desafío</div><div class="pf-value">' + esc(desafioText) + '</div></div><div class="panel-field"><div class="pf-label">Estado</div><div class="pf-value"><span class="badge ' + ei.cls + '">' + esc(ei.label) + '</span></div></div><div class="panel-field"><div class="pf-label">Ingreso</div><div class="pf-value">' + (lead.created_at ? new Date(lead.created_at).toLocaleString('es-AR') : '—') + '</div></div><div class="panel-field"><div class="pf-label">Notas</div><textarea id="panel-notas">' + esc(lead.notas || '') + '</textarea></div><button class="btn-save" onclick="guardarNotas(\'' + lead.id + '\')">Guardar notas</button>';
+  document.getElementById('panel-body').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('side-panel').classList.add('open');
+}
+function cerrarPanel() { document.getElementById('overlay').classList.remove('open'); document.getElementById('side-panel').classList.remove('open'); }
+async function guardarNotas(id) {
+  var notas = document.getElementById('panel-notas').value;
+  try { var res = await fetch(API_URL + '/api/leads/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notas: notas }) }); if (!res.ok) throw new Error('Error'); var updated = await res.json(); for (var i = 0; i < allLeads.length; i++) { if (allLeads[i].id === id) { allLeads[i] = updated; break; } } cerrarPanel(); renderTabla(); } catch (err) { alert('Error al guardar notas'); }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// WHATSAPP
+// ════════════════════════════════════════════════════════════════════
+
+async function cargarConversacionesWA() {
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/conversaciones');
+    if (!res.ok) throw new Error('Error ' + res.status);
+    waConversaciones = await res.json();
+    renderConversacionesWA();
+    actualizarBadgeNoLeidos();
+  } catch (err) {
+    document.getElementById('wa-convos').innerHTML = '<div class="empty-state" style="padding:40px 20px;"><p>' + esc(err.message) + '</p></div>';
+  }
+}
+
+function actualizarBadgeNoLeidos() {
+  var total = 0;
+  waConversaciones.forEach(function(c) { total += c.mensajes_no_leidos || 0; });
+  var badge = document.getElementById('wa-unread-badge');
+  badge.textContent = total > 0 ? total : '';
+}
+
+function formatTiempoRelativo(iso) {
+  if (!iso) return '';
+  var now = new Date();
+  var d = new Date(iso);
+  var diff = (now - d) / 1000;
+  if (diff < 60) return 'ahora';
+  if (diff < 3600) return Math.floor(diff / 60) + ' min';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+  var ayer = new Date(now); ayer.setDate(ayer.getDate() - 1);
+  if (d.toDateString() === ayer.toDateString()) return 'ayer';
+  return d.getDate() + ' ' + d.toLocaleDateString('es-AR', { month: 'short' }).replace('.', '');
+}
+
+function getInitials(name) {
+  if (!name) return '?';
+  var parts = name.trim().split(/\s+/);
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+
+function renderConversacionesWA() {
+  var search = (document.getElementById('wa-search').value || '').toLowerCase().trim();
+  var filtered = waConversaciones;
+  if (search) {
+    filtered = waConversaciones.filter(function(c) {
+      return (c.nombre_contacto || '').toLowerCase().indexOf(search) !== -1 ||
+             (c.telefono || '').indexOf(search) !== -1 ||
+             (c.leads_empresas?.empresa || '').toLowerCase().indexOf(search) !== -1;
+    });
+  }
+
+  if (filtered.length === 0) {
+    document.getElementById('wa-convos').innerHTML = '<div class="empty-state" style="padding:50px 20px;"><div class="icon" style="font-size:36px;">&#128172;</div><h3>No hay conversaciones</h3><p>Los mensajes entrantes aparecerán acá.</p></div>';
+    return;
+  }
+
+  var html = '';
+  filtered.forEach(function(c) {
+    var isActive = waConvActual && waConvActual.id === c.id ? ' active' : '';
+    var nombre = c.nombre_contacto || c.telefono;
+    var empresa = c.leads_empresas?.empresa || '';
+    html += '<div class="wa-conv-item' + isActive + '" onclick="seleccionarConversacion(\'' + c.id + '\')">' +
+      '<div class="wa-avatar">' + getInitials(c.nombre_contacto || c.telefono) + '</div>' +
+      '<div class="wa-conv-body">' +
+        '<div class="wa-conv-name"><span>' + esc(nombre) + '</span><span class="time">' + formatTiempoRelativo(c.ultimo_mensaje_at) + '</span></div>' +
+        (empresa ? '<div class="wa-conv-empresa">' + esc(empresa) + '</div>' : '') +
+        '<div class="wa-conv-preview">' + esc(c.ultimo_mensaje || '') + '</div>' +
+      '</div>' +
+      (c.mensajes_no_leidos > 0 ? '<div class="wa-unread">' + c.mensajes_no_leidos + '</div>' : '') +
+    '</div>';
+  });
+
+  document.getElementById('wa-convos').innerHTML = html;
+}
+
+document.getElementById('wa-search').addEventListener('input', function() {
+  clearTimeout(_waSearchTimer);
+  _waSearchTimer = setTimeout(renderConversacionesWA, 200);
+});
+
+async function seleccionarConversacion(id) {
+  var conv = waConversaciones.find(function(c) { return c.id === id; });
+  if (!conv) return;
+  waConvActual = conv;
+
+  // Mobile: show chat
+  document.getElementById('wa-container').classList.add('chat-open');
+
+  // Show chat UI
+  document.getElementById('wa-placeholder').style.display = 'none';
+  document.getElementById('wa-chat-header').style.display = 'flex';
+  document.getElementById('wa-messages').style.display = 'flex';
+  document.getElementById('wa-input-area').style.display = 'flex';
+
+  // Header
+  var nombre = conv.nombre_contacto || conv.telefono;
+  var empresa = conv.leads_empresas?.empresa || '';
+  var headerHtml = '<div><h4>' + esc(nombre) + '</h4><span>' + esc(conv.telefono) + (empresa ? ' · ' + esc(empresa) : '') + '</span></div>';
+  if (conv.lead_id) {
+    headerHtml += '<button class="btn-ver-lead" onclick="verLeadDesdeWA(\'' + conv.lead_id + '\')">Ver lead</button>';
+  }
+  document.getElementById('wa-chat-header-info').innerHTML = headerHtml;
+
+  // Highlight in list
+  renderConversacionesWA();
+
+  // Load messages
+  await cargarMensajesWA(id);
+}
+
+async function cargarMensajesWA(convId) {
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/conversaciones/' + convId + '/mensajes');
+    if (!res.ok) throw new Error('Error');
+    waMensajes = await res.json();
+    renderMensajesWA();
+    // Update unread count locally
+    var conv = waConversaciones.find(function(c) { return c.id === convId; });
+    if (conv) { conv.mensajes_no_leidos = 0; actualizarBadgeNoLeidos(); renderConversacionesWA(); }
+  } catch (err) {
+    document.getElementById('wa-messages').innerHTML = '<div class="empty-state" style="padding:40px;"><p>Error al cargar mensajes</p></div>';
+  }
+}
+
+function renderMensajesWA() {
+  var container = document.getElementById('wa-messages');
+  if (waMensajes.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:#8696a0;padding:40px;font-size:13px;">No hay mensajes en esta conversación</div>';
+    return;
+  }
+  var html = '';
+  waMensajes.forEach(function(m) {
+    var cls = m.direccion === 'saliente' ? 'saliente' : 'entrante';
+    var time = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '';
+    html += '<div class="wa-msg ' + cls + '">' + esc(m.contenido || '') + '<div class="msg-time">' + time + '</div></div>';
+  });
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+
+// ── Send message ──
+async function enviarMensaje() {
+  if (!waConvActual) return;
+  var input = document.getElementById('wa-input');
+  var msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  autoResizeInput(input);
+
+  // Optimistic UI
+  waMensajes.push({ direccion: 'saliente', contenido: msg, created_at: new Date().toISOString() });
+  renderMensajesWA();
+
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/enviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversacion_id: waConvActual.id, mensaje: msg })
+    });
+    if (!res.ok) { var err = await res.json(); throw new Error(err.error || 'Error al enviar'); }
+    // Update conversation preview
+    waConvActual.ultimo_mensaje = msg;
+    waConvActual.ultimo_mensaje_at = new Date().toISOString();
+    renderConversacionesWA();
+  } catch (err) {
+    alert('Error al enviar: ' + err.message);
+  }
+}
+
+// Textarea auto-resize and Enter to send
+var waInput = document.getElementById('wa-input');
+waInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensaje(); }
+});
+waInput.addEventListener('input', function() { autoResizeInput(this); });
+function autoResizeInput(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+
+// ── New chat modal ──
+function abrirNuevoChat() { document.getElementById('modal-new-chat').classList.add('open'); document.getElementById('new-chat-tel').focus(); }
+function cerrarNuevoChat() { document.getElementById('modal-new-chat').classList.remove('open'); document.getElementById('new-chat-tel').value = ''; document.getElementById('new-chat-msg').value = ''; }
+
+async function enviarNuevoChat() {
+  var tel = document.getElementById('new-chat-tel').value.trim();
+  var msg = document.getElementById('new-chat-msg').value.trim();
+  if (!tel || !msg) { alert('Completá teléfono y mensaje'); return; }
+
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/enviar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telefono: tel, mensaje: msg })
+    });
+    if (!res.ok) { var err = await res.json(); throw new Error(err.error || 'Error'); }
+    cerrarNuevoChat();
+    await cargarConversacionesWA();
+    // Select the new/existing conversation
+    if (waConversaciones.length > 0) seleccionarConversacion(waConversaciones[0].id);
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// ── Ver lead from WhatsApp ──
+function verLeadDesdeWA(leadId) {
+  switchView('empresas');
+  var lead = allLeads.find(function(l) { return l.id === leadId; });
+  if (lead) abrirPanel(lead);
+}
+
+// ── Polling ──
+async function pollWhatsApp() {
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/conversaciones');
+    if (!res.ok) return;
+    waConversaciones = await res.json();
+    renderConversacionesWA();
+    actualizarBadgeNoLeidos();
+    // If we have an open conversation, refresh its messages
+    if (waConvActual) {
+      var stillExists = waConversaciones.find(function(c) { return c.id === waConvActual.id; });
+      if (stillExists) {
+        var prevCount = waMensajes.length;
+        var msgRes = await fetch(API_URL + '/api/whatsapp/conversaciones/' + waConvActual.id + '/mensajes');
+        if (msgRes.ok) {
+          waMensajes = await msgRes.json();
+          if (waMensajes.length !== prevCount) renderMensajesWA();
+        }
+      }
+    }
+  } catch (err) { /* silent */ }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CONTACTOS
+// ════════════════════════════════════════════════════════════════════
+
+var allContactos = [];
+var camposCustom = [];
+var _ctSearchTimer = null;
+
+async function cargarCamposCustom() {
+  try {
+    var res = await fetch(API_URL + '/api/contactos/campos/custom');
+    if (!res.ok) throw new Error('Error');
+    camposCustom = await res.json();
+  } catch (err) { camposCustom = []; }
+}
+
+async function cargarContactos() {
+  try {
+    await cargarCamposCustom();
+    var res = await fetch(API_URL + '/api/contactos');
+    if (!res.ok) throw new Error('Error ' + res.status);
+    allContactos = await res.json();
+    renderContactos();
+  } catch (err) {
+    document.getElementById('ct-tabla').innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div><h3>Error</h3><p>' + esc(err.message) + '</p></div>';
+  }
+}
+
+document.getElementById('ct-buscar').addEventListener('input', function() {
+  clearTimeout(_ctSearchTimer);
+  _ctSearchTimer = setTimeout(renderContactos, 250);
+});
+
+function getFilteredContactos() {
+  var q = (document.getElementById('ct-buscar').value || '').toLowerCase().trim();
+  if (!q) return allContactos;
+  return allContactos.filter(function(c) {
+    return (c.nombre||'').toLowerCase().indexOf(q)!==-1 || (c.empresa||'').toLowerCase().indexOf(q)!==-1 || (c.telefono||'').indexOf(q)!==-1 || (c.email||'').toLowerCase().indexOf(q)!==-1;
+  });
+}
+
+function renderContactos() {
+  var list = getFilteredContactos();
+  if (list.length === 0) {
+    document.getElementById('ct-tabla').innerHTML = '<div class="empty-state"><div class="icon">&#128100;</div><h3>No hay contactos</h3><p>Creá tu primer contacto para empezar a enviar mensajes y plantillas.</p></div>';
+    return;
+  }
+  var html = '<table class="ct-table"><thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Empresa</th>';
+  camposCustom.forEach(function(f) { html += '<th>' + esc(f.nombre) + '</th>'; });
+  html += '<th></th></tr></thead><tbody>';
+  list.forEach(function(c) {
+    var custom = c.campos_custom || {};
+    html += '<tr><td class="ct-name">' + esc(c.nombre) + '</td><td class="ct-sub">' + esc(c.telefono||'—') + '</td><td class="ct-sub">' + esc(c.email||'—') + '</td><td class="ct-sub">' + esc(c.empresa||'—') + '</td>';
+    camposCustom.forEach(function(f) { html += '<td class="ct-sub">' + esc(custom[f.slug]||'—') + '</td>'; });
+    html += '<td><div class="ct-actions-cell">' +
+      '<button class="btn-ct btn-ct-wa" onclick="enviarWAContacto(\'' + c.id + '\')">WA</button>' +
+      '<button class="btn-ct" onclick=\'abrirContactoModal(' + JSON.stringify(c).replace(/'/g,"&#39;") + ')\'>Editar</button>' +
+      '<button class="btn-ct btn-ct-del" onclick="eliminarContacto(\'' + c.id + '\')">&#10005;</button>' +
+    '</div></td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('ct-tabla').innerHTML = html;
+}
+
+// ── Contact Modal ──
+function abrirContactoModal(contacto) {
+  document.getElementById('modal-contacto').classList.add('open');
+  document.getElementById('ct-add-field-area').style.display = 'none';
+  var isEdit = contacto && contacto.id;
+  document.getElementById('ct-modal-title').textContent = isEdit ? 'Editar contacto' : 'Nuevo contacto';
+  document.getElementById('ct-edit-id').value = isEdit ? contacto.id : '';
+  document.getElementById('ct-nombre').value = isEdit ? contacto.nombre || '' : '';
+  document.getElementById('ct-telefono').value = isEdit ? contacto.telefono || '' : '';
+  document.getElementById('ct-email').value = isEdit ? contacto.email || '' : '';
+  document.getElementById('ct-empresa').value = isEdit ? contacto.empresa || '' : '';
+  document.getElementById('ct-notas').value = isEdit ? contacto.notas || '' : '';
+  // Custom fields
+  var custom = isEdit ? (contacto.campos_custom || {}) : {};
+  var cfHtml = '';
+  camposCustom.forEach(function(f) {
+    cfHtml += '<label>' + esc(f.nombre) + '</label>';
+    if (f.tipo === 'select' && f.opciones) {
+      var opts = typeof f.opciones === 'string' ? JSON.parse(f.opciones) : f.opciones;
+      cfHtml += '<select id="ct-cf-' + f.slug + '"><option value="">—</option>';
+      (opts||[]).forEach(function(o) { cfHtml += '<option value="' + esc(o) + '"' + (custom[f.slug] === o ? ' selected' : '') + '>' + esc(o) + '</option>'; });
+      cfHtml += '</select>';
+    } else {
+      cfHtml += '<input type="' + (f.tipo || 'text') + '" id="ct-cf-' + f.slug + '" value="' + esc(custom[f.slug] || '') + '">';
+    }
+  });
+  document.getElementById('ct-custom-fields').innerHTML = cfHtml;
+}
+function cerrarContactoModal() { document.getElementById('modal-contacto').classList.remove('open'); }
+
+async function guardarContacto() {
+  var id = document.getElementById('ct-edit-id').value;
+  var nombre = document.getElementById('ct-nombre').value.trim();
+  if (!nombre) { alert('El nombre es obligatorio'); return; }
+  var payload = {
+    nombre: nombre,
+    telefono: document.getElementById('ct-telefono').value.trim() || null,
+    email: document.getElementById('ct-email').value.trim() || null,
+    empresa: document.getElementById('ct-empresa').value.trim() || null,
+    notas: document.getElementById('ct-notas').value.trim() || null,
+    campos_custom: {}
+  };
+  camposCustom.forEach(function(f) {
+    var el = document.getElementById('ct-cf-' + f.slug);
+    if (el && el.value) payload.campos_custom[f.slug] = el.value;
+  });
+  try {
+    var url = API_URL + '/api/contactos' + (id ? '/' + id : '');
+    var res = await fetch(url, {
+      method: id ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) { var e = await res.json(); throw new Error(e.error || 'Error'); }
+    cerrarContactoModal();
+    cargarContactos();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+async function eliminarContacto(id) {
+  if (!confirm('¿Eliminar este contacto?')) return;
+  try {
+    var res = await fetch(API_URL + '/api/contactos/' + id, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Error');
+    cargarContactos();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ── Add custom field inline ──
+function abrirAgregarCampo() {
+  var area = document.getElementById('ct-add-field-area');
+  area.style.display = area.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('ct-new-field-name').value = '';
+}
+
+async function crearCampoCustom() {
+  var nombre = document.getElementById('ct-new-field-name').value.trim();
+  var tipo = document.getElementById('ct-new-field-type').value;
+  if (!nombre) { alert('Ingresá el nombre del campo'); return; }
+  try {
+    var res = await fetch(API_URL + '/api/contactos/campos/custom', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: nombre, tipo: tipo })
+    });
+    if (!res.ok) { var e = await res.json(); throw new Error(e.error || 'Error'); }
+    document.getElementById('ct-add-field-area').style.display = 'none';
+    await cargarCamposCustom();
+    // Re-render custom fields in the modal
+    var currentId = document.getElementById('ct-edit-id').value;
+    var current = currentId ? allContactos.find(function(c){return c.id===currentId;}) : null;
+    abrirContactoModal(current);
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ── Manage fields modal ──
+function abrirGestionCampos() {
+  document.getElementById('modal-campos').classList.add('open');
+  renderCamposList();
+}
+function cerrarGestionCampos() { document.getElementById('modal-campos').classList.remove('open'); }
+
+function renderCamposList() {
+  if (camposCustom.length === 0) {
+    document.getElementById('campos-list').innerHTML = '<p style="color:#9ca3af;font-size:13px;">No hay campos personalizados. Podés crearlos desde el formulario de contacto.</p>';
+    return;
+  }
+  var html = '';
+  camposCustom.forEach(function(f) {
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;">' +
+      '<div><span style="font-weight:600;font-size:13px;color:#1a1a2e;">' + esc(f.nombre) + '</span><span style="font-size:11px;color:#9ca3af;margin-left:8px;">{{' + esc(f.slug) + '}}</span><span style="font-size:10px;color:#6b7280;margin-left:8px;background:#f1f5f9;padding:2px 6px;border-radius:3px;">' + esc(f.tipo) + '</span></div>' +
+      '<button class="btn-ct btn-ct-del" onclick="eliminarCampoCustom(\'' + f.id + '\')">&#10005;</button>' +
+    '</div>';
+  });
+  document.getElementById('campos-list').innerHTML = html;
+}
+
+async function eliminarCampoCustom(id) {
+  if (!confirm('¿Eliminar este campo? Los datos existentes en contactos no se borran.')) return;
+  try {
+    var res = await fetch(API_URL + '/api/contactos/campos/custom/' + id, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Error');
+    await cargarCamposCustom();
+    renderCamposList();
+    renderContactos();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+// ── Send WA to contact ──
+function enviarWAContacto(contactoId) {
+  var c = allContactos.find(function(x) { return x.id === contactoId; });
+  if (!c || !c.telefono) { alert('Este contacto no tiene teléfono'); return; }
+  // Switch to WhatsApp view and open new chat with pre-filled phone
+  switchView('whatsapp');
+  setTimeout(function() {
+    abrirNuevoChat();
+    document.getElementById('new-chat-tel').value = c.telefono;
+  }, 100);
+}
+
+// ── Select contact for template sending ──
+function abrirSelectContacto(callback) {
+  document.getElementById('modal-select-contacto').classList.add('open');
+  document.getElementById('select-ct-buscar').value = '';
+  window._selectContactoCallback = callback;
+  renderSelectContacto();
+}
+
+function renderSelectContacto() {
+  var q = (document.getElementById('select-ct-buscar').value || '').toLowerCase().trim();
+  var list = allContactos.filter(function(c) {
+    if (!c.telefono) return false;
+    if (!q) return true;
+    return (c.nombre||'').toLowerCase().indexOf(q)!==-1 || (c.empresa||'').toLowerCase().indexOf(q)!==-1 || (c.telefono||'').indexOf(q)!==-1;
+  });
+  if (list.length === 0) {
+    document.getElementById('select-ct-list').innerHTML = '<p style="color:#9ca3af;font-size:13px;text-align:center;padding:20px;">No hay contactos con teléfono</p>';
+    return;
+  }
+  var html = '';
+  list.forEach(function(c) {
+    html += '<div style="padding:10px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background .1s;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'\'" onclick="seleccionarContactoParaEnvio(\'' + c.id + '\')">' +
+      '<div><div style="font-weight:600;font-size:13px;color:#1a1a2e;">' + esc(c.nombre) + '</div><div style="font-size:11px;color:#9ca3af;">' + esc(c.telefono) + (c.empresa ? ' · ' + esc(c.empresa) : '') + '</div></div>' +
+      '<span style="color:#25d366;font-size:12px;">Seleccionar</span>' +
+    '</div>';
+  });
+  document.getElementById('select-ct-list').innerHTML = html;
+}
+
+function seleccionarContactoParaEnvio(id) {
+  document.getElementById('modal-select-contacto').classList.remove('open');
+  var c = allContactos.find(function(x) { return x.id === id; });
+  if (c && window._selectContactoCallback) window._selectContactoCallback(c);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TEMPLATES
+// ════════════════════════════════════════════════════════════════════
+
+var allTemplates = [];
+var _sendTemplateData = null;
+var _tplButtonCount = 0;
+
+async function cargarTemplates(force) {
+  var url = API_URL + '/api/whatsapp/templates' + (force ? '?refresh=true' : '');
+  try {
+    document.getElementById('tpl-grid-contenido').innerHTML = '<div class="empty-state" style="padding:40px;"><p>Cargando plantillas...</p></div>';
+    var res = await fetch(url);
+    if (!res.ok) throw new Error('Error ' + res.status);
+    allTemplates = await res.json();
+    renderTemplates();
+  } catch (err) {
+    document.getElementById('tpl-grid-contenido').innerHTML = '<div class="empty-state"><div class="icon">&#9888;</div><h3>Error al cargar plantillas</h3><p>' + esc(err.message) + '</p></div>';
+  }
+}
+
+function renderTemplates() {
+  if (allTemplates.length === 0) {
+    document.getElementById('tpl-grid-contenido').innerHTML = '<div class="empty-state"><div class="icon">&#128196;</div><h3>No hay plantillas</h3><p>Creá tu primera plantilla para enviar mensajes a tus contactos.</p></div>';
+    return;
+  }
+  var html = '<div class="tpl-grid">';
+  allTemplates.forEach(function(t) {
+    var catCls = 'tpl-badge-utility';
+    if (t.category === 'MARKETING') catCls = 'tpl-badge-marketing';
+    if (t.category === 'AUTHENTICATION') catCls = 'tpl-badge-authentication';
+    var statusCls = 'tpl-status-pending';
+    var statusLabel = t.status;
+    if (t.status === 'APPROVED') { statusCls = 'tpl-status-approved'; statusLabel = 'Aprobada'; }
+    if (t.status === 'PENDING') { statusLabel = 'Pendiente'; }
+    if (t.status === 'REJECTED') { statusCls = 'tpl-status-rejected'; statusLabel = 'Rechazada'; }
+
+    var bodyText = '';
+    if (t.components) {
+      var bodyComp = t.components.find(function(c) { return c.type === 'BODY'; });
+      if (bodyComp) bodyText = bodyComp.text || '';
+    }
+
+    html += '<div class="tpl-card">' +
+      '<div class="tpl-card-header"><span class="tpl-card-name">' + esc(t.name) + '</span></div>' +
+      '<div class="tpl-card-badges">' +
+        '<span class="tpl-badge-cat ' + catCls + '">' + esc(t.category) + '</span>' +
+        '<span class="tpl-badge-status ' + statusCls + '">' + statusLabel + '</span>' +
+      '</div>' +
+      '<div class="tpl-card-lang">' + esc(t.language || '—') + '</div>' +
+      '<div class="tpl-card-body">' + esc(bodyText) + '</div>' +
+      '<div class="tpl-card-actions">' +
+        (t.status === 'APPROVED' ? '<button class="btn-tpl btn-tpl-send" onclick=\'abrirEnviarTemplate(' + JSON.stringify({name:t.name,language:t.language,components:t.components}).replace(/'/g,"&#39;") + ')\'>Enviar</button>' : '') +
+        '<button class="btn-tpl btn-tpl-danger" onclick="eliminarTemplate(\'' + esc(t.name) + '\')">Eliminar</button>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  document.getElementById('tpl-grid-contenido').innerHTML = html;
+}
+
+// ── Create Template ──
+function abrirCrearTemplate() {
+  document.getElementById('modal-create-tpl').classList.add('open');
+  _tplButtonCount = 0;
+  document.getElementById('tpl-buttons-container').innerHTML = '';
+  document.getElementById('tpl-name').value = '';
+  document.getElementById('tpl-header').value = '';
+  document.getElementById('tpl-body').value = '';
+  document.getElementById('tpl-footer').value = '';
+  actualizarPreviewTemplate();
+  renderVarsPalette();
+}
+function cerrarCrearTemplate() { document.getElementById('modal-create-tpl').classList.remove('open'); }
+
+function renderVarsPalette() {
+  // Load custom fields if not loaded
+  var buildPalette = function() {
+    var fields = [
+      { num: 1, label: 'Nombre' },
+      { num: 2, label: 'Empresa' },
+      { num: 3, label: 'Teléfono' },
+      { num: 4, label: 'Email' }
+    ];
+    var nextNum = 5;
+    camposCustom.forEach(function(f) {
+      fields.push({ num: nextNum, label: f.nombre });
+      nextNum++;
+    });
+    var html = '';
+    fields.forEach(function(f) {
+      html += '<button type="button" class="var-chip" onclick="insertarVariable(' + f.num + ')" title="Insertar {{' + f.num + '}} = ' + esc(f.label) + '"><span class="var-num">{{' + f.num + '}}</span> ' + esc(f.label) + '</button>';
+    });
+    document.getElementById('tpl-vars-palette').innerHTML = html;
+  };
+  if (camposCustom.length === 0) {
+    fetch(API_URL + '/api/contactos/campos/custom').then(function(r){return r.json();}).then(function(d){ camposCustom = d; buildPalette(); }).catch(function(){ buildPalette(); });
+  } else {
+    buildPalette();
+  }
+}
+
+function insertarVariable(num) {
+  var ta = document.getElementById('tpl-body');
+  var varText = '{{' + num + '}}';
+  var start = ta.selectionStart;
+  var end = ta.selectionEnd;
+  var val = ta.value;
+  ta.value = val.substring(0, start) + varText + val.substring(end);
+  ta.selectionStart = ta.selectionEnd = start + varText.length;
+  ta.focus();
+  actualizarPreviewTemplate();
+}
+
+function agregarBotonTemplate() {
+  if (_tplButtonCount >= 2) { alert('Máximo 2 botones'); return; }
+  _tplButtonCount++;
+  var container = document.getElementById('tpl-buttons-container');
+  var div = document.createElement('div');
+  div.className = 'tpl-buttons-row';
+  div.innerHTML = '<input type="text" class="tpl-btn-text" placeholder="Texto del botón ' + _tplButtonCount + '" oninput="actualizarPreviewTemplate()"><button class="btn-remove-btn" onclick="this.parentElement.remove();_tplButtonCount--;actualizarPreviewTemplate();">&times;</button>';
+  container.appendChild(div);
+  actualizarPreviewTemplate();
+}
+
+// Live preview
+document.getElementById('tpl-header').addEventListener('input', actualizarPreviewTemplate);
+document.getElementById('tpl-body').addEventListener('input', actualizarPreviewTemplate);
+document.getElementById('tpl-footer').addEventListener('input', actualizarPreviewTemplate);
+
+function actualizarPreviewTemplate() {
+  var header = document.getElementById('tpl-header').value;
+  var body = document.getElementById('tpl-body').value;
+  var footer = document.getElementById('tpl-footer').value;
+
+  var hEl = document.getElementById('tpl-prev-header');
+  var bEl = document.getElementById('tpl-prev-body');
+  var fEl = document.getElementById('tpl-prev-footer');
+  var btnsEl = document.getElementById('tpl-prev-buttons');
+
+  hEl.style.display = header ? 'block' : 'none';
+  hEl.textContent = header;
+  bEl.textContent = body || 'Escribí el body para ver la vista previa...';
+  bEl.style.color = body ? '#111827' : '#6b7280';
+  fEl.style.display = footer ? 'block' : 'none';
+  fEl.textContent = footer;
+
+  var btns = document.querySelectorAll('.tpl-btn-text');
+  var btnsHtml = '';
+  btns.forEach(function(b) { if (b.value.trim()) btnsHtml += '<div class="prev-btn">' + esc(b.value.trim()) + '</div>'; });
+  btnsEl.innerHTML = btnsHtml;
+}
+
+// Validar nombre al tipear
+document.getElementById('tpl-name').addEventListener('input', function() {
+  this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+});
+
+async function crearTemplate() {
+  var name = document.getElementById('tpl-name').value.trim();
+  var category = document.getElementById('tpl-category').value;
+  var language = document.getElementById('tpl-language').value;
+  var header = document.getElementById('tpl-header').value.trim();
+  var body = document.getElementById('tpl-body').value.trim();
+  var footer = document.getElementById('tpl-footer').value.trim();
+
+  if (!name) { alert('El nombre es obligatorio'); return; }
+  if (!body) { alert('El body es obligatorio'); return; }
+  if (!/^[a-z0-9_]+$/.test(name)) { alert('El nombre solo puede contener minúsculas, números y _'); return; }
+
+  var components = [];
+  if (header) components.push({ type: 'HEADER', format: 'TEXT', text: header });
+  components.push({ type: 'BODY', text: body });
+  if (footer) components.push({ type: 'FOOTER', text: footer });
+
+  var btns = document.querySelectorAll('.tpl-btn-text');
+  var buttons = [];
+  btns.forEach(function(b) { if (b.value.trim()) buttons.push({ type: 'QUICK_REPLY', text: b.value.trim() }); });
+  if (buttons.length > 0) components.push({ type: 'BUTTONS', buttons: buttons });
+
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/templates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, category: category, language: language, components: components })
+    });
+    var data = await res.json();
+    if (!res.ok) {
+      var msg = data.detalle?.message || data.error || 'Error al crear';
+      alert('Error: ' + msg);
+      return;
+    }
+    cerrarCrearTemplate();
+    alert('Plantilla enviada a Meta para aprobación. El proceso puede tardar hasta 24 horas.');
+    cargarTemplates(true);
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function eliminarTemplate(name) {
+  if (!confirm('¿Eliminar la plantilla "' + name + '"? Esta acción no se puede deshacer.')) return;
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/templates/' + encodeURIComponent(name), { method: 'DELETE' });
+    if (!res.ok) { var data = await res.json(); throw new Error(data.detalle?.message || data.error || 'Error'); }
+    cargarTemplates(true);
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// ── Send Template ──
+function abrirEnviarTemplate(tplData) {
+  _sendTemplateData = tplData;
+  document.getElementById('modal-send-tpl').classList.add('open');
+  document.getElementById('tpl-send-tel').value = '';
+
+  // Find variables in body
+  var bodyComp = (tplData.components || []).find(function(c) { return c.type === 'BODY'; });
+  var bodyText = bodyComp ? bodyComp.text || '' : '';
+  var vars = bodyText.match(/\{\{\d+\}\}/g) || [];
+  var uniqueVars = [];
+  vars.forEach(function(v) { if (uniqueVars.indexOf(v) === -1) uniqueVars.push(v); });
+
+  var varsHtml = '';
+  uniqueVars.forEach(function(v, i) {
+    varsHtml += '<label>Variable ' + v + '</label><input type="text" class="tpl-send-var" data-var="' + v + '" placeholder="Valor para ' + v + '" oninput="actualizarSendPreview()">';
+  });
+  document.getElementById('tpl-send-vars').innerHTML = varsHtml;
+  _sendTemplateBodyText = bodyText;
+  actualizarSendPreview();
+}
+var _sendTemplateBodyText = '';
+
+function actualizarSendPreview() {
+  var text = _sendTemplateBodyText;
+  document.querySelectorAll('.tpl-send-var').forEach(function(input) {
+    var v = input.dataset.var;
+    var val = input.value || v;
+    text = text.split(v).join(val);
+  });
+  document.getElementById('tpl-send-preview-text').textContent = text;
+}
+
+function cerrarEnviarTemplate() { document.getElementById('modal-send-tpl').classList.remove('open'); _sendTemplateData = null; }
+
+async function enviarTemplate() {
+  if (!_sendTemplateData) return;
+  var tel = document.getElementById('tpl-send-tel').value.trim();
+  if (!tel) { alert('Ingresá el teléfono'); return; }
+
+  // Build components with variable values
+  var bodyVars = [];
+  document.querySelectorAll('.tpl-send-var').forEach(function(input) {
+    bodyVars.push({ type: 'text', text: input.value || input.dataset.var });
+  });
+
+  var components = [];
+  if (bodyVars.length > 0) {
+    components.push({ type: 'body', parameters: bodyVars });
+  }
+
+  try {
+    var res = await fetch(API_URL + '/api/whatsapp/templates/enviar-template', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        telefono: tel,
+        template_name: _sendTemplateData.name,
+        template_language: _sendTemplateData.language,
+        components: components.length > 0 ? components : undefined
+      })
+    });
+    var data = await res.json();
+    if (!res.ok) {
+      var msg = data.detalle?.error?.message || data.error || 'Error al enviar';
+      alert('Error: ' + msg);
+      return;
+    }
+    cerrarEnviarTemplate();
+    alert('Template enviado exitosamente');
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// Load templates when switching to view
+var _origSwitchView = switchView;
+switchView = function(view) {
+  _origSwitchView(view);
+  if (view === 'plantillas' && allTemplates.length === 0) cargarTemplates(false);
+  if (view === 'contactos' && allContactos.length === 0) cargarContactos();
+};
+
+// ── Select contact to auto-fill template send ──
+function seleccionarContactoParaTpl() {
+  // Load contacts if not loaded yet
+  if (allContactos.length === 0) {
+    fetch(API_URL + '/api/contactos').then(function(r){return r.json();}).then(function(d){ allContactos = d; _showContactPicker(); });
+    fetch(API_URL + '/api/contactos/campos/custom').then(function(r){return r.json();}).then(function(d){ camposCustom = d; });
+  } else {
+    _showContactPicker();
+  }
+}
+
+function _showContactPicker() {
+  abrirSelectContacto(function(contacto) {
+    // Fill phone
+    document.getElementById('tpl-send-tel').value = contacto.telefono || '';
+    // Build field values array from contact for auto-filling variables
+    var fieldValues = [contacto.nombre, contacto.empresa, contacto.telefono, contacto.email];
+    var custom = contacto.campos_custom || {};
+    camposCustom.forEach(function(f) { if (custom[f.slug]) fieldValues.push(custom[f.slug]); });
+    // Auto-fill variable inputs in order
+    var varInputs = document.querySelectorAll('.tpl-send-var');
+    varInputs.forEach(function(input, i) {
+      if (i < fieldValues.length && fieldValues[i]) {
+        input.value = fieldValues[i];
+      }
+    });
+    actualizarSendPreview();
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// BOT KNOWLEDGE
+// ════════════════════════════════════════════════════════════════════
+
+var BOT_SECCIONES = [
+  { id: 'productos', icon: '\u{1F4A7}', nombre: 'Productos & Modelos', desc: 'Características de cada equipo, diferencias, para quién es cada uno' },
+  { id: 'segmentos', icon: '\u{1F465}', nombre: 'Segmentos de Clientes', desc: 'Consumidor final, empresas, organismos públicos, perfiles típicos' },
+  { id: 'venta', icon: '\u{1F91D}', nombre: 'Proceso de Venta', desc: 'Cómo se cierra una venta, pasos, documentación, tiempos' },
+  { id: 'objeciones', icon: '\u{1F6E1}', nombre: 'Objeciones & Respuestas', desc: 'Objeciones típicas y cómo las manejan' },
+  { id: 'diagnostico', icon: '\u{1F50D}', nombre: 'Diagnóstico de Necesidades', desc: 'Cómo determinan qué necesita el cliente, criterios de recomendación' },
+  { id: 'diferencial', icon: '\u{2B50}', nombre: 'Diferencial Yakú', desc: 'Qué hace distinto a Yakú, propuesta de valor, competencia' },
+];
+
+var botEntrevistas = {};   // { seccion: { mensajes, estado, resumen } }
+var botConocimiento = {};  // { seccion: { contenido, version, integrado_por } }
+var botSeccionActual = null;
+var _botSendingMessage = false;
+
+var BOT_BASE_INFO = `INFORMACIÓN BASE QUE YA TENÉS (NO preguntar esto):
+- Los equipos se conectan a la red de agua, NO usan bidones
+- Servicio de alquiler mensual, permanencia mínima 6 meses
+- Incluye instalación bonificada, mantenimiento, cambio de filtros cada 18 meses, sanitización cada 180 días
+- Certificados ANMAT
+- Solo agua de red clorada (excepto ósmosis inversa para arsénico)
+- Filtros: tripack (sedimento + carbón activado en bloque + carbón granular)
+- Agua fría: 5-10°C, caliente: 80-87°C
+- El equipo se enchufa, consumo bajo
+- Instalación simple, no rompe, se conecta con flexible y llave de paso
+- No tienen showroom, web: yakuagua.com.ar
+- Aumentos cada 90 días por IPC
+- Formas de pago: transferencia, débito en cuenta, cheque electrónico
+- NO venden equipos, solo alquiler
+- NO alquilan por día
+- Cable de 1.50m, distancia máxima 15m del punto de agua
+- MODELOS Y PRECIOS: Los tenés disponibles en el sistema de stock de Fukari. No preguntes precios.`;
+
+function buildBotSystemPrompt(seccion) {
+  var seccionInfo = BOT_SECCIONES.find(function(s) { return s.id === seccion; });
+  var seccionDesc = seccionInfo ? seccionInfo.nombre + ': ' + seccionInfo.desc : seccion;
+
+  // Conocimiento ya extraído de otras secciones
+  var prevKnowledge = '';
+  Object.keys(botEntrevistas).forEach(function(k) {
+    if (k !== seccion && botEntrevistas[k] && botEntrevistas[k].resumen) {
+      var info = BOT_SECCIONES.find(function(s) { return s.id === k; });
+      prevKnowledge += '\n## ' + (info ? info.nombre : k) + '\n' + botEntrevistas[k].resumen + '\n';
+    }
+  });
+  if (!prevKnowledge) prevKnowledge = '(Todavía no hay otras secciones completas)';
+
+  return `Sos un entrevistador experto en procesos comerciales. Estás entrevistando a René, socio comercial de Yakú Agua, una empresa de Santa Fe que alquila purificadores de agua conectados a red.
+Tu objetivo es extraer TODO el conocimiento necesario para que un bot de ventas pueda operar de forma autónoma por WhatsApp, vendiendo el servicio de alquiler de equipos.
+
+${BOT_BASE_INFO}
+
+SECCIÓN ACTUAL: ${seccionDesc}
+
+REGLAS:
+- Hacé UNA pregunta a la vez, clara y directa
+- Dirigite siempre a René por su nombre
+- Si la respuesta es vaga, repreguntá con ejemplos concretos
+- Buscá datos específicos: números, criterios exactos, casos reales
+- Sé profesional pero cercano, tuteá
+- No repitas lo que ya sabés (ver información base arriba)
+- Respondé SOLO con tu pregunta o breve comentario + pregunta
+- Cuando cubriste un aspecto, avisá qué vas a preguntar a continuación
+
+CONOCIMIENTO YA OBTENIDO DE OTRAS SECCIONES:
+${prevKnowledge}`;
+}
+
+function buildResumenSystemPrompt(seccion) {
+  var seccionInfo = BOT_SECCIONES.find(function(s) { return s.id === seccion; });
+  var seccionNombre = seccionInfo ? seccionInfo.nombre : seccion;
+  return `Extractá los datos clave de esta entrevista comercial con René de Yakú Agua sobre "${seccionNombre}".
+Devolvé SOLO un resumen estructurado con los datos concretos obtenidos.
+Formato: bullets organizados por subtema.
+Sin introducción ni cierre. Solo datos útiles para programar un bot de ventas autónomo.
+Incluí: reglas de negocio, criterios de decisión, excepciones, ejemplos mencionados.`;
+}
+
+async function cargarBotEntrevistas() {
+  try {
+    var res = await fetch(API_URL + '/api/bot/entrevistas');
+    if (!res.ok) throw new Error('Error');
+    var data = await res.json();
+    botEntrevistas = {};
+    (data || []).forEach(function(row) {
+      botEntrevistas[row.seccion] = row;
+    });
+    renderBotSecciones();
+    renderBotProgress();
+  } catch (err) {
+    console.error('Error cargando entrevistas:', err.message);
+  }
+}
+
+async function cargarBotConocimiento() {
+  try {
+    var res = await fetch(API_URL + '/api/bot/conocimiento');
+    if (!res.ok) return;
+    var data = await res.json();
+    botConocimiento = {};
+    (data || []).forEach(function(row) { botConocimiento[row.seccion] = row; });
+  } catch (err) { /* silent */ }
+}
+
+function renderBotSecciones() {
+  var html = '';
+  BOT_SECCIONES.forEach(function(s) {
+    var ent = botEntrevistas[s.id];
+    var estado = ent ? ent.estado : 'pendiente';
+    var estadoLabel = 'Sin iniciar';
+    if (estado === 'en_progreso') estadoLabel = 'En progreso';
+    if (estado === 'completa') estadoLabel = '\u2705 Completa';
+    var activeCls = botSeccionActual === s.id ? ' active' : '';
+    html += '<div class="bot-section-item' + activeCls + '" onclick="seleccionarSeccionBot(\'' + s.id + '\')">' +
+      '<span class="bot-section-icon">' + s.icon + '</span>' +
+      '<div class="bot-section-info">' +
+        '<div class="bot-section-name">' + esc(s.nombre) + '</div>' +
+        '<div class="bot-section-status ' + estado + '">' + estadoLabel + '</div>' +
+      '</div>' +
+    '</div>';
+  });
+  document.getElementById('bot-section-list').innerHTML = html;
+}
+
+function renderBotProgress() {
+  var completas = 0;
+  BOT_SECCIONES.forEach(function(s) {
+    if (botEntrevistas[s.id] && botEntrevistas[s.id].estado === 'completa') completas++;
+  });
+  var pct = Math.round((completas / BOT_SECCIONES.length) * 100);
+  document.getElementById('bot-progress-fill').style.width = pct + '%';
+  document.getElementById('bot-progress-text').textContent = completas + '/' + BOT_SECCIONES.length + ' secciones completas';
+}
+
+async function seleccionarSeccionBot(seccionId) {
+  botSeccionActual = seccionId;
+  var seccionInfo = BOT_SECCIONES.find(function(s) { return s.id === seccionId; });
+  document.getElementById('bot-chat-title').innerHTML = seccionInfo.icon + ' ' + esc(seccionInfo.nombre);
+  document.getElementById('bot-chat-subtitle').textContent = seccionInfo.desc;
+  document.getElementById('bot-input-area').style.display = 'flex';
+  renderBotSecciones();
+
+  var ent = botEntrevistas[seccionId];
+  if (ent && ent.mensajes && ent.mensajes.length > 0) {
+    renderMensajesBot(ent.mensajes);
+  } else {
+    // Iniciar entrevista con pregunta inicial de la IA
+    document.getElementById('bot-chat-msgs').innerHTML = '<div class="bot-empty">Iniciando entrevista...</div>';
+    await iniciarEntrevista(seccionId);
+  }
+  actualizarBotonCompletar();
+}
+
+async function iniciarEntrevista(seccionId) {
+  var systemPrompt = buildBotSystemPrompt(seccionId);
+  var initialMsg = { role: 'user', content: 'Hola, soy René. Empezá la entrevista con la primera pregunta sobre esta sección.' };
+  try {
+    var res = await fetch(API_URL + '/api/bot/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [initialMsg]
+      })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error');
+    var respuesta = data.content?.[0]?.text || '';
+    var mensajes = [
+      { role: 'assistant', content: respuesta, timestamp: new Date().toISOString() }
+    ];
+    botEntrevistas[seccionId] = { seccion: seccionId, mensajes: mensajes, estado: 'en_progreso' };
+    await guardarEntrevista(seccionId);
+    renderMensajesBot(mensajes);
+    renderBotSecciones();
+    renderBotProgress();
+    actualizarBotonCompletar();
+  } catch (err) {
+    document.getElementById('bot-chat-msgs').innerHTML = '<div class="bot-empty">Error al iniciar: ' + esc(err.message) + '</div>';
+  }
+}
+
+function renderMensajesBot(mensajes) {
+  var container = document.getElementById('bot-chat-msgs');
+  if (!mensajes || mensajes.length === 0) {
+    container.innerHTML = '<div class="bot-empty">Sin mensajes</div>';
+    return;
+  }
+  var html = '';
+  mensajes.forEach(function(m) {
+    var cls = m.role === 'user' ? 'user' : 'bot';
+    var who = m.role === 'user' ? 'René' : 'Entrevistador';
+    html += '<div class="bot-msg ' + cls + '"><div class="who">' + who + '</div>' + esc(m.content).replace(/\n/g, '<br>') + '</div>';
+  });
+  // Si hay resumen, mostrarlo
+  var ent = botEntrevistas[botSeccionActual];
+  if (ent && ent.resumen && ent.estado === 'completa') {
+    html += '<div class="bot-resumen"><strong>\u{1F4DD} Resumen extraído:</strong>\n\n' + esc(ent.resumen) + '</div>';
+  }
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+
+async function enviarMensajeBot() {
+  if (_botSendingMessage || !botSeccionActual) return;
+  var input = document.getElementById('bot-input');
+  var texto = input.value.trim();
+  if (!texto) return;
+
+  _botSendingMessage = true;
+  document.getElementById('btn-bot-send').disabled = true;
+
+  var ent = botEntrevistas[botSeccionActual] || { seccion: botSeccionActual, mensajes: [], estado: 'en_progreso' };
+  ent.mensajes = ent.mensajes || [];
+  ent.mensajes.push({ role: 'user', content: texto, timestamp: new Date().toISOString() });
+  ent.estado = 'en_progreso';
+  botEntrevistas[botSeccionActual] = ent;
+
+  input.value = '';
+  autoResizeBotInput(input);
+  renderMensajesBot(ent.mensajes);
+
+  try {
+    // Llamar a Anthropic con el historial completo
+    var systemPrompt = buildBotSystemPrompt(botSeccionActual);
+    var apiMessages = ent.mensajes.map(function(m) { return { role: m.role, content: m.content }; });
+    var res = await fetch(API_URL + '/api/bot/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: apiMessages
+      })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error');
+    var respuesta = data.content?.[0]?.text || '';
+    ent.mensajes.push({ role: 'assistant', content: respuesta, timestamp: new Date().toISOString() });
+    botEntrevistas[botSeccionActual] = ent;
+    renderMensajesBot(ent.mensajes);
+    await guardarEntrevista(botSeccionActual);
+    renderBotSecciones();
+    actualizarBotonCompletar();
+  } catch (err) {
+    alert('Error al enviar: ' + err.message);
+  } finally {
+    _botSendingMessage = false;
+    document.getElementById('btn-bot-send').disabled = false;
+  }
+}
+
+async function guardarEntrevista(seccionId) {
+  var ent = botEntrevistas[seccionId];
+  if (!ent) return;
+  try {
+    await fetch(API_URL + '/api/bot/entrevistas/' + seccionId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mensajes: ent.mensajes, estado: ent.estado, resumen: ent.resumen })
+    });
+  } catch (err) { console.error('Error guardando entrevista:', err.message); }
+}
+
+function actualizarBotonCompletar() {
+  var btn = document.getElementById('btn-bot-completar');
+  var ent = botEntrevistas[botSeccionActual];
+  if (ent && ent.mensajes && ent.mensajes.length >= 3 && ent.estado !== 'completa') {
+    btn.style.display = '';
+    btn.textContent = 'Marcar completa';
+  } else if (ent && ent.estado === 'completa') {
+    btn.style.display = '';
+    btn.textContent = 'Re-extraer resumen';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+async function marcarCompleta() {
+  if (!botSeccionActual) return;
+  var ent = botEntrevistas[botSeccionActual];
+  if (!ent || !ent.mensajes || ent.mensajes.length < 3) return;
+
+  var btn = document.getElementById('btn-bot-completar');
+  var prevText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Extrayendo...';
+
+  try {
+    var systemPrompt = buildResumenSystemPrompt(botSeccionActual);
+    var historial = ent.mensajes.map(function(m) {
+      return (m.role === 'user' ? 'René: ' : 'Entrevistador: ') + m.content;
+    }).join('\n\n');
+
+    var res = await fetch(API_URL + '/api/bot/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: 'Esta es la entrevista completa:\n\n' + historial }]
+      })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error');
+    var resumen = data.content?.[0]?.text || '';
+
+    ent.resumen = resumen;
+    ent.estado = 'completa';
+    botEntrevistas[botSeccionActual] = ent;
+    await guardarEntrevista(botSeccionActual);
+    renderBotSecciones();
+    renderBotProgress();
+    renderMensajesBot(ent.mensajes);
+    actualizarBotonCompletar();
+  } catch (err) {
+    alert('Error al extraer resumen: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prevText;
+  }
+}
+
+// ── Botones admin (solo bautx23) ──
+async function exportarConocimiento() {
+  try {
+    var res = await fetch(API_URL + '/api/bot/conocimiento/exportar');
+    if (!res.ok) throw new Error('Error');
+    var blob = await res.blob();
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'bot-conocimiento-' + Date.now() + '.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) { alert('Error al exportar: ' + err.message); }
+}
+
+async function integrarConocimiento() {
+  // Tomar todas las secciones completas y subirlas a bot_conocimiento
+  var completas = BOT_SECCIONES.filter(function(s) {
+    var ent = botEntrevistas[s.id];
+    return ent && ent.estado === 'completa' && ent.resumen;
+  });
+  if (completas.length === 0) {
+    alert('No hay secciones completas para integrar. Marcá al menos una como completa.');
+    return;
+  }
+  if (!confirm('Integrar ' + completas.length + ' sección(es) al sistema? Esto pone el conocimiento disponible para los agentes.')) return;
+
+  var ok = 0, errors = 0;
+  for (var i = 0; i < completas.length; i++) {
+    var s = completas[i];
+    var ent = botEntrevistas[s.id];
+    try {
+      var res = await fetch(API_URL + '/api/bot/conocimiento/integrar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': _currentUserEmail
+        },
+        body: JSON.stringify({ seccion: s.nombre, contenido: ent.resumen })
+      });
+      if (res.ok) ok++;
+      else errors++;
+    } catch (err) { errors++; }
+  }
+  await cargarBotConocimiento();
+  alert('Integración completada: ' + ok + ' exitosas, ' + errors + ' con error');
+}
+
+// Textarea auto-resize and Enter to send
+document.getElementById('bot-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensajeBot(); }
+});
+document.getElementById('bot-input').addEventListener('input', function() { autoResizeBotInput(this); });
+function autoResizeBotInput(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+
+// Hook switchView para cargar al entrar a "bot"
+var _origSwitchViewBot = switchView;
+switchView = function(view) {
+  _origSwitchViewBot(view);
+  if (view === 'bot' && Object.keys(botEntrevistas).length === 0) {
+    cargarBotEntrevistas();
+    cargarBotConocimiento();
+  }
+};
+</script>
+</body>
+</html>
