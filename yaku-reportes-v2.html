@@ -223,17 +223,18 @@ function cargarDatos() {
     fetch(API_URL + '/api/reportes/bajas' + qs).then(function(r){ if(!r.ok) throw new Error('bajas '+r.status); return r.json(); }),
     fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); }),
     fetch(API_URL + '/api/rechazos-crediticios' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
-    fetch(API_URL + '/api/ordenes/no-factibles').then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; })
+    fetch(API_URL + '/api/ordenes/no-factibles').then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
+    fetch(API_URL + '/api/ordenes/fuentes-resumen').then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; })
   ]).then(function(results) {
     destroyCharts();
-    renderAll(results[0], results[1], results[2], results[3], results[4], results[5]);
+    renderAll(results[0], results[1], results[2], results[3], results[4], results[5], results[6]);
   }).catch(function(err) {
     contenido.innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
   });
 }
 
 /* ── RENDER ALL ── */
-function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactibles) {
+function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactibles, fuentesResumen) {
   var contenido = document.getElementById('contenido');
   var html = '';
   html += renderResumen(resumen, instalaciones);
@@ -241,6 +242,7 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
   html += renderBajas(bajas, resumen);
   html += renderRechazos(rechazos || []);
   html += renderNoFactibles(noFactibles || []);
+  html += renderFuentes(fuentesResumen || {});
   html += renderClientes(clientes);
   contenido.innerHTML = html;
 
@@ -250,6 +252,7 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
     renderChartOrdenesMes2026(instalaciones.por_mes);
     renderChartBajasMes2026(bajas.por_mes);
     renderChartMotivos(bajas.por_motivo);
+    renderChartFuentes(fuentesResumen || {});
   }, 50);
 }
 
@@ -723,6 +726,57 @@ function setPeriodo(tipo, btn) {
   if (btn) btn.classList.add('active');
 
   cargarDatos();
+}
+
+function renderFuentes(data) {
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar" style="background:#2563eb"></div><h2 style="color:#2563eb">Fuentes de adquisición</h2></div>';
+
+  var crm = data.CRM || 0;
+  var ref = data.Referidos || 0;
+  var via = data['Vía pública'] || 0;
+  var sinAsignar = data.sin_asignar || 0;
+  var total = data.total || 0;
+  var asignadas = crm + ref + via;
+  var pctAsig = total > 0 ? Math.round((asignadas / total) * 100) : 0;
+
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card" style="border-top-color:#2563eb"><div class="label">CRM</div><div class="value" style="color:#2563eb">' + crm + '</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#16a34a"><div class="label">Referidos</div><div class="value" style="color:#16a34a">' + ref + '</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#d97706"><div class="label">Vía pública</div><div class="value" style="color:#d97706">' + via + '</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#9ca3af"><div class="label">Con fuente asignada</div><div class="value">' + pctAsig + '%</div><div style="font-size:11px;color:#9ca3af;margin-top:2px;">' + asignadas + ' de ' + total + '</div></div>';
+  html += '</div>';
+
+  if (asignadas > 0) {
+    html += '<div class="tabla-wrap" style="padding:24px;"><div style="max-width:320px;margin:0 auto;"><canvas id="chart-fuentes"></canvas></div></div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function renderChartFuentes(data) {
+  var el = document.getElementById('chart-fuentes');
+  if (!el) return;
+  var crm = data.CRM || 0;
+  var ref = data.Referidos || 0;
+  var via = data['Vía pública'] || 0;
+  if (crm + ref + via === 0) return;
+  var ctx = el.getContext('2d');
+  var chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['CRM', 'Referidos', 'Vía pública'],
+      datasets: [{ data: [crm, ref, via], backgroundColor: ['#2563eb', '#16a34a', '#d97706'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, font: { size: 12, family: 'Inter' } } }
+      }
+    }
+  });
+  _chartInstances.push(chart);
 }
 
 function onFechaManual() {

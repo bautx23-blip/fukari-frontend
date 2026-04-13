@@ -485,6 +485,11 @@ function renderTabla() {
     var editBtn = (esAdmin && !o.anulada && !o.no_factible) ? '<button class="btn-edit-orden" onclick=\'abrirEdicion(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\' title="Editar orden">&#9998;</button>' : '';
     var noFactBtn = (esAdmin && !o.anulada && !o.no_factible) ? '<button style="background:transparent;border:1px solid #d97706;color:#d97706;padding:2px 7px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:600;" onclick="marcarNoFactible(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Marcar como No Factible">NF</button>' : '';
     var noFactBadge = o.no_factible ? '<span style="display:inline-block;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600;margin-left:6px;">No Factible</span>' : '';
+    var fuenteBtn = (esAdmin && !o.anulada && !o.no_factible) ? '<button style="background:transparent;border:1px solid #9ca3af;color:#6b7280;padding:2px 7px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;" onclick="abrirFuente(\'' + o.id + '\',\'' + (o.fuente_adquisicion||'').replace(/'/g,'') + '\')" title="Fuente de adquisición">FA</button>' : '';
+    var fuenteBadge = '';
+    if (o.fuente_adquisicion === 'CRM') fuenteBadge = '<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">CRM</span>';
+    else if (o.fuente_adquisicion === 'Referidos') fuenteBadge = '<span style="display:inline-block;background:#dcfce7;color:#166534;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Referidos</span>';
+    else if (o.fuente_adquisicion === 'Vía pública') fuenteBadge = '<span style="display:inline-block;background:#ffedd5;color:#9a3412;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Vía pública</span>';
     var completadaCell = '';
     if (esAdmin) {
       var checked = o.completada ? ' checked' : '';
@@ -496,7 +501,7 @@ function renderTabla() {
       '</td>';
     }
     var filaStyleNF = o.no_factible ? ' style="opacity:0.55;"' : '';
-    html += '<tr' + filaClass + filaStyleNF + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + noFactBadge + '</td><td>' + tipoBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td>' + completadaCell + '<td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + editBtn + noFactBtn + deleteBtn + '</div></td></tr>';
+    html += '<tr' + filaClass + filaStyleNF + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + noFactBadge + fuenteBadge + '</td><td>' + tipoBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td>' + completadaCell + '<td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + editBtn + fuenteBtn + noFactBtn + deleteBtn + '</div></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
@@ -924,6 +929,33 @@ function renderRechazos(data) {
   });
   html += '</tbody></table>';
   document.getElementById('rechazos-tabla-body').innerHTML = html;
+}
+
+// ── Fuente de Adquisición ──
+function abrirFuente(id, actual) {
+  var opciones = ['CRM', 'Referidos', 'Vía pública'];
+  var msg = 'Fuente de adquisición:\n';
+  opciones.forEach(function(o, i) { msg += (i+1) + '. ' + o + (o === actual ? ' (actual)' : '') + '\n'; });
+  msg += '\nIngresá el número (1, 2 o 3):';
+  var sel = prompt(msg);
+  if (!sel) return;
+  var idx = parseInt(sel) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= opciones.length) { alert('Opción inválida'); return; }
+  var fuente = opciones[idx];
+  fetch(API_URL + '/api/ordenes/' + id + '/fuente-adquisicion', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fuente: fuente })
+  }).then(function(res) {
+    if (!res.ok) return res.json().then(function(e){ throw new Error(e.error||'Error'); });
+    return res.json();
+  }).then(function() {
+    var orden = todasLasOrdenes.find(function(o){ return o.id == id; });
+    if (orden) orden.fuente_adquisicion = fuente;
+    filtrar();
+  }).catch(function(err) {
+    alert('Error: ' + err.message);
+  });
 }
 
 // ── No Factible ──
