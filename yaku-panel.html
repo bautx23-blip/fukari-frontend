@@ -410,7 +410,7 @@ function localidadesUnicas(o) {
 }
 
 function calcularStats() {
-  var noAnuladas = ordenesFiltradas.filter(function(o){ return !o.anulada; });
+  var noAnuladas = ordenesFiltradas.filter(function(o){ return !o.anulada && !o.no_factible; });
   var completadas = noAnuladas.filter(function(o){ return o.completada; });
   var totalFact = completadas.reduce(function(acc,o){ return acc + (parseFloat(o.total_general)||0); }, 0);
   var totalSinIVA = totalFact / 1.21;
@@ -481,18 +481,22 @@ function renderTabla() {
       var body = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva ' + tipoOrdenLabel + ', para la localidad de ' + loc + '; el equipo será para ' + (o.responsable||'') + ' y su celular es ' + (o.responsable_celular||'') + '.\n\nLink de ' + tipoOrdenLabel + ': ' + o.pdf_url);
       mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subj + '&body=' + body + '" title="Enviar por mail">&#9993;</a>';
     }
-    var deleteBtn = (esAdmin && !o.anulada) ? '<button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Anular orden">&#9888;</button>' : '';
-    var editBtn = (esAdmin && !o.anulada) ? '<button class="btn-edit-orden" onclick=\'abrirEdicion(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\' title="Editar orden">&#9998;</button>' : '';
+    var deleteBtn = (esAdmin && !o.anulada && !o.no_factible) ? '<button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Anular orden">&#9888;</button>' : '';
+    var editBtn = (esAdmin && !o.anulada && !o.no_factible) ? '<button class="btn-edit-orden" onclick=\'abrirEdicion(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\' title="Editar orden">&#9998;</button>' : '';
+    var noFactBtn = (esAdmin && !o.anulada && !o.no_factible) ? '<button style="background:transparent;border:1px solid #d97706;color:#d97706;padding:2px 7px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:600;" onclick="marcarNoFactible(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Marcar como No Factible">NF</button>' : '';
+    var noFactBadge = o.no_factible ? '<span style="display:inline-block;background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600;margin-left:6px;">No Factible</span>' : '';
     var completadaCell = '';
     if (esAdmin) {
       var checked = o.completada ? ' checked' : '';
       var fechaComp = o.fecha_completada || '';
+      var chkDisabled = o.no_factible ? ' disabled' : '';
       completadaCell = '<td style="text-align:center">' +
-        '<input type="checkbox" id="chk-' + o.id + '" ' + checked + ' onclick="toggleCompletada(' + o.id + ', document.getElementById(\'chk-' + o.id + '\').checked)" style="cursor:pointer;width:16px;height:16px;" title="' + (fechaComp ? 'Completada: ' + fechaComp : 'No completada') + '">' +
+        '<input type="checkbox" id="chk-' + o.id + '" ' + checked + chkDisabled + ' onclick="toggleCompletada(' + o.id + ', document.getElementById(\'chk-' + o.id + '\').checked)" style="cursor:pointer;width:16px;height:16px;" title="' + (o.no_factible ? 'No factible — no se puede completar' : fechaComp ? 'Completada: ' + fechaComp : 'No completada') + '">' +
         (fechaComp ? '<div style="font-size:10px;color:#16a34a;margin-top:2px">' + new Date(fechaComp + 'T12:00:00').toLocaleDateString('es-AR') + '</div>' : '') +
       '</td>';
     }
-    html += '<tr' + filaClass + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + '</td><td>' + tipoBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td>' + completadaCell + '<td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + editBtn + deleteBtn + '</div></td></tr>';
+    var filaStyleNF = o.no_factible ? ' style="opacity:0.55;"' : '';
+    html += '<tr' + filaClass + filaStyleNF + '><td><span class="badge-num">' + (o.numero_completo||'—') + '</span>' + anuladaBadge + noFactBadge + '</td><td>' + tipoBadge + '</td><td>' + (o.razon_social||'—') + '</td><td>' + localidadesUnicas(o).map(function(l){return '<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;">'+l+'</span>';}).join('') + '</td><td>' + fecha + '</td><td style="font-size:12px;color:#6b7280;">' + (o.vendedor||'—') + '</td><td class="total-cell">' + tot + '</td>' + completadaCell + '<td>' + pdfBtn + '</td><td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\'>Ver</button>' + mailBtn + editBtn + noFactBtn + deleteBtn + '</div></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-body').innerHTML = html;
@@ -920,6 +924,24 @@ function renderRechazos(data) {
   });
   html += '</tbody></table>';
   document.getElementById('rechazos-tabla-body').innerHTML = html;
+}
+
+// ── No Factible ──
+function marcarNoFactible(id, numOrden) {
+  var motivo = prompt('Motivo de no factibilidad para orden ' + numOrden + ':');
+  if (!motivo || !motivo.trim()) return;
+  fetch(API_URL + '/api/ordenes/' + id + '/no-factible', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ motivo: motivo.trim(), email: _currentUserEmail })
+  }).then(function(res) {
+    if (!res.ok) return res.json().then(function(e){ throw new Error(e.error||'Error'); });
+    return res.json();
+  }).then(function() {
+    cargarOrdenes();
+  }).catch(function(err) {
+    alert('Error: ' + err.message);
+  });
 }
 </script>
 </body>

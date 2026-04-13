@@ -222,23 +222,25 @@ function cargarDatos() {
     fetch(API_URL + '/api/reportes/instalaciones' + qs).then(function(r){ if(!r.ok) throw new Error('instalaciones '+r.status); return r.json(); }),
     fetch(API_URL + '/api/reportes/bajas' + qs).then(function(r){ if(!r.ok) throw new Error('bajas '+r.status); return r.json(); }),
     fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); }),
-    fetch(API_URL + '/api/rechazos-crediticios' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; })
+    fetch(API_URL + '/api/rechazos-crediticios' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
+    fetch(API_URL + '/api/ordenes/no-factibles').then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; })
   ]).then(function(results) {
     destroyCharts();
-    renderAll(results[0], results[1], results[2], results[3], results[4]);
+    renderAll(results[0], results[1], results[2], results[3], results[4], results[5]);
   }).catch(function(err) {
     contenido.innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
   });
 }
 
 /* ── RENDER ALL ── */
-function renderAll(resumen, instalaciones, bajas, clientes, rechazos) {
+function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactibles) {
   var contenido = document.getElementById('contenido');
   var html = '';
   html += renderResumen(resumen, instalaciones);
   html += renderInstalaciones(instalaciones);
   html += renderBajas(bajas, resumen);
   html += renderRechazos(rechazos || []);
+  html += renderNoFactibles(noFactibles || []);
   html += renderClientes(clientes);
   contenido.innerHTML = html;
 
@@ -727,6 +729,44 @@ function onFechaManual() {
   var btns = document.querySelectorAll('.periodo-btn');
   btns.forEach(function(b) { b.classList.remove('active'); });
   cargarDatos();
+}
+
+function renderNoFactibles(data) {
+  var html = '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar" style="background:#d97706"></div><h2 style="color:#d97706">Órdenes no factibles</h2></div>';
+
+  var count = data.length;
+  var totalPerdido = data.reduce(function(acc, r) { return acc + (parseFloat(r.total_general) || 0); }, 0);
+  var totalPerdidoSinIVA = totalPerdido / 1.21;
+
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card" style="border-top-color:#d97706"><div class="label">No factibles</div><div class="value" style="color:#d97706">' + count + '</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#d97706"><div class="label">Facturación perdida estimada (sin IVA)</div><div class="value" style="color:#dc2626">' + fmt(totalPerdidoSinIVA) + '</div></div>';
+  html += '</div>';
+
+  if (count > 0) {
+    html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Detalle de órdenes no factibles</h3></div>';
+    html += '<table><thead><tr><th>Fecha</th><th>Nro Orden</th><th>Cliente</th><th>CUIT</th><th>Motivo</th><th class="right">Fact. Perdida Est.</th><th>Vendedor</th></tr></thead><tbody>';
+    data.forEach(function(r) {
+      var fecha = r.fecha_orden ? r.fecha_orden.split('-').reverse().join('/') : '-';
+      var perdido = (parseFloat(r.total_general) || 0) / 1.21;
+      html += '<tr>';
+      html += '<td>' + fecha + '</td>';
+      html += '<td class="bold">' + (r.numero_completo || '-') + '</td>';
+      html += '<td>' + (r.razon_social || '-') + '</td>';
+      html += '<td>' + (r.cuit || '-') + '</td>';
+      html += '<td><span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">' + (r.no_factible_motivo || '-') + '</span></td>';
+      html += '<td class="right money" style="color:#dc2626">' + fmt(perdido) + '</td>';
+      html += '<td>' + (r.vendedor || '-') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += '<div class="tabla-wrap"><div style="padding:32px;text-align:center;color:#9ca3af;font-size:13px">No hay órdenes no factibles en el período</div></div>';
+  }
+
+  html += '</div>';
+  return html;
 }
 </script>
 </body>
