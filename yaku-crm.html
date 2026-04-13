@@ -310,8 +310,8 @@ tbody tr:hover{background:#f8fafc;}
 /* ═══════════════════════════════════════════
    BOT KNOWLEDGE SECTION
    ═══════════════════════════════════════════ */
-.bot-wrap{display:flex;gap:20px;height:calc(100vh - 56px - 56px);}
-.bot-sections{width:320px;flex-shrink:0;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);padding:18px;display:flex;flex-direction:column;}
+.bot-wrap{display:flex;gap:0;height:calc(100vh - 56px - 56px);}
+.bot-sections{width:320px;flex-shrink:0;background:#fff;border-radius:8px 0 0 8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);padding:18px;display:flex;flex-direction:column;border-right:1px solid #e5e7eb;}
 .bot-sections h3{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:6px;}
 .bot-progress-wrap{margin-bottom:14px;}
 .bot-progress-bar{height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;}
@@ -327,33 +327,41 @@ tbody tr:hover{background:#f8fafc;}
 .bot-section-status{font-size:10.5px;color:#9ca3af;margin-top:1px;}
 .bot-section-status.completa{color:#16a34a;font-weight:600;}
 .bot-section-status.en_progreso{color:#d97706;font-weight:600;}
-.bot-actions-admin{padding-top:14px;border-top:1px solid #f1f5f9;margin-top:10px;display:flex;flex-direction:column;gap:8px;}
-.btn-bot{padding:9px 12px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#374151;transition:all .15s;text-align:center;}
-.btn-bot:hover{border-color:#1a1a2e;color:#1a1a2e;}
-.btn-bot-primary{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
-.btn-bot-primary:hover{background:#2d2d4e;color:#fff;}
 
-.bot-chat{flex:1;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);display:flex;flex-direction:column;min-width:0;}
-.bot-chat-header{padding:18px 22px;border-bottom:1px solid #e5e7eb;}
-.bot-chat-header h3{font-size:15px;font-weight:700;color:#1a1a2e;display:flex;align-items:center;gap:8px;}
-.bot-chat-header p{font-size:12px;color:#6b7280;margin-top:3px;}
-.bot-chat-msgs{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:14px;}
-.bot-msg{max-width:80%;padding:11px 15px;border-radius:10px;font-size:13px;line-height:1.55;}
-.bot-msg.bot{background:#f1f5f9;color:#1a1a2e;align-self:flex-start;border-top-left-radius:3px;}
-.bot-msg.user{background:#1a1a2e;color:#fff;align-self:flex-end;border-top-right-radius:3px;}
-.bot-msg .who{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;opacity:0.6;margin-bottom:4px;}
-.bot-empty{flex:1;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;text-align:center;padding:40px;}
-.bot-input-area{padding:14px 22px;border-top:1px solid #e5e7eb;display:flex;gap:10px;align-items:flex-end;}
+.bot-chat{flex:1;background:#fff;border-radius:0 8px 8px 0;box-shadow:0 1px 4px rgba(0,0,0,0.07);display:flex;flex-direction:column;min-width:0;}
+.bot-chat-header{padding:16px 22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;}
+.bot-chat-header-left h3{font-size:15px;font-weight:700;color:#1a1a2e;display:flex;align-items:center;gap:8px;}
+.bot-chat-header-left p{font-size:12px;color:#6b7280;margin-top:3px;}
+.bot-estado-badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;}
+.bot-estado-sin_iniciar{background:#f1f5f9;color:#6b7280;}
+.bot-estado-en_progreso{background:#fef3c7;color:#d97706;}
+.bot-estado-completa{background:#dcfce7;color:#16a34a;}
+.bot-chat-msgs{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:14px;background:#fafafa;}
+.bot-msg{max-width:80%;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.6;position:relative;}
+.bot-msg.assistant{background:#fff;color:#1a1a2e;align-self:flex-start;border:1px solid #e5e7eb;border-top-left-radius:4px;}
+.bot-msg.user{background:#1a1a2e;color:#fff;align-self:flex-end;border-top-right-radius:4px;}
+.bot-msg .msg-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:5px;}
+.bot-msg.assistant .msg-label{color:#d97706;}
+.bot-msg.user .msg-label{color:rgba(255,255,255,0.5);}
+.bot-msg .msg-text{white-space:pre-wrap;word-wrap:break-word;}
+.bot-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;text-align:center;padding:40px;gap:12px;}
+.bot-typing{align-self:flex-start;padding:12px 18px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;border-top-left-radius:4px;display:flex;gap:4px;align-items:center;}
+.bot-typing span{width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:botDot 1.4s infinite;}
+.bot-typing span:nth-child(2){animation-delay:.2s;}
+.bot-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes botDot{0%,80%,100%{opacity:.3;transform:scale(.8);}40%{opacity:1;transform:scale(1);}}
+.bot-input-area{padding:14px 22px;border-top:1px solid #e5e7eb;display:flex;gap:10px;align-items:flex-end;background:#fff;border-radius:0 0 8px 0;}
 .bot-input-area textarea{flex:1;font-family:inherit;font-size:13px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;resize:none;max-height:120px;min-height:42px;color:#111827;line-height:1.4;}
 .bot-input-area textarea:focus{outline:none;border-color:#1a1a2e;box-shadow:0 0 0 2px rgba(26,26,46,0.06);}
-.btn-bot-send{background:#1a1a2e;color:#fff;border:none;padding:0 18px;height:42px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;flex-shrink:0;}
+.btn-bot-send{background:#1a1a2e;color:#fff;border:none;padding:0 18px;height:42px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;flex-shrink:0;transition:background .15s;}
 .btn-bot-send:hover{background:#2d2d4e;}
 .btn-bot-send:disabled{opacity:0.5;cursor:not-allowed;}
-.bot-resumen{margin-top:14px;padding:14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;font-size:12px;color:#065f46;white-space:pre-wrap;}
+.btn-bot-iniciar{background:#1a1a2e;color:#fff;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;}
+.btn-bot-iniciar:hover{background:#2d2d4e;}
 
 @media(max-width:900px){
   .bot-wrap{flex-direction:column;height:auto;}
-  .bot-sections{width:100%;}
+  .bot-sections{width:100%;border-radius:8px;border-right:none;border-bottom:1px solid #e5e7eb;}
 }
 
 /* ── RESPONSIVE ── */
@@ -508,7 +516,7 @@ tbody tr:hover{background:#f8fafc;}
     </div>
   </div>
 
-  <!-- VIEW: BOT KNOWLEDGE -->
+    <!-- VIEW: BOT KNOWLEDGE -->
   <div class="view" id="view-bot">
     <div class="bot-wrap">
       <aside class="bot-sections">
@@ -518,23 +526,24 @@ tbody tr:hover{background:#f8fafc;}
           <div class="bot-progress-text" id="bot-progress-text">0/6 secciones completas</div>
         </div>
         <div class="bot-section-list" id="bot-section-list"></div>
-        <div class="bot-actions-admin" id="bot-actions-admin" style="display:none;">
-          <button class="btn-bot" onclick="exportarConocimiento()">&#128229; Exportar conocimiento</button>
-          <button class="btn-bot btn-bot-primary" onclick="integrarConocimiento()">&#128640; Integrar al sistema</button>
-        </div>
       </aside>
       <div class="bot-chat">
-        <div class="bot-chat-header">
-          <h3 id="bot-chat-title">Seleccioná una sección</h3>
-          <p id="bot-chat-subtitle">Elegí una sección de la izquierda para comenzar la entrevista</p>
+        <div class="bot-chat-header" id="bot-chat-header">
+          <div class="bot-chat-header-left">
+            <h3 id="bot-chat-title">Seleccioná una sección</h3>
+            <p id="bot-chat-subtitle">Elegí una sección de la izquierda para comenzar la entrevista</p>
+          </div>
+          <span class="bot-estado-badge bot-estado-sin_iniciar" id="bot-estado-badge"></span>
         </div>
         <div class="bot-chat-msgs" id="bot-chat-msgs">
-          <div class="bot-empty" id="bot-empty">Seleccioná una sección para comenzar</div>
+          <div class="bot-empty">
+            <div style="font-size:48px;opacity:0.5;">🧠</div>
+            <div>Seleccioná una sección para comenzar la entrevista</div>
+          </div>
         </div>
         <div class="bot-input-area" id="bot-input-area" style="display:none;">
           <textarea id="bot-input" rows="1" placeholder="Escribí tu respuesta..."></textarea>
-          <button class="btn-bot-send" id="btn-bot-send" onclick="enviarMensajeBot()">Enviar</button>
-          <button class="btn-bot" id="btn-bot-completar" onclick="marcarCompleta()" style="display:none;">Marcar completa</button>
+          <button class="btn-bot-send" id="btn-bot-send" onclick="botEnviarMensaje()">Enviar</button>
         </div>
       </div>
     </div>
@@ -1663,393 +1672,205 @@ function _showContactPicker() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// BOT KNOWLEDGE
+// BOT KNOWLEDGE (v2)
 // ════════════════════════════════════════════════════════════════════
 
-var BOT_SECCIONES = [
-  { id: 'productos', icon: '\u{1F4A7}', nombre: 'Productos & Modelos', desc: 'Características de cada equipo, diferencias, para quién es cada uno' },
-  { id: 'segmentos', icon: '\u{1F465}', nombre: 'Segmentos de Clientes', desc: 'Consumidor final, empresas, organismos públicos, perfiles típicos' },
-  { id: 'venta', icon: '\u{1F91D}', nombre: 'Proceso de Venta', desc: 'Cómo se cierra una venta, pasos, documentación, tiempos' },
-  { id: 'objeciones', icon: '\u{1F6E1}', nombre: 'Objeciones & Respuestas', desc: 'Objeciones típicas y cómo las manejan' },
-  { id: 'diagnostico', icon: '\u{1F50D}', nombre: 'Diagnóstico de Necesidades', desc: 'Cómo determinan qué necesita el cliente, criterios de recomendación' },
-  { id: 'diferencial', icon: '\u{2B50}', nombre: 'Diferencial Yakú', desc: 'Qué hace distinto a Yakú, propuesta de valor, competencia' },
-];
-
-var botEntrevistas = {};
-var botConocimiento = {};
+var botSecciones = [];
 var botSeccionActual = null;
-var _botSendingMessage = false;
+var botMensajes = [];
+var botEstadoActual = 'sin_iniciar';
+var _botSending = false;
 
-var BOT_BASE_INFO = `INFORMACIÓN BASE QUE YA TENÉS (NO preguntar esto):
-- Los equipos se conectan a la red de agua, NO usan bidones
-- Servicio de alquiler mensual, permanencia mínima 6 meses
-- Incluye instalación bonificada, mantenimiento, cambio de filtros cada 18 meses, sanitización cada 180 días
-- Certificados ANMAT
-- Solo agua de red clorada (excepto ósmosis inversa para arsénico)
-- Filtros: tripack (sedimento + carbón activado en bloque + carbón granular)
-- Agua fría: 5-10°C, caliente: 80-87°C
-- El equipo se enchufa, consumo bajo
-- Instalación simple, no rompe, se conecta con flexible y llave de paso
-- No tienen showroom, web: yakuagua.com.ar
-- Aumentos cada 90 días por IPC
-- Formas de pago: transferencia, débito en cuenta, cheque electrónico
-- NO venden equipos, solo alquiler
-- NO alquilan por día
-- Cable de 1.50m, distancia máxima 15m del punto de agua
-- MODELOS Y PRECIOS: Los tenés disponibles en el sistema de stock de Fukari. No preguntes precios.`;
-
-function buildBotSystemPrompt(seccion) {
-  var seccionInfo = BOT_SECCIONES.find(function(s) { return s.id === seccion; });
-  var seccionDesc = seccionInfo ? seccionInfo.nombre + ': ' + seccionInfo.desc : seccion;
-
-  var prevKnowledge = '';
-  Object.keys(botEntrevistas).forEach(function(k) {
-    if (k !== seccion && botEntrevistas[k] && botEntrevistas[k].resumen) {
-      var info = BOT_SECCIONES.find(function(s) { return s.id === k; });
-      prevKnowledge += '\n## ' + (info ? info.nombre : k) + '\n' + botEntrevistas[k].resumen + '\n';
-    }
-  });
-  if (!prevKnowledge) prevKnowledge = '(Todavía no hay otras secciones completas)';
-
-  return `Sos un entrevistador experto en procesos comerciales. Estás entrevistando a René, socio comercial de Yakú Agua, una empresa de Santa Fe que alquila equipos de agua (dispensers y purificadores) conectados a red.
-Tu objetivo es extraer TODO el conocimiento necesario para que un bot de ventas pueda operar de forma autónoma por WhatsApp, vendiendo el servicio de alquiler de equipos.
-
-${BOT_BASE_INFO}
-
-SECCIÓN ACTUAL: ${seccionDesc}
-
-REGLAS:
-- Hacé UNA pregunta a la vez, clara y directa
-- Dirigite siempre a René por su nombre
-- Si la respuesta es vaga, repreguntá con ejemplos concretos
-- Buscá datos específicos: números, criterios exactos, casos reales
-- Sé profesional pero cercano, tuteá
-- No repitas lo que ya sabés (ver información base arriba)
-- Respondé SOLO con tu pregunta o breve comentario + pregunta
-- Cuando cubriste un aspecto, avisá qué vas a preguntar a continuación
-
-CONOCIMIENTO YA OBTENIDO DE OTRAS SECCIONES:
-${prevKnowledge}`;
-}
-
-function buildResumenSystemPrompt(seccion) {
-  var seccionInfo = BOT_SECCIONES.find(function(s) { return s.id === seccion; });
-  var seccionNombre = seccionInfo ? seccionInfo.nombre : seccion;
-  return `Extractá los datos clave de esta entrevista comercial con René de Yakú Agua sobre "${seccionNombre}".
-Devolvé SOLO un resumen estructurado con los datos concretos obtenidos.
-Formato: bullets organizados por subtema.
-Sin introducción ni cierre. Solo datos útiles para programar un bot de ventas autónomo.
-Incluí: reglas de negocio, criterios de decisión, excepciones, ejemplos mencionados.`;
-}
-
-async function cargarBotEntrevistas() {
+async function botCargarSecciones() {
   try {
-    var res = await fetch(API_URL + '/api/bot/entrevistas');
-    if (!res.ok) throw new Error('Error');
-    var data = await res.json();
-    botEntrevistas = {};
-    (data || []).forEach(function(row) {
-      botEntrevistas[row.seccion] = row;
-    });
-    renderBotSecciones();
-    renderBotProgress();
-  } catch (err) {
-    console.error('Error cargando entrevistas:', err.message);
-  }
+    var res = await fetch(API_URL + '/api/bot/secciones');
+    if (!res.ok) throw new Error('Error ' + res.status);
+    botSecciones = await res.json();
+    botRenderSecciones();
+    botRenderProgress();
+  } catch (err) { console.error('Error cargando secciones bot:', err); }
 }
 
-async function cargarBotConocimiento() {
-  try {
-    var res = await fetch(API_URL + '/api/bot/conocimiento');
-    if (!res.ok) return;
-    var data = await res.json();
-    botConocimiento = {};
-    (data || []).forEach(function(row) { botConocimiento[row.seccion] = row; });
-  } catch (err) { /* silent */ }
-}
-
-function renderBotSecciones() {
+function botRenderSecciones() {
   var html = '';
-  BOT_SECCIONES.forEach(function(s) {
-    var ent = botEntrevistas[s.id];
-    var estado = ent ? ent.estado : 'pendiente';
-    var estadoLabel = 'Sin iniciar';
-    if (estado === 'en_progreso') estadoLabel = 'En progreso';
-    if (estado === 'completa') estadoLabel = '\u2705 Completa';
+  botSecciones.forEach(function(s) {
     var activeCls = botSeccionActual === s.id ? ' active' : '';
-    html += '<div class="bot-section-item' + activeCls + '" onclick="seleccionarSeccionBot(\'' + s.id + '\')">' +
+    var estadoLabel = 'Sin iniciar';
+    var estadoCls = s.estado;
+    if (s.estado === 'en_progreso') estadoLabel = 'En progreso';
+    if (s.estado === 'completa') estadoLabel = '\u2705 Completa';
+    html += '<div class="bot-section-item' + activeCls + '" onclick="botSeleccionarSeccion(\'' + s.id + '\')">' +
       '<span class="bot-section-icon">' + s.icon + '</span>' +
-      '<div class="bot-section-info">' +
-        '<div class="bot-section-name">' + esc(s.nombre) + '</div>' +
-        '<div class="bot-section-status ' + estado + '">' + estadoLabel + '</div>' +
-      '</div>' +
-    '</div>';
+      '<div class="bot-section-info"><div class="bot-section-name">' + esc(s.title) + '</div>' +
+      '<div class="bot-section-status ' + estadoCls + '">' + estadoLabel + '</div></div></div>';
   });
   document.getElementById('bot-section-list').innerHTML = html;
 }
 
-function renderBotProgress() {
-  var completas = 0;
-  BOT_SECCIONES.forEach(function(s) {
-    if (botEntrevistas[s.id] && botEntrevistas[s.id].estado === 'completa') completas++;
-  });
-  var pct = Math.round((completas / BOT_SECCIONES.length) * 100);
+function botRenderProgress() {
+  var completas = botSecciones.filter(function(s) { return s.estado === 'completa'; }).length;
+  var pct = Math.round((completas / Math.max(botSecciones.length, 1)) * 100);
   document.getElementById('bot-progress-fill').style.width = pct + '%';
-  document.getElementById('bot-progress-text').textContent = completas + '/' + BOT_SECCIONES.length + ' secciones completas';
+  document.getElementById('bot-progress-text').textContent = completas + '/' + botSecciones.length + ' secciones completas';
 }
 
-async function seleccionarSeccionBot(seccionId) {
-  botSeccionActual = seccionId;
-  var seccionInfo = BOT_SECCIONES.find(function(s) { return s.id === seccionId; });
-  document.getElementById('bot-chat-title').innerHTML = seccionInfo.icon + ' ' + esc(seccionInfo.nombre);
-  document.getElementById('bot-chat-subtitle').textContent = seccionInfo.desc;
-  document.getElementById('bot-input-area').style.display = 'flex';
-  renderBotSecciones();
+async function botSeleccionarSeccion(id) {
+  botSeccionActual = id;
+  var seccion = botSecciones.find(function(s) { return s.id === id; });
+  if (!seccion) return;
 
-  var ent = botEntrevistas[seccionId];
-  if (ent && ent.mensajes && ent.mensajes.length > 0) {
-    renderMensajesBot(ent.mensajes);
-  } else {
-    document.getElementById('bot-chat-msgs').innerHTML = '<div class="bot-empty">Iniciando entrevista...</div>';
-    await iniciarEntrevista(seccionId);
-  }
-  actualizarBotonCompletar();
-}
+  document.getElementById('bot-chat-title').innerHTML = seccion.icon + ' ' + esc(seccion.title);
+  document.getElementById('bot-chat-subtitle').textContent = seccion.description;
+  var badge = document.getElementById('bot-estado-badge');
+  badge.className = 'bot-estado-badge bot-estado-' + seccion.estado;
+  badge.textContent = seccion.estado === 'completa' ? '\u2705 Completa' : seccion.estado === 'en_progreso' ? 'En progreso' : 'Sin iniciar';
 
-async function iniciarEntrevista(seccionId) {
-  var systemPrompt = buildBotSystemPrompt(seccionId);
-  var initialMsg = { role: 'user', content: 'Hola, soy René. Empezá la entrevista con la primera pregunta sobre esta sección.' };
+  botRenderSecciones();
+
+  // Load messages
   try {
-    var res = await fetch(API_URL + '/api/bot/anthropic', {
+    var res = await fetch(API_URL + '/api/bot/entrevista/' + id);
+    if (!res.ok) throw new Error('Error');
+    var data = await res.json();
+    botMensajes = data.mensajes || [];
+    botEstadoActual = data.estado || 'sin_iniciar';
+  } catch (err) {
+    botMensajes = [];
+    botEstadoActual = 'sin_iniciar';
+  }
+
+  if (botMensajes.length === 0 && botEstadoActual === 'sin_iniciar') {
+    // Show "Iniciar" button
+    document.getElementById('bot-chat-msgs').innerHTML = '<div class="bot-empty"><div style="font-size:48px;opacity:0.5;">' + seccion.icon + '</div><div style="margin-bottom:12px;">' + esc(seccion.title) + '</div><button class="btn-bot-iniciar" onclick="botIniciarSeccion()">Iniciar entrevista</button></div>';
+    document.getElementById('bot-input-area').style.display = 'none';
+  } else {
+    botRenderMensajes();
+    document.getElementById('bot-input-area').style.display = botEstadoActual === 'completa' ? 'none' : 'flex';
+  }
+}
+
+async function botIniciarSeccion() {
+  if (!botSeccionActual) return;
+  document.getElementById('bot-chat-msgs').innerHTML = '<div class="bot-empty"><div class="bot-typing"><span></span><span></span><span></span></div><div style="margin-top:8px;">Iniciando entrevista...</div></div>';
+
+  try {
+    var res = await fetch(API_URL + '/api/bot/entrevista/' + botSeccionActual + '/iniciar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [initialMsg]
-      })
+      body: JSON.stringify({ userEmail: _currentUserEmail })
     });
+    if (!res.ok) { var e = await res.json(); throw new Error(e.error || 'Error'); }
     var data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error');
-    var respuesta = data.content?.[0]?.text || '';
-    var mensajes = [
-      { role: 'assistant', content: respuesta, timestamp: new Date().toISOString() }
-    ];
-    botEntrevistas[seccionId] = { seccion: seccionId, mensajes: mensajes, estado: 'en_progreso' };
-    await guardarEntrevista(seccionId);
-    renderMensajesBot(mensajes);
-    renderBotSecciones();
-    renderBotProgress();
-    actualizarBotonCompletar();
+    botMensajes = data.mensajes || [];
+    botEstadoActual = data.estado;
+    botRenderMensajes();
+    document.getElementById('bot-input-area').style.display = 'flex';
+    document.getElementById('bot-input').focus();
+    // Update section state in sidebar
+    var sec = botSecciones.find(function(s) { return s.id === botSeccionActual; });
+    if (sec) sec.estado = botEstadoActual;
+    botRenderSecciones();
+    botRenderProgress();
+    var badge = document.getElementById('bot-estado-badge');
+    badge.className = 'bot-estado-badge bot-estado-' + botEstadoActual;
+    badge.textContent = 'En progreso';
   } catch (err) {
-    document.getElementById('bot-chat-msgs').innerHTML = '<div class="bot-empty">Error al iniciar: ' + esc(err.message) + '</div>';
+    document.getElementById('bot-chat-msgs').innerHTML = '<div class="bot-empty">Error: ' + esc(err.message) + '</div>';
   }
 }
 
-function renderMensajesBot(mensajes) {
+function botRenderMensajes() {
   var container = document.getElementById('bot-chat-msgs');
-  if (!mensajes || mensajes.length === 0) {
+  if (botMensajes.length === 0) {
     container.innerHTML = '<div class="bot-empty">Sin mensajes</div>';
     return;
   }
   var html = '';
-  mensajes.forEach(function(m) {
-    var cls = m.role === 'user' ? 'user' : 'bot';
-    var who = m.role === 'user' ? 'René' : 'Entrevistador';
-    html += '<div class="bot-msg ' + cls + '"><div class="who">' + who + '</div>' + esc(m.content).replace(/\n/g, '<br>') + '</div>';
+  botMensajes.forEach(function(m) {
+    var cls = m.role === 'user' ? 'user' : 'assistant';
+    var label = m.role === 'user' ? 'René' : 'Entrevistador';
+    var textHtml = esc(m.text || m.content || '').replace(/\n/g, '<br>');
+    html += '<div class="bot-msg ' + cls + '"><div class="msg-label">' + label + '</div><div class="msg-text">' + textHtml + '</div></div>';
   });
-  var ent = botEntrevistas[botSeccionActual];
-  if (ent && ent.resumen && ent.estado === 'completa') {
-    html += '<div class="bot-resumen"><strong>\u{1F4DD} Resumen extraído:</strong>\n\n' + esc(ent.resumen) + '</div>';
-  }
   container.innerHTML = html;
   container.scrollTop = container.scrollHeight;
 }
 
-async function enviarMensajeBot() {
-  if (_botSendingMessage || !botSeccionActual) return;
+async function botEnviarMensaje() {
+  if (_botSending || !botSeccionActual) return;
   var input = document.getElementById('bot-input');
   var texto = input.value.trim();
   if (!texto) return;
 
-  _botSendingMessage = true;
+  _botSending = true;
   document.getElementById('btn-bot-send').disabled = true;
-
-  var ent = botEntrevistas[botSeccionActual] || { seccion: botSeccionActual, mensajes: [], estado: 'en_progreso' };
-  ent.mensajes = ent.mensajes || [];
-  ent.mensajes.push({ role: 'user', content: texto, timestamp: new Date().toISOString() });
-  ent.estado = 'en_progreso';
-  botEntrevistas[botSeccionActual] = ent;
-
   input.value = '';
-  autoResizeBotInput(input);
-  renderMensajesBot(ent.mensajes);
+  botAutoResize(input);
+
+  // Optimistic: show user message + typing
+  botMensajes.push({ role: 'user', text: texto, ts: new Date().toISOString() });
+  botRenderMensajes();
+  var container = document.getElementById('bot-chat-msgs');
+  container.innerHTML += '<div class="bot-typing" id="bot-typing-indicator"><span></span><span></span><span></span></div>';
+  container.scrollTop = container.scrollHeight;
 
   try {
-    var systemPrompt = buildBotSystemPrompt(botSeccionActual);
-    var apiMessages = ent.mensajes.map(function(m) { return { role: m.role, content: m.content }; });
-    var res = await fetch(API_URL + '/api/bot/anthropic', {
+    var res = await fetch(API_URL + '/api/bot/entrevista/' + botSeccionActual + '/mensaje', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: apiMessages
-      })
+      body: JSON.stringify({ texto: texto, userEmail: _currentUserEmail })
     });
+    if (!res.ok) { var e = await res.json(); throw new Error(e.error || 'Error'); }
     var data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error');
-    var respuesta = data.content?.[0]?.text || '';
-    ent.mensajes.push({ role: 'assistant', content: respuesta, timestamp: new Date().toISOString() });
-    botEntrevistas[botSeccionActual] = ent;
-    renderMensajesBot(ent.mensajes);
-    await guardarEntrevista(botSeccionActual);
-    renderBotSecciones();
-    actualizarBotonCompletar();
+
+    botMensajes.push({ role: 'assistant', text: data.respuesta, ts: new Date().toISOString() });
+    botEstadoActual = data.estado;
+
+    // Remove typing indicator
+    var typing = document.getElementById('bot-typing-indicator');
+    if (typing) typing.remove();
+
+    botRenderMensajes();
+
+    // Update estado if changed
+    if (data.estado === 'completa') {
+      document.getElementById('bot-input-area').style.display = 'none';
+      var badge = document.getElementById('bot-estado-badge');
+      badge.className = 'bot-estado-badge bot-estado-completa';
+      badge.textContent = '\u2705 Completa';
+    }
+    var sec = botSecciones.find(function(s) { return s.id === botSeccionActual; });
+    if (sec) sec.estado = data.estado;
+    botRenderSecciones();
+    botRenderProgress();
   } catch (err) {
-    alert('Error al enviar: ' + err.message);
+    var typing = document.getElementById('bot-typing-indicator');
+    if (typing) typing.remove();
+    alert('Error: ' + err.message);
+    // Remove the optimistic user message
+    botMensajes.pop();
+    botRenderMensajes();
   } finally {
-    _botSendingMessage = false;
+    _botSending = false;
     document.getElementById('btn-bot-send').disabled = false;
+    input.focus();
   }
 }
 
-async function guardarEntrevista(seccionId) {
-  var ent = botEntrevistas[seccionId];
-  if (!ent) return;
-  try {
-    await fetch(API_URL + '/api/bot/entrevistas/' + seccionId, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mensajes: ent.mensajes, estado: ent.estado, resumen: ent.resumen })
-    });
-  } catch (err) { console.error('Error guardando entrevista:', err.message); }
-}
-
-function actualizarBotonCompletar() {
-  var btn = document.getElementById('btn-bot-completar');
-  var ent = botEntrevistas[botSeccionActual];
-  if (ent && ent.mensajes && ent.mensajes.length >= 3 && ent.estado !== 'completa') {
-    btn.style.display = '';
-    btn.textContent = 'Marcar completa';
-  } else if (ent && ent.estado === 'completa') {
-    btn.style.display = '';
-    btn.textContent = 'Re-extraer resumen';
-  } else {
-    btn.style.display = 'none';
-  }
-}
-
-async function marcarCompleta() {
-  if (!botSeccionActual) return;
-  var ent = botEntrevistas[botSeccionActual];
-  if (!ent || !ent.mensajes || ent.mensajes.length < 3) return;
-
-  var btn = document.getElementById('btn-bot-completar');
-  var prevText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = 'Extrayendo...';
-
-  try {
-    var systemPrompt = buildResumenSystemPrompt(botSeccionActual);
-    var historial = ent.mensajes.map(function(m) {
-      return (m.role === 'user' ? 'René: ' : 'Entrevistador: ') + m.content;
-    }).join('\n\n');
-
-    var res = await fetch(API_URL + '/api/bot/anthropic', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: 'Esta es la entrevista completa:\n\n' + historial }]
-      })
-    });
-    var data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error');
-    var resumen = data.content?.[0]?.text || '';
-
-    ent.resumen = resumen;
-    ent.estado = 'completa';
-    botEntrevistas[botSeccionActual] = ent;
-    await guardarEntrevista(botSeccionActual);
-    renderBotSecciones();
-    renderBotProgress();
-    renderMensajesBot(ent.mensajes);
-    actualizarBotonCompletar();
-  } catch (err) {
-    alert('Error al extraer resumen: ' + err.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = prevText;
-  }
-}
-
-async function exportarConocimiento() {
-  try {
-    var res = await fetch(API_URL + '/api/bot/conocimiento/exportar');
-    if (!res.ok) throw new Error('Error');
-    var blob = await res.blob();
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'bot-conocimiento-' + Date.now() + '.md';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  } catch (err) { alert('Error al exportar: ' + err.message); }
-}
-
-async function integrarConocimiento() {
-  var completas = BOT_SECCIONES.filter(function(s) {
-    var ent = botEntrevistas[s.id];
-    return ent && ent.estado === 'completa' && ent.resumen;
-  });
-  if (completas.length === 0) {
-    alert('No hay secciones completas para integrar. Marcá al menos una como completa.');
-    return;
-  }
-  if (!confirm('Integrar ' + completas.length + ' sección(es) al sistema? Esto pone el conocimiento disponible para los agentes.')) return;
-
-  var ok = 0, errors = 0;
-  for (var i = 0; i < completas.length; i++) {
-    var s = completas[i];
-    var ent = botEntrevistas[s.id];
-    try {
-      var res = await fetch(API_URL + '/api/bot/conocimiento/integrar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': _currentUserEmail
-        },
-        body: JSON.stringify({ seccion: s.nombre, contenido: ent.resumen })
-      });
-      if (res.ok) ok++;
-      else errors++;
-    } catch (err) { errors++; }
-  }
-  await cargarBotConocimiento();
-  alert('Integración completada: ' + ok + ' exitosas, ' + errors + ' con error');
-}
-
+// Enter to send, Shift+Enter new line
 document.getElementById('bot-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensajeBot(); }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); botEnviarMensaje(); }
 });
-document.getElementById('bot-input').addEventListener('input', function() { autoResizeBotInput(this); });
-function autoResizeBotInput(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+document.getElementById('bot-input').addEventListener('input', function() { botAutoResize(this); });
+function botAutoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
 
-var _origSwitchViewBot = switchView;
+// Hook switchView for bot
+var _prevSwitchViewBot = switchView;
 switchView = function(view) {
-  _origSwitchViewBot(view);
-  if (view === 'bot' && Object.keys(botEntrevistas).length === 0) {
-    cargarBotEntrevistas();
-    cargarBotConocimiento();
-  }
+  _prevSwitchViewBot(view);
+  if (view === 'bot' && botSecciones.length === 0) botCargarSecciones();
 };
+
 </script>
 </body>
 </html>
