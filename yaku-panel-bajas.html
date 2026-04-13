@@ -387,7 +387,7 @@ function renderTabla() {
     if (b.pdf_url) {
       var locBaja = (b.localidad_retiro || b.localidad || '').trim();
       var subjB = encodeURIComponent('Nueva orden de baja de servicio — ' + locBaja + ' — ' + (b.razon_social||''));
-      var bodyB = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva orden de baja de servicio, para ' + (b.razon_social||'') + '. El responsable es ' + (b.responsable||'') + ' y su celular es ' + (b.responsable_celular||'') + '.\n\nLink de orden de baja: ' + b.pdf_url);
+      var bodyB = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva orden de baja de servicio, para ' + (b.razon_social||'') + '. El responsable es ' + (b.responsable||'') + ' y su celular es ' + (b.responsable_celular||'') + '.\n\nLink de orden de baja: ' + b.pdf_url + '?t=' + Date.now());
       mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subjB + '&body=' + bodyB + '" title="Enviar por mail">&#9993;</a>';
     }
     var deleteBtn = (esAdmin && !b.anulada) ? '<button class="btn-del-orden" onclick="confirmarAnular(\'' + b.id + '\',\'' + (b.numero_completo||'').replace(/'/g,'') + '\')" title="Anular baja">&#9888;</button>' : '';
