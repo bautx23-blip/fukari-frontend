@@ -735,15 +735,17 @@ function renderFuentes(data) {
   var crm = data.CRM || 0;
   var ref = data.Referidos || 0;
   var via = data['Vía pública'] || 0;
+  var yec = data['Ya era cliente'] || 0;
   var sinAsignar = data.sin_asignar || 0;
   var total = data.total || 0;
-  var asignadas = crm + ref + via;
+  var asignadas = crm + ref + via + yec;
   var pctAsig = total > 0 ? Math.round((asignadas / total) * 100) : 0;
 
   html += '<div class="stats-row">';
   html += '<div class="stat-card" style="border-top-color:#2563eb"><div class="label">CRM</div><div class="value" style="color:#2563eb">' + crm + '</div></div>';
   html += '<div class="stat-card" style="border-top-color:#16a34a"><div class="label">Referidos</div><div class="value" style="color:#16a34a">' + ref + '</div></div>';
   html += '<div class="stat-card" style="border-top-color:#d97706"><div class="label">Vía pública</div><div class="value" style="color:#d97706">' + via + '</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#7c3aed"><div class="label">Ya era cliente</div><div class="value" style="color:#7c3aed">' + yec + '</div></div>';
   html += '<div class="stat-card" style="border-top-color:#9ca3af"><div class="label">Con fuente asignada</div><div class="value">' + pctAsig + '%</div><div style="font-size:11px;color:#9ca3af;margin-top:2px;">' + asignadas + ' de ' + total + '</div></div>';
   html += '</div>';
 
@@ -761,13 +763,14 @@ function renderChartFuentes(data) {
   var crm = data.CRM || 0;
   var ref = data.Referidos || 0;
   var via = data['Vía pública'] || 0;
-  if (crm + ref + via === 0) return;
+  var yec = data['Ya era cliente'] || 0;
+  if (crm + ref + via + yec === 0) return;
   var ctx = el.getContext('2d');
   var chart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['CRM', 'Referidos', 'Vía pública'],
-      datasets: [{ data: [crm, ref, via], backgroundColor: ['#2563eb', '#16a34a', '#d97706'], borderWidth: 0, hoverOffset: 6 }]
+      labels: ['CRM', 'Referidos', 'Vía pública', 'Ya era cliente'],
+      datasets: [{ data: [crm, ref, via, yec], backgroundColor: ['#2563eb', '#16a34a', '#d97706', '#7c3aed'], borderWidth: 0, hoverOffset: 6 }]
     },
     options: {
       responsive: true,

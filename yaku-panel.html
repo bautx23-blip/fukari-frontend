@@ -490,6 +490,7 @@ function renderTabla() {
     if (o.fuente_adquisicion === 'CRM') fuenteBadge = '<span style="display:inline-block;background:#dbeafe;color:#1d4ed8;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">CRM</span>';
     else if (o.fuente_adquisicion === 'Referidos') fuenteBadge = '<span style="display:inline-block;background:#dcfce7;color:#166534;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Referidos</span>';
     else if (o.fuente_adquisicion === 'Vía pública') fuenteBadge = '<span style="display:inline-block;background:#ffedd5;color:#9a3412;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Vía pública</span>';
+    else if (o.fuente_adquisicion === 'Ya era cliente') fuenteBadge = '<span style="display:inline-block;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Ya era cliente</span>';
     var completadaCell = '';
     if (esAdmin) {
       var checked = o.completada ? ' checked' : '';
@@ -933,10 +934,10 @@ function renderRechazos(data) {
 
 // ── Fuente de Adquisición ──
 function abrirFuente(id, actual) {
-  var opciones = ['CRM', 'Referidos', 'Vía pública'];
+  var opciones = ['CRM', 'Referidos', 'Vía pública', 'Ya era cliente'];
   var msg = 'Fuente de adquisición:\n';
   opciones.forEach(function(o, i) { msg += (i+1) + '. ' + o + (o === actual ? ' (actual)' : '') + '\n'; });
-  msg += '\nIngresá el número (1, 2 o 3):';
+  msg += '\nIngresá el número (1, 2, 3 o 4):';
   var sel = prompt(msg);
   if (!sel) return;
   var idx = parseInt(sel) - 1;
