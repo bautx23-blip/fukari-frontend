@@ -320,6 +320,17 @@ function renderInstalaciones(data) {
   });
   html += '</tbody></table></div>';
 
+  // Tabla top localidades por equipos instalados
+  var topLoc = data.top_localidades || [];
+  if (topLoc.length > 0) {
+    html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Top localidades por equipos instalados</h3></div>';
+    html += '<table><thead><tr><th>Localidad</th><th class="right">Equipos instalados</th><th class="right">Ordenes</th></tr></thead><tbody>';
+    topLoc.forEach(function(l) {
+      html += '<tr><td class="bold">' + l.localidad + '</td><td class="right">' + l.equipos + '</td><td class="right">' + l.ordenes + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
   // Tabla top clientes
   html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Top 10 clientes por facturado</h3></div>';
   html += '<table><thead><tr><th>Razon Social</th><th>CUIT</th><th class="right">Ordenes</th><th class="right">Total facturado</th></tr></thead><tbody>';
