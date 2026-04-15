@@ -823,14 +823,18 @@ function seleccionarTipoBaja(tipo) {
   } else if (tipo === 'parcial') {
     // Baja parcial: show equipos selector with model details
     document.getElementById('baja-total-cant-section').style.display = 'none';
-    // Restore manual equipment section for parcial if in manual mode
+    // En modo manual el usuario carga directamente los equipos a dar de baja en la
+    // sección "EQUIPOS A DAR DE BAJA (CARGA MANUAL)". El selector con checkboxes
+    // es redundante y confunde (no se auto-refresca al agregar equipos).
     if (_manualMode) {
       document.getElementById('equipos-manual-section').style.display = 'block';
+      document.getElementById('equipos-selector').style.display = 'none';
+      return;
     }
-    var equipos = _manualMode ? getEquiposManuales() : ((ordenRef && ordenRef.equipos_activos) || []);
+    var equipos = (ordenRef && ordenRef.equipos_activos) || [];
     var list = document.getElementById('equipos-check-list');
     if (equipos.length === 0) {
-      list.innerHTML = '<p style="font-size:12px;color:#9ca3af;">' + (_manualMode ? 'Agregá equipos arriba primero para poder seleccionarlos.' : 'Este cliente no tiene equipos registrados.') + '</p>';
+      list.innerHTML = '<p style="font-size:12px;color:#9ca3af;">Este cliente no tiene equipos registrados.</p>';
     } else {
       list.innerHTML = equipos.map(function(e, i) {
         var cant = parseInt(e.cantidad) || 1;
@@ -1079,7 +1083,7 @@ function obtenerAdvertencias() {
     tieneEquipos = (ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0);
   }
   if (!tieneEquipos) warns.push('Al menos 1 equipo');
-  if (_tipoBaja === 'parcial' && _equiposBaja.length === 0) warns.push('Equipos seleccionados para baja parcial');
+  if (_tipoBaja === 'parcial' && !_manualMode && _equiposBaja.length === 0) warns.push('Equipos seleccionados para baja parcial');
   var retira = document.getElementById('retira-equipo').value;
   if (retira === 'si') {
     var domVal = document.getElementById('dom-retiro').value.trim();
@@ -1245,7 +1249,7 @@ async function guardarBaja() {
       localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '',
       cliente_manual: _manualMode,
       productos_ref: (function() {
-        if (_tipoBaja === 'parcial') return _equiposBaja;
+        if (_tipoBaja === 'parcial') return _manualMode ? getEquiposManuales() : _equiposBaja;
         if (_tipoBaja === 'total') {
           if (!_manualMode && ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0) return ordenRef.equipos_activos;
           var cantTotal = parseInt(document.getElementById('baja-total-cantidad').value) || 1;
@@ -1265,7 +1269,7 @@ async function guardarBaja() {
         if (!_manualMode && ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0) return ordenRef.equipos_activos;
         var cantTotal = parseInt(document.getElementById('baja-total-cantidad').value) || 1;
         return [{ modelo: 'Baja total', cantidad: cantTotal, domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '', localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '' }];
-      })() : _equiposBaja,
+      })() : (_manualMode ? getEquiposManuales() : _equiposBaja),
       retira_equipo: document.getElementById('retira-equipo').value === 'si',
       dom_retiro: document.getElementById('dom-retiro').value.trim() || (document.getElementById('dom-retiro-manual') ? document.getElementById('dom-retiro-manual').value.trim() : ''),
       localidad_retiro: document.getElementById('localidad-retiro').value.trim() || (document.getElementById('localidad-retiro-manual') ? document.getElementById('localidad-retiro-manual').value.trim() : ''),
