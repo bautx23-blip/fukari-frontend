@@ -698,10 +698,42 @@ function cerrarModal(e) {
 
 // ── EDITAR ORDEN ──
 var _editOrdenActual = null;
+var _modelosCache = {}; // { 'instalacion': [...], 'venta': [...] }
 
-function abrirEdicion(o) {
+async function cargarModelosPorTipo(tipo) {
+  if (_modelosCache[tipo]) return _modelosCache[tipo];
+  try {
+    var r = await fetch(API_URL + '/api/stock?tipo=' + encodeURIComponent(tipo));
+    var items = await r.json();
+    _modelosCache[tipo] = Array.isArray(items) ? items.map(function(it){ return it.modelo; }) : [];
+  } catch (e) {
+    _modelosCache[tipo] = [];
+  }
+  return _modelosCache[tipo];
+}
+
+function _modeloSelectHtml(modelos, valor) {
+  var opts = '<option value="">— Seleccionar —</option>';
+  var incluida = false;
+  modelos.forEach(function(m) {
+    var sel = (m === valor) ? ' selected' : '';
+    if (m === valor) incluida = true;
+    opts += '<option value="' + esc(m) + '"' + sel + '>' + esc(m) + '</option>';
+  });
+  // Si el modelo cargado no está en la lista actual (ej. discontinuado), lo agregamos
+  // para no perder la selección al editar.
+  if (valor && !incluida) {
+    opts += '<option value="' + esc(valor) + '" selected>' + esc(valor) + ' (fuera de stock)</option>';
+  }
+  return '<select class="edit-prod-modelo">' + opts + '</select>';
+}
+
+async function abrirEdicion(o) {
   _editOrdenActual = o;
   document.getElementById('modal-editar-titulo').textContent = 'Editar Orden ' + (o.numero_completo||'');
+  var tipoStock = (o.tipo_orden === 'venta') ? 'venta' : 'instalacion';
+  var MODELOS = await cargarModelosPorTipo(tipoStock);
+  _editOrdenActual._modelos = MODELOS;
 
   var fechaVal = o.fecha_orden || '';
 
@@ -736,7 +768,7 @@ function abrirEdicion(o) {
   html += '<div class="form-full" id="edit-productos-wrap">';
   prods.forEach(function(p, i) {
     html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;" class="edit-prod-row">';
-    html += '<div><label>Modelo</label><input type="text" class="edit-prod-modelo" value="' + esc(p.modelo) + '"></div>';
+    html += '<div><label>Modelo</label>' + _modeloSelectHtml(MODELOS, p.modelo || '') + '</div>';
     html += '<div><label>Cantidad</label><input type="number" class="edit-prod-cantidad" value="' + (p.cantidad||1) + '" min="1"></div>';
     html += '<div><label>P. Unitario</label><input type="number" class="edit-prod-precio" value="' + (p.precio_unitario||0) + '" step="0.01"></div>';
     html += '<div><label>Domicilio</label><input type="text" class="edit-prod-domicilio" value="' + esc(p.domicilio) + '"></div>';
@@ -768,7 +800,8 @@ function agregarProductoEdit() {
   var row = document.createElement('div');
   row.className = 'edit-prod-row';
   row.style = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;';
-  row.innerHTML = '<div><label>Modelo</label><input type="text" class="edit-prod-modelo" value=""></div>' +
+  var modelos = (_editOrdenActual && _editOrdenActual._modelos) || [];
+  row.innerHTML = '<div><label>Modelo</label>' + _modeloSelectHtml(modelos, '') + '</div>' +
     '<div><label>Cantidad</label><input type="number" class="edit-prod-cantidad" value="1" min="1"></div>' +
     '<div><label>P. Unitario</label><input type="number" class="edit-prod-precio" value="0" step="0.01"></div>' +
     '<div><label>Domicilio</label><input type="text" class="edit-prod-domicilio" value=""></div>' +
