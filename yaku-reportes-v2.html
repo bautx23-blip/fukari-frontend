@@ -224,7 +224,7 @@ function cargarDatos() {
     fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); }),
     fetch(API_URL + '/api/rechazos-crediticios' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
     fetch(API_URL + '/api/ordenes/no-factibles').then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
-    fetch(API_URL + '/api/ordenes/fuentes-resumen').then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; })
+    fetch(API_URL + '/api/ordenes/fuentes-resumen' + qs).then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; })
   ]).then(function(results) {
     destroyCharts();
     renderAll(results[0], results[1], results[2], results[3], results[4], results[5], results[6]);
