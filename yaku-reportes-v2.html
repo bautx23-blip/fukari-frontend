@@ -753,6 +753,43 @@ function renderFuentes(data) {
     html += '<div class="tabla-wrap" style="padding:24px;"><div style="max-width:320px;margin:0 auto;"><canvas id="chart-fuentes"></canvas></div></div>';
   }
 
+  // Tabla cierres por vendedor y fuente
+  var byVend = data.by_vendedor || [];
+  if (byVend.length > 0) {
+    html += '<div class="tabla-wrap" style="margin-top:20px;"><div class="tabla-header"><h3>Cierres por vendedor y fuente</h3></div>';
+    html += '<table><thead><tr>';
+    html += '<th>Vendedor</th>';
+    html += '<th class="right" style="color:#2563eb;">CRM</th>';
+    html += '<th class="right" style="color:#16a34a;">Referidos</th>';
+    html += '<th class="right" style="color:#d97706;">Vía pública</th>';
+    html += '<th class="right" style="color:#7c3aed;">Ya era cliente</th>';
+    html += '<th class="right" style="color:#9ca3af;">Sin asignar</th>';
+    html += '<th class="right">Total</th>';
+    html += '</tr></thead><tbody>';
+    byVend.forEach(function(r) {
+      html += '<tr>';
+      html += '<td class="bold">' + r.vendedor + '</td>';
+      html += '<td class="right">' + (r.CRM || 0) + '</td>';
+      html += '<td class="right">' + (r.Referidos || 0) + '</td>';
+      html += '<td class="right">' + (r['Vía pública'] || 0) + '</td>';
+      html += '<td class="right">' + (r['Ya era cliente'] || 0) + '</td>';
+      html += '<td class="right" style="color:#9ca3af;">' + (r.sin_asignar || 0) + '</td>';
+      html += '<td class="right bold">' + r.total + '</td>';
+      html += '</tr>';
+    });
+    // Fila de totales
+    html += '<tr style="background:#f8fafc;border-top:2px solid #e5e7eb;font-weight:700;">';
+    html += '<td class="bold">Total</td>';
+    html += '<td class="right">' + crm + '</td>';
+    html += '<td class="right">' + ref + '</td>';
+    html += '<td class="right">' + via + '</td>';
+    html += '<td class="right">' + yec + '</td>';
+    html += '<td class="right" style="color:#9ca3af;">' + sinAsignar + '</td>';
+    html += '<td class="right bold">' + total + '</td>';
+    html += '</tr>';
+    html += '</tbody></table></div>';
+  }
+
   html += '</div>';
   return html;
 }
