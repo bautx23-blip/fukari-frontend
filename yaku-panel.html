@@ -731,7 +731,7 @@ function _modeloSelectHtml(modelos, valor) {
 async function abrirEdicion(o) {
   _editOrdenActual = o;
   document.getElementById('modal-editar-titulo').textContent = 'Editar Orden ' + (o.numero_completo||'');
-  var tipoStock = (o.tipo_orden === 'venta') ? 'venta' : 'instalacion';
+  var tipoStock = (o.tipo_orden === 'venta') ? 'venta' : 'alquiler';
   var MODELOS = await cargarModelosPorTipo(tipoStock);
   _editOrdenActual._modelos = MODELOS;
 
