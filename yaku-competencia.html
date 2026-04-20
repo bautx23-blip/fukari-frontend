@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relevamiento de Competencia — Yakú</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;background:#f1f5f9;min-height:100vh;color:#111827;visibility:hidden;}
+body.ready{visibility:visible;}
+
+/* ── TOPBAR ── */
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.topbar-logos img.yaku{height:36px;}
+.topbar-logos .fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
+.topbar-logos img.fuk{height:26px;}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:0.3px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-right span{color:#9ca3af;font-size:12px;}
+.btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.15s;text-decoration:none;}
+.btn-logout:hover{border-color:#9ca3af;color:#fff;}
+
+.contenido{padding:28px 32px;max-width:1280px;margin:0 auto;}
+
+.page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;}
+.page-head h1{font-size:20px;font-weight:700;color:#1a1a2e;}
+.page-head p{font-size:12.5px;color:#6b7280;margin-top:2px;}
+.btn-primary{padding:10px 18px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary:hover{background:#1d4ed8;}
+
+/* ── Filtros ── */
+.filtros{background:#fff;border-radius:8px;padding:14px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.filtros label{font-size:11.5px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;}
+.filtros input,.filtros select{padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;transition:border-color 0.15s;}
+.filtros input:focus,.filtros select:focus{border-color:#2563eb;}
+.btn-clear{padding:7px 12px;background:transparent;border:1.5px solid #e5e7eb;border-radius:6px;color:#6b7280;font-family:inherit;font-size:12px;cursor:pointer;}
+.btn-clear:hover{border-color:#9ca3af;color:#374151;}
+
+/* ── Tabla ── */
+.tabla-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:#f9fafb;padding:11px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e5e7eb;white-space:nowrap;}
+thead th.right{text-align:right;}
+tbody tr{border-bottom:1px solid #f3f4f6;transition:background 0.1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f9fafb;}
+tbody td{padding:12px 14px;font-size:13px;color:#374151;vertical-align:middle;}
+tbody td.right{text-align:right;font-variant-numeric:tabular-nums;}
+tbody td.muted{color:#9ca3af;}
+.badge-tipo{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700;letter-spacing:0.3px;text-transform:uppercase;}
+.badge-tipo.dispenser{background:#dbeafe;color:#1d4ed8;}
+.badge-tipo.bidones{background:#dcfce7;color:#16a34a;}
+.badge-tipo.ambos{background:#fef3c7;color:#b45309;}
+.badge-install{background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700;}
+.badge-install.no{background:#f3f4f6;color:#6b7280;}
+
+.acciones-wrap{display:flex;gap:6px;}
+.btn-row{padding:6px 10px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid transparent;line-height:1;display:inline-flex;align-items:center;white-space:nowrap;}
+.btn-edit{background:#fef3c7;border-color:#fde68a;color:#b45309;}
+.btn-edit:hover{background:#fde68a;}
+.btn-del{background:#fee2e2;border-color:#fecaca;color:#b91c1c;}
+.btn-del:hover{background:#fecaca;}
+
+.loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
+.empty-msg{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
+.error-msg{text-align:center;padding:48px;color:#dc2626;font-size:14px;}
+
+/* ── Modal ── */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px;}
+#modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:10px;width:620px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;}
+.modal-header{padding:18px 22px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:15px;font-weight:700;color:#1a1a2e;}
+.modal-close{background:transparent;border:none;font-size:20px;color:#9ca3af;cursor:pointer;line-height:1;}
+.modal-close:hover{color:#374151;}
+.modal-body{padding:22px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.modal-body .full{grid-column:1 / -1;}
+.modal-body label{display:block;font-size:11.5px;font-weight:600;color:#4b5563;margin-bottom:4px;letter-spacing:0.2px;}
+.modal-body input[type=text],.modal-body input[type=number],.modal-body input[type=date],.modal-body textarea,.modal-body select{width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;transition:border-color 0.15s;}
+.modal-body textarea{min-height:80px;resize:vertical;}
+.modal-body input:focus,.modal-body textarea:focus,.modal-body select:focus{border-color:#2563eb;}
+.radio-group{display:flex;gap:14px;flex-wrap:wrap;}
+.radio-group label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#374151;margin:0;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;}
+.radio-group input{accent-color:#2563eb;}
+.toggle-row{display:flex;align-items:center;gap:10px;}
+.toggle-row input[type=checkbox]{width:18px;height:18px;accent-color:#2563eb;cursor:pointer;}
+.modal-footer{padding:14px 22px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end;background:#f9fafb;}
+.btn-cancel{padding:9px 18px;background:#fff;border:1.5px solid #e5e7eb;border-radius:7px;color:#374151;font-family:inherit;font-size:13px;cursor:pointer;}
+.btn-cancel:hover{background:#f3f4f6;}
+.btn-save{padding:9px 22px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-save:hover{background:#1d4ed8;}
+.btn-save:disabled{opacity:0.6;cursor:not-allowed;}
+
+@media(max-width:720px){
+  .modal-body{grid-template-columns:1fr;}
+  thead th,tbody td{padding:10px 10px;font-size:11.5px;}
+  .contenido{padding:18px;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yaku">
+    <div class="fuk-wrap"><img class="fuk" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
+  </div>
+  <span class="topbar-title">Relevamiento de Competencia</span>
+  <div class="topbar-right">
+    <span id="topbar-fecha"></span>
+    <a href="/hub.html" class="btn-logout">&#8592; Inicio</a>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="contenido">
+  <div class="page-head">
+    <div>
+      <h1>Relevamiento de Competencia</h1>
+      <p>Registrá llamadas a competidores con precios, equipos y condiciones.</p>
+    </div>
+    <button class="btn-primary" onclick="abrirModalNuevo()">+ Nueva llamada</button>
+  </div>
+
+  <div class="filtros">
+    <label>Competidor</label>
+    <select id="filtro-competidor" onchange="aplicarFiltros()">
+      <option value="">Todos</option>
+    </select>
+    <label>Desde</label>
+    <input type="date" id="filtro-desde" onchange="aplicarFiltros()">
+    <label>Hasta</label>
+    <input type="date" id="filtro-hasta" onchange="aplicarFiltros()">
+    <button class="btn-clear" onclick="limpiarFiltros()">Limpiar</button>
+  </div>
+
+  <div class="tabla-wrap">
+    <div id="tabla-body"><div class="loading">Cargando llamadas…</div></div>
+  </div>
+</div>
+
+<!-- Modal crear/editar -->
+<div id="modal-overlay" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-titulo">Nueva llamada</h3>
+      <button class="modal-close" onclick="cerrarModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label>Fecha de la llamada *</label>
+        <input type="date" id="f-fecha">
+      </div>
+      <div>
+        <label>Nombre del competidor *</label>
+        <input type="text" id="f-competidor" placeholder="Ej: Aquavita">
+      </div>
+      <div>
+        <label>Precio mensual del servicio (ARS)</label>
+        <input type="number" id="f-precio-mensual" min="0" step="0.01" placeholder="0">
+      </div>
+      <div>
+        <label>Modelo más básico</label>
+        <input type="text" id="f-modelo-basico" placeholder="Ej: Osmosis compacto">
+      </div>
+      <div class="full">
+        <label>Tipo de equipo</label>
+        <div class="radio-group">
+          <label><input type="radio" name="f-tipo" value="dispenser" onchange="onTipoChange()"> Dispenser</label>
+          <label><input type="radio" name="f-tipo" value="bidones" onchange="onTipoChange()"> Bidones</label>
+          <label><input type="radio" name="f-tipo" value="ambos" onchange="onTipoChange()"> Ambos</label>
+        </div>
+      </div>
+      <div id="wrap-costo-disp" style="display:none;">
+        <label>Costo dispenser (ARS)</label>
+        <input type="number" id="f-costo-disp" min="0" step="0.01" placeholder="0">
+      </div>
+      <div id="wrap-costo-bid" style="display:none;">
+        <label>Costo bidones (ARS)</label>
+        <input type="number" id="f-costo-bid" min="0" step="0.01" placeholder="0">
+      </div>
+      <div class="full">
+        <label>&iquest;Tiene costo de instalaci&oacute;n?</label>
+        <div class="toggle-row">
+          <input type="checkbox" id="f-tiene-inst" onchange="onInstChange()">
+          <span id="f-tiene-inst-label" style="font-size:13px;color:#6b7280;">No</span>
+        </div>
+      </div>
+      <div id="wrap-costo-inst" class="full" style="display:none;">
+        <label>Costo de instalaci&oacute;n (ARS) *</label>
+        <input type="number" id="f-costo-inst" min="0" step="0.01" placeholder="0">
+      </div>
+      <div class="full">
+        <label>Notas (opcional)</label>
+        <textarea id="f-notas" placeholder="Comentarios, contactos, promociones, etc."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save" id="btn-save" onclick="guardar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var API_URL = 'https://fukari-backend-production-92f1.up.railway.app';
+var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+var _currentUserEmail = '';
+var _todas = [];
+var _editId = null;
+
+sb.auth.getSession().then(function(result) {
+  var session = result.data.session;
+  if (!session) { window.location.href = '/index.html'; return; }
+  _currentUserEmail = session.user.email;
+  if (_currentUserEmail !== ADMIN_EMAIL) { window.location.href = '/hub.html'; return; }
+  document.body.classList.add('ready');
+  document.getElementById('topbar-fecha').textContent = new Date().toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'});
+  cargar();
+});
+
+function logout() { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); }
+
+function fmtMoney(v) {
+  if (v === null || v === undefined || v === '') return '—';
+  var n = parseFloat(v);
+  if (isNaN(n)) return '—';
+  return '$' + n.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
+}
+
+function fmtFecha(s) {
+  if (!s) return '—';
+  var parts = s.split('-');
+  if (parts.length < 3) return s;
+  return parts[2] + '/' + parts[1] + '/' + parts[0];
+}
+
+function esc(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function cargar() {
+  var url = API_URL + '/api/llamadas-competencia?email=' + encodeURIComponent(_currentUserEmail);
+  fetch(url, { headers: { 'x-user-email': _currentUserEmail } })
+    .then(function(r) {
+      if (!r.ok) throw new Error('Error ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      _todas = data || [];
+      actualizarFiltroCompetidores();
+      render();
+    })
+    .catch(function(err) {
+      document.getElementById('tabla-body').innerHTML = '<div class="error-msg">Error al cargar: ' + esc(err.message) + '</div>';
+    });
+}
+
+function actualizarFiltroCompetidores() {
+  var sel = document.getElementById('filtro-competidor');
+  var prev = sel.value;
+  var nombres = {};
+  _todas.forEach(function(l) {
+    if (l.competidor_nombre) nombres[l.competidor_nombre] = true;
+  });
+  var ordenados = Object.keys(nombres).sort(function(a,b){ return a.localeCompare(b, 'es'); });
+  sel.innerHTML = '<option value="">Todos</option>' + ordenados.map(function(n){
+    return '<option value="' + esc(n) + '">' + esc(n) + '</option>';
+  }).join('');
+  if (prev && ordenados.indexOf(prev) !== -1) sel.value = prev;
+}
+
+function aplicarFiltros() {
+  render();
+}
+
+function limpiarFiltros() {
+  document.getElementById('filtro-competidor').value = '';
+  document.getElementById('filtro-desde').value = '';
+  document.getElementById('filtro-hasta').value = '';
+  render();
+}
+
+function filtrar() {
+  var comp = document.getElementById('filtro-competidor').value;
+  var desde = document.getElementById('filtro-desde').value;
+  var hasta = document.getElementById('filtro-hasta').value;
+  return _todas.filter(function(l) {
+    if (comp && l.competidor_nombre !== comp) return false;
+    if (desde && l.fecha_llamada < desde) return false;
+    if (hasta && l.fecha_llamada > hasta) return false;
+    return true;
+  });
+}
+
+function render() {
+  var rows = filtrar();
+  var wrap = document.getElementById('tabla-body');
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="empty-msg">Sin registros.</div>';
+    return;
+  }
+  var html = '<table><thead><tr>';
+  html += '<th>Fecha</th><th>Competidor</th><th class="right">Precio mensual</th><th>Modelo básico</th><th>Tipo equipo</th><th class="right">$ Dispenser</th><th class="right">$ Bidones</th><th>Instalación</th><th>Acciones</th>';
+  html += '</tr></thead><tbody>';
+  rows.forEach(function(l) {
+    var tipo = l.tipo_equipo ? '<span class="badge-tipo ' + l.tipo_equipo + '">' + l.tipo_equipo + '</span>' : '<span class="muted">—</span>';
+    var inst;
+    if (l.tiene_costo_instalacion) {
+      inst = '<span class="badge-install">' + fmtMoney(l.costo_instalacion) + '</span>';
+    } else {
+      inst = '<span class="badge-install no">Sin costo</span>';
+    }
+    html += '<tr>';
+    html += '<td>' + esc(fmtFecha(l.fecha_llamada)) + '</td>';
+    html += '<td style="font-weight:600">' + esc(l.competidor_nombre || '—') + '</td>';
+    html += '<td class="right">' + esc(fmtMoney(l.precio_mensual_servicio)) + '</td>';
+    html += '<td>' + esc(l.modelo_basico || '—') + '</td>';
+    html += '<td>' + tipo + '</td>';
+    html += '<td class="right">' + esc(fmtMoney(l.costo_dispenser)) + '</td>';
+    html += '<td class="right">' + esc(fmtMoney(l.costo_bidones)) + '</td>';
+    html += '<td>' + inst + '</td>';
+    html += '<td><div class="acciones-wrap">';
+    html += '<button class="btn-row btn-edit" onclick="abrirModalEditar(' + l.id + ')">Editar</button>';
+    html += '<button class="btn-row btn-del" onclick="eliminar(' + l.id + ')">Eliminar</button>';
+    html += '</div></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function abrirModalNuevo() {
+  _editId = null;
+  document.getElementById('modal-titulo').textContent = 'Nueva llamada';
+  document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f-competidor').value = '';
+  document.getElementById('f-precio-mensual').value = '';
+  document.getElementById('f-modelo-basico').value = '';
+  document.querySelectorAll('input[name="f-tipo"]').forEach(function(r){ r.checked = false; });
+  document.getElementById('f-costo-disp').value = '';
+  document.getElementById('f-costo-bid').value = '';
+  document.getElementById('f-tiene-inst').checked = false;
+  document.getElementById('f-tiene-inst-label').textContent = 'No';
+  document.getElementById('f-costo-inst').value = '';
+  document.getElementById('f-notas').value = '';
+  onTipoChange();
+  onInstChange();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function abrirModalEditar(id) {
+  var l = _todas.find(function(x){ return x.id === id; });
+  if (!l) return;
+  _editId = id;
+  document.getElementById('modal-titulo').textContent = 'Editar llamada';
+  document.getElementById('f-fecha').value = l.fecha_llamada || '';
+  document.getElementById('f-competidor').value = l.competidor_nombre || '';
+  document.getElementById('f-precio-mensual').value = l.precio_mensual_servicio != null ? l.precio_mensual_servicio : '';
+  document.getElementById('f-modelo-basico').value = l.modelo_basico || '';
+  document.querySelectorAll('input[name="f-tipo"]').forEach(function(r){ r.checked = r.value === l.tipo_equipo; });
+  document.getElementById('f-costo-disp').value = l.costo_dispenser != null ? l.costo_dispenser : '';
+  document.getElementById('f-costo-bid').value = l.costo_bidones != null ? l.costo_bidones : '';
+  document.getElementById('f-tiene-inst').checked = !!l.tiene_costo_instalacion;
+  document.getElementById('f-tiene-inst-label').textContent = l.tiene_costo_instalacion ? 'Sí' : 'No';
+  document.getElementById('f-costo-inst').value = l.costo_instalacion != null ? l.costo_instalacion : '';
+  document.getElementById('f-notas').value = l.notas || '';
+  onTipoChange();
+  onInstChange();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function cerrarModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  _editId = null;
+}
+
+function onTipoChange() {
+  var tipo = (document.querySelector('input[name="f-tipo"]:checked') || {}).value || '';
+  document.getElementById('wrap-costo-disp').style.display = (tipo === 'dispenser' || tipo === 'ambos') ? '' : 'none';
+  document.getElementById('wrap-costo-bid').style.display = (tipo === 'bidones' || tipo === 'ambos') ? '' : 'none';
+}
+
+function onInstChange() {
+  var chk = document.getElementById('f-tiene-inst').checked;
+  document.getElementById('f-tiene-inst-label').textContent = chk ? 'Sí' : 'No';
+  document.getElementById('wrap-costo-inst').style.display = chk ? '' : 'none';
+}
+
+function guardar() {
+  var fecha = document.getElementById('f-fecha').value;
+  var competidor = document.getElementById('f-competidor').value.trim();
+  if (!fecha) { alert('Fecha de llamada es requerida'); return; }
+  if (!competidor) { alert('Nombre del competidor es requerido'); return; }
+
+  var tipo = (document.querySelector('input[name="f-tipo"]:checked') || {}).value || null;
+  var tieneInst = document.getElementById('f-tiene-inst').checked;
+  var costoInst = document.getElementById('f-costo-inst').value;
+  if (tieneInst && (!costoInst || parseFloat(costoInst) <= 0)) {
+    alert('Costo de instalación debe ser mayor a 0'); return;
+  }
+
+  var payload = {
+    email: _currentUserEmail,
+    fecha_llamada: fecha,
+    competidor_nombre: competidor,
+    precio_mensual_servicio: document.getElementById('f-precio-mensual').value || null,
+    modelo_basico: document.getElementById('f-modelo-basico').value.trim() || null,
+    tipo_equipo: tipo,
+    costo_dispenser: (tipo === 'dispenser' || tipo === 'ambos') ? (document.getElementById('f-costo-disp').value || null) : null,
+    costo_bidones: (tipo === 'bidones' || tipo === 'ambos') ? (document.getElementById('f-costo-bid').value || null) : null,
+    tiene_costo_instalacion: tieneInst,
+    costo_instalacion: tieneInst ? costoInst : null,
+    notas: document.getElementById('f-notas').value.trim() || null
+  };
+
+  var btn = document.getElementById('btn-save');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+
+  var url, method;
+  if (_editId) {
+    url = API_URL + '/api/llamadas-competencia/' + _editId + '?email=' + encodeURIComponent(_currentUserEmail);
+    method = 'PATCH';
+  } else {
+    url = API_URL + '/api/llamadas-competencia?email=' + encodeURIComponent(_currentUserEmail);
+    method = 'POST';
+  }
+
+  fetch(url, {
+    method: method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(j){ throw new Error(j.error || ('Error ' + r.status)); });
+    return r.json();
+  }).then(function() {
+    cerrarModal();
+    cargar();
+  }).catch(function(err) {
+    alert('Error al guardar: ' + err.message);
+  }).finally(function() {
+    btn.disabled = false; btn.textContent = 'Guardar';
+  });
+}
+
+function eliminar(id) {
+  var l = _todas.find(function(x){ return x.id === id; });
+  var nombre = l ? (l.competidor_nombre + ' — ' + fmtFecha(l.fecha_llamada)) : ('#' + id);
+  if (!confirm('¿Eliminar llamada a ' + nombre + '?')) return;
+  var url = API_URL + '/api/llamadas-competencia/' + id + '?email=' + encodeURIComponent(_currentUserEmail);
+  fetch(url, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: _currentUserEmail })
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(j){ throw new Error(j.error || ('Error ' + r.status)); });
+    return r.json();
+  }).then(function() {
+    cargar();
+  }).catch(function(err) {
+    alert('Error al eliminar: ' + err.message);
+  });
+}
+</script>
+</body>
+</html>
