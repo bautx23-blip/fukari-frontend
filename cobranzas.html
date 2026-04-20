@@ -1075,13 +1075,36 @@ function renderChats(lista) {
     const sel = chatSeleccionado?.telefono === c.telefono ? 'selected' : '';
     const m = c.ultimo_mensaje || {};
     const dir = m.direccion === 'OUTBOUND' ? 'out' : 'in';
+    const nombreMostrable = c.razon_social || c.telefono;
+    const iniSrc = c.razon_social || '?';
+    if (c.sin_cobro_activo) {
+      return `
+        <div class="chat-item ${sel}" onclick="abrirChat('${c.telefono}')">
+          <div class="chat-avatar" style="background: linear-gradient(135deg,#2c3340,#3b4250)">${escHtml(iniciales(iniSrc))}</div>
+          <div class="chat-body">
+            <div class="chat-row">
+              <div class="chat-name">${escHtml(c.telefono)}</div>
+              <div class="chat-time">${relativeTime(c.ultima_actividad)}</div>
+            </div>
+            <div class="chat-preview">
+              <span class="dir-dot ${dir}"></span>
+              ${escHtml(previewUltimo(m))}
+            </div>
+            <div class="chat-meta">
+              <span style="color:var(--warn)">● Sin cobro activo</span>
+              <span class="total">—</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
     const total = Number(c.total_facturado || 0).toLocaleString('es-AR');
     return `
       <div class="chat-item ${sel}" onclick="abrirChat('${c.telefono}')">
-        <div class="chat-avatar">${escHtml(iniciales(c.razon_social))}</div>
+        <div class="chat-avatar">${escHtml(iniciales(iniSrc))}</div>
         <div class="chat-body">
           <div class="chat-row">
-            <div class="chat-name">${escHtml(c.razon_social || c.telefono)}</div>
+            <div class="chat-name">${escHtml(nombreMostrable)}</div>
             <div class="chat-time">${relativeTime(c.ultima_actividad)}</div>
           </div>
           <div class="chat-preview">
@@ -1117,23 +1140,35 @@ function renderChatDetail(data) {
   const main = document.getElementById('chatMainArea');
   document.getElementById('chatMainEmpty')?.remove();
 
-  const pendientes = cobros.filter(c => c.estado !== 'COBRADO' && c.estado !== 'DISPUTA').length;
-  const deudaPend = cobros
+  const pendientes = (cobros || []).filter(c => c.estado !== 'COBRADO' && c.estado !== 'DISPUTA').length;
+  const deudaPend = (cobros || [])
     .filter(c => c.estado !== 'COBRADO')
     .reduce((s, c) => s + (parseFloat(c.importe) || 0), 0);
 
+  const iniSrc = cliente.razon_social || '?';
+  const avatarStyle = cliente.sin_cobro_activo
+    ? 'background: linear-gradient(135deg,#2c3340,#3b4250)'
+    : '';
+
+  const headerSub = cliente.sin_cobro_activo
+    ? `
+        <span>📞 ${escHtml(cliente.telefono)}</span>
+        <span style="color:var(--warn)">● Sin cobro activo — número no reconocido</span>
+      `
+    : `
+        <span>📞 ${escHtml(cliente.telefono)}</span>
+        <span>📍 ${escHtml(cliente.localidad || '—')}</span>
+        <span>🗂 ${cliente.cantidad_cobros} cobro${cliente.cantidad_cobros===1?'':'s'}</span>
+        <span>✓ ${cliente.cobrado} cobrado${cliente.cobrado===1?'':'s'}</span>
+        ${pendientes ? `<span style="color:var(--warn)">● ${pendientes} pendiente${pendientes===1?'':'s'} · $${Math.round(deudaPend).toLocaleString('es-AR')}</span>` : ''}
+      `;
+
   main.innerHTML = `
     <div class="chat-detail-header">
-      <div class="chat-avatar">${escHtml(iniciales(cliente.razon_social))}</div>
+      <div class="chat-avatar" style="${avatarStyle}">${escHtml(iniciales(iniSrc))}</div>
       <div class="chat-detail-info">
         <div class="chat-detail-name">${escHtml(cliente.razon_social || cliente.telefono)}</div>
-        <div class="chat-detail-sub">
-          <span>📞 ${escHtml(cliente.telefono)}</span>
-          <span>📍 ${escHtml(cliente.localidad || '—')}</span>
-          <span>🗂 ${cliente.cantidad_cobros} cobro${cliente.cantidad_cobros===1?'':'s'}</span>
-          <span>✓ ${cliente.cobrado} cobrado${cliente.cobrado===1?'':'s'}</span>
-          ${pendientes ? `<span style="color:var(--warn)">● ${pendientes} pendiente${pendientes===1?'':'s'} · $${Math.round(deudaPend).toLocaleString('es-AR')}</span>` : ''}
-        </div>
+        <div class="chat-detail-sub">${headerSub}</div>
       </div>
     </div>
     <div class="chat-stream" id="chatStream"></div>
