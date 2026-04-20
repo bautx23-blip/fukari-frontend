@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fukari — Cobranzas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #1c2330;
+      --border:    #30363d;
+      --border2:   #21262d;
+      --text:      #e6edf3;
+      --muted:     #7d8590;
+      --accent:    #1a9e6b;
+      --accent-lt: #23c47e;
+      --accent-bg: rgba(26,158,107,.12);
+      --warn:      #d29922;
+      --warn-bg:   rgba(210,153,34,.12);
+      --danger:    #c0392b;
+      --danger-bg: rgba(192,57,43,.12);
+      --info:      #2e7de9;
+      --info-bg:   rgba(46,125,233,.12);
+      --sent:      #6e56cf;
+      --sent-bg:   rgba(110,86,207,.12);
+      --radius:    10px;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-back {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      display: flex; align-items: center; gap: 5px;
+      transition: color .2s;
+    }
+    .topbar-back:hover { color: var(--text); }
+    .topbar-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .badge-pill {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 20px;
+      background: var(--accent-bg); color: var(--accent-lt);
+    }
+    .topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+    /* ── LAYOUT ── */
+    .layout { display: grid; grid-template-columns: 280px 1fr; height: calc(100vh - 53px); overflow: hidden; }
+    .sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .main { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── SIDEBAR CONTROLS ── */
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border2);
+    }
+    .periodo-selector {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 8px 12px;
+      font-family: var(--font); color: var(--text); font-size: 13px;
+      width: 100%; cursor: pointer;
+    }
+    .periodo-selector select {
+      background: none; border: none; color: var(--text); font-family: var(--font);
+      font-size: 13px; flex: 1; cursor: pointer; outline: none;
+    }
+    .upload-area {
+      margin-top: 10px;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      color: var(--muted); font-size: 13px;
+    }
+    .upload-area:hover { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-lt); }
+    .upload-area input { display: none; }
+
+    /* ── STATS CHIPS ── */
+    .stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6px; padding: 14px 16px;
+      border-bottom: 1px solid var(--border2);
+    }
+    .stat-chip {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 8px; padding: 10px 12px;
+    }
+    .stat-chip .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .stat-chip .val { font-size: 20px; font-weight: 600; margin-top: 2px; }
+    .stat-chip.green .val { color: var(--accent-lt); }
+    .stat-chip.warn  .val { color: var(--warn); }
+    .stat-chip.red   .val { color: var(--danger); }
+    .stat-chip.purple .val { color: var(--sent); }
+
+    /* ── FILTER TABS ── */
+    .filter-tabs {
+      display: flex; gap: 4px; padding: 10px 16px;
+      border-bottom: 1px solid var(--border2); flex-wrap: wrap;
+    }
+    .filter-tab {
+      font-size: 12px; padding: 4px 10px; border-radius: 20px;
+      border: 1px solid var(--border); cursor: pointer;
+      background: none; color: var(--muted); transition: all .15s;
+    }
+    .filter-tab:hover { border-color: var(--accent); color: var(--text); }
+    .filter-tab.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent-lt); }
+
+    /* ── COBROS LIST ── */
+    .cobros-list { flex: 1; overflow-y: auto; }
+    .cobro-item {
+      padding: 12px 16px; border-bottom: 1px solid var(--border2);
+      cursor: pointer; transition: background .1s;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .cobro-item:hover { background: var(--surface2); }
+    .cobro-item.selected { background: var(--surface2); border-left: 3px solid var(--accent); }
+    .cobro-name { font-weight: 500; font-size: 13px; line-height: 1.3; }
+    .cobro-meta { display: flex; justify-content: space-between; align-items: center; }
+    .cobro-importe { font-family: var(--mono); font-size: 13px; color: var(--accent-lt); font-weight: 500; }
+    .cobro-status { display: flex; align-items: center; gap: 5px; }
+
+    /* ── STATUS BADGES ── */
+    .status {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; padding: 2px 7px; border-radius: 20px; white-space: nowrap;
+    }
+    .status.PENDIENTE          { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+    .status.MENSAJE_ENVIADO    { background: var(--sent-bg); color: var(--sent); }
+    .status.RESPONDIO          { background: var(--info-bg); color: var(--info); }
+    .status.COMPROBANTE_RECIBIDO { background: var(--warn-bg); color: var(--warn); }
+    .status.VALIDADO           { background: var(--accent-bg); color: var(--accent-lt); }
+    .status.COBRADO            { background: var(--accent-bg); color: var(--accent-lt); border: 1px solid var(--accent); }
+    .status.DISPUTA            { background: var(--danger-bg); color: var(--danger); }
+
+    /* ── MAIN AREA ── */
+    .main-empty {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+      color: var(--muted);
+    }
+    .main-empty .icon { font-size: 48px; opacity: .3; }
+
+    /* ── DETAIL HEADER ── */
+    .detail-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .detail-name { font-size: 18px; font-weight: 600; }
+    .detail-sub { color: var(--muted); font-size: 13px; margin-top: 3px; display: flex; gap: 12px; }
+    .detail-sub span { display: flex; align-items: center; gap: 4px; }
+
+    /* ── DETAIL BODY (2 cols) ── */
+    .detail-body { flex: 1; display: grid; grid-template-columns: 1fr 320px; overflow: hidden; }
+    .conversation { padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .info-panel { border-left: 1px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── CHAT BUBBLES ── */
+    .msg { max-width: 76%; display: flex; flex-direction: column; gap: 3px; }
+    .msg.outbound { align-self: flex-end; align-items: flex-end; }
+    .msg.inbound  { align-self: flex-start; align-items: flex-start; }
+    .msg-bubble {
+      padding: 9px 13px; border-radius: 12px;
+      font-size: 13px; line-height: 1.5; white-space: pre-wrap;
+    }
+    .msg.outbound .msg-bubble { background: var(--accent-bg); border: 1px solid rgba(26,158,107,.25); color: var(--text); border-radius: 12px 12px 2px 12px; }
+    .msg.inbound  .msg-bubble { background: var(--surface2); border: 1px solid var(--border2); color: var(--text); border-radius: 12px 12px 12px 2px; }
+    .msg-time { font-size: 11px; color: var(--muted); }
+    .msg-image { max-width: 200px; border-radius: 8px; margin-top: 4px; border: 1px solid var(--border); cursor: zoom-in; }
+
+    .conversation-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
+
+    /* ── INFO PANEL SECTIONS ── */
+    .info-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; font-size: 13px; }
+    .info-row .lbl { color: var(--muted); }
+    .info-row .val { font-weight: 500; font-family: var(--mono); font-size: 12px; }
+    .info-row .val.green { color: var(--accent-lt); }
+    .info-row .val.warn  { color: var(--warn); }
+    .info-row .val.red   { color: var(--danger); }
+
+    /* ── HISTORIAL ── */
+    .historial-card {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      margin-bottom: 8px; overflow: hidden; transition: border-color .15s;
+    }
+    .historial-card:hover { border-color: var(--accent); }
+    .historial-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; cursor: pointer; user-select: none;
+    }
+    .historial-header .periodo { font-size: 13px; font-weight: 600; color: var(--text); }
+    .historial-header .meta { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .historial-header .arrow { color: var(--muted); transition: transform .2s; font-size: 10px; }
+    .historial-card.open .historial-header .arrow { transform: rotate(90deg); }
+    .historial-body { display: none; padding: 0 12px 10px; }
+    .historial-card.open .historial-body { display: block; }
+    .historial-msgs { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 8px 0; }
+    .historial-msg { font-size: 12px; color: var(--muted); line-height: 1.4; padding: 6px 8px; background: var(--surface); border-radius: 6px; }
+    .historial-msg.outbound { border-left: 2px solid var(--accent); }
+    .historial-msg.inbound { border-left: 2px solid var(--border2); }
+    .historial-notas { font-size: 11px; color: var(--muted); padding: 6px 0; border-top: 1px solid var(--border); margin-top: 6px; word-break: break-word; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 7px 14px; border-radius: 7px; border: none; cursor: pointer;
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary  { background: var(--accent); color: #fff; }
+    .btn-primary:hover  { background: var(--accent-lt); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent-lt); }
+    .btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(192,57,43,.3); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid rgba(210,153,34,.3); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; padding: 20px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; width: 100%; max-width: 500px;
+      padding: 24px; display: flex; flex-direction: column; gap: 16px;
+    }
+    .modal-title { font-size: 16px; font-weight: 600; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+    .form-input, .form-textarea, .form-select {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 8px 12px; font-family: var(--font); font-size: 13px;
+      outline: none; transition: border-color .15s; width: 100%;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+    .form-textarea { resize: vertical; min-height: 100px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 200;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 18px; font-size: 13px;
+      display: flex; align-items: center; gap: 8px;
+      transform: translateY(80px); opacity: 0;
+      transition: all .3s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-left: 3px solid var(--accent); }
+    .toast.error   { border-left: 3px solid var(--danger); }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── CAMPAIGN LAUNCH BANNER ── */
+    .campaign-banner {
+      background: linear-gradient(135deg, #0f2d1e 0%, #0d1117 100%);
+      border: 1px solid rgba(26,158,107,.3);
+      border-radius: var(--radius); padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; margin: 16px;
+    }
+    .campaign-banner .info { display: flex; flex-direction: column; gap: 3px; }
+    .campaign-banner .title { font-weight: 600; font-size: 14px; color: var(--accent-lt); }
+    .campaign-banner .sub { font-size: 12px; color: var(--muted); }
+
+    .loading-dot {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-lt); animation: pulse 1.2s infinite;
+    }
+    .loading-dot:nth-child(2) { animation-delay: .2s; }
+    .loading-dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes pulse { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a href="hub.html" class="topbar-back">← Volver al Panel</a>
+  <span style="color:var(--border)">|</span>
+  <div class="topbar-title">
+    💧 Cobranzas
+    <span class="badge-pill" id="periodoLabel">—</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-secondary btn-sm" onclick="openPlantillasModal()">📋 Plantillas</button>
+    <button class="btn btn-secondary btn-sm" id="btnExportar" onclick="exportar()" disabled title="Sin cobros para exportar">⬇ Exportar XLS Cobranzas</button>
+    <button class="btn btn-primary btn-sm" onclick="openCampanaModal()" id="btnCampana">
+      📤 Lanzar campaña
+    </button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="periodo-selector">
+        📅
+        <select id="periodoSelect" onchange="cambiarPeriodo(this.value)">
+          <option value="2026-03">Marzo 2026</option>
+          <option value="2026-02">Febrero 2026</option>
+          <option value="2026-01">Enero 2026</option>
+        </select>
+      </div>
+      <label class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="subirArchivo(event)">
+        <div id="uploadText">📂 Subir planilla del mes</div>
+      </label>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-chip"><div class="label">Total</div><div class="val" id="statTotal">—</div></div>
+      <div class="stat-chip green"><div class="label">Cobrado</div><div class="val" id="statCobrado">—</div></div>
+      <div class="stat-chip warn"><div class="label">Pendiente</div><div class="val" id="statPendiente">—</div></div>
+      <div class="stat-chip red"><div class="label">Disputa</div><div class="val" id="statDisputa">—</div></div>
+    </div>
+
+    <!-- FILTER TABS -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filtrar(null, this)">Todos</button>
+      <button class="filter-tab" onclick="filtrar('PENDIENTE', this)">Pendiente</button>
+      <button class="filter-tab" onclick="filtrar('MENSAJE_ENVIADO', this)">Enviado</button>
+      <button class="filter-tab" onclick="filtrar('COMPROBANTE_RECIBIDO', this)">Comprobante</button>
+      <button class="filter-tab" onclick="filtrar('COBRADO', this)">Cobrado</button>
+      <button class="filter-tab" onclick="filtrar('DISPUTA', this)">Disputa</button>
+    </div>
+
+    <!-- LIST -->
+    <div class="cobros-list" id="cobrosList">
+      <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Subí una planilla para comenzar</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" id="mainArea">
+    <div class="main-empty" id="mainEmpty">
+      <div class="icon">💧</div>
+      <div style="font-size:15px;font-weight:500;color:var(--text)">Seleccioná un cobro</div>
+      <div style="font-size:13px;">para ver la conversación y el estado del pago</div>
+    </div>
+    <!-- Detail se renderiza acá dinámicamente -->
+  </main>
+
+</div>
+
+<!-- MODAL CAMPAÑA -->
+<div class="modal-overlay hidden" id="modalCampana">
+  <div class="modal">
+    <div class="modal-title">📤 Lanzar campaña de cobro</div>
+    <p style="font-size:13px;color:var(--muted)">Se enviará un mensaje de WhatsApp a todos los contactos con estado <strong style="color:var(--text)">PENDIENTE</strong> del período seleccionado.</p>
+    <div id="campanaResumen" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalCampana')">Cancelar</button>
+      <button class="btn btn-primary" onclick="lanzarCampana()" id="btnLanzar">🚀 Enviar mensajes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PLANTILLAS -->
+<div class="modal-overlay hidden" id="modalPlantillas">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-title">📋 Plantillas de WhatsApp</div>
+    <div id="plantillasList" style="display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalPlantillas')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// Detecta staging vs prod por hostname (mismo patrón que yaku-competencia.html)
+const API = (location.hostname.indexOf('staging') !== -1
+  ? 'https://fukari-backend-production-92f1.up.railway.app'
+  : 'https://fukari-backend-production.up.railway.app') + '/api/cobranzas';
+
+let periodoActual = '2026-03';
+let cobros = [];
+let filtroActivo = null;
+let cobroSeleccionado = null;
+let pollingInterval = null;
+
+// ── INIT ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  cargarCobros();
+  actualizarPeriodoLabel();
+  startPolling();
+});
+
+function startPolling() {
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(() => {
+    cargarCobros(true);
+    if (cobroSeleccionado) cargarMensajes(cobroSeleccionado.id, true);
+  }, 8000); // refresh cada 8s
+}
+
+function actualizarPeriodoLabel() {
+  const meses = {
+    '2026-03':'Marzo 2026','2026-02':'Febrero 2026','2026-01':'Enero 2026',
+    '2025-12':'Diciembre 2025'
+  };
+  document.getElementById('periodoLabel').textContent = meses[periodoActual] || periodoActual;
+}
+
+function cambiarPeriodo(val) {
+  periodoActual = val;
+  actualizarPeriodoLabel();
+  cobroSeleccionado = null;
+  renderMainEmpty();
+  cargarCobros();
+}
+
+// ── CARGA DE DATOS ────────────────────────────────────────────
+async function cargarCobros(silent = false) {
+  try {
+    const url = `${API}?periodo=${periodoActual}`;
+    const res = await fetch(url);
+    cobros = await res.json();
+    renderLista();
+    cargarStats();
+  } catch (err) {
+    if (!silent) toast('Error al cargar cobros: ' + err.message, 'error');
+  }
+}
+
+async function cargarStats() {
+  try {
+    const res = await fetch(`${API}/stats?periodo=${periodoActual}`);
+    const s = await res.json();
+    document.getElementById('statTotal').textContent = s.total || 0;
+    document.getElementById('statCobrado').textContent = s.cobrado || 0;
+    document.getElementById('statPendiente').textContent = (s.pendiente || 0) + (s.mensaje_enviado || 0);
+    document.getElementById('statDisputa').textContent = s.disputa || 0;
+    // Habilitar/deshabilitar botón exportar
+    const exportables = (s.cobrado || 0) + (s.comprobante_recibido || 0);
+    const btnExp = document.getElementById('btnExportar');
+    if (exportables > 0) {
+      btnExp.disabled = false;
+      btnExp.title = `Exportar ${exportables} cobros`;
+    } else {
+      btnExp.disabled = true;
+      btnExp.title = 'Sin cobros para exportar';
+    }
+  } catch {}
+}
+
+// ── RENDER LISTA ──────────────────────────────────────────────
+function renderLista() {
+  const lista = document.getElementById('cobrosList');
+  const filtered = filtroActivo ? cobros.filter(c => c.estado === filtroActivo) : cobros;
+
+  if (!filtered.length) {
+    lista.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Sin cobros en este filtro</div>`;
+    return;
+  }
+
+  lista.innerHTML = filtered.map(c => `
+    <div class="cobro-item ${cobroSeleccionado?.id === c.id ? 'selected' : ''}" onclick="seleccionarCobro('${c.id}')">
+      <div class="cobro-name">${c.razon_social}</div>
+      <div style="font-size:11px;color:var(--muted)">${c.localidad || '—'}</div>
+      <div class="cobro-meta">
+        <span class="cobro-importe">$${Number(c.importe).toLocaleString('es-AR')}</span>
+        <span class="status ${c.estado}">${estadoLabel(c.estado)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function estadoLabel(e) {
+  const m = {
+    PENDIENTE:'Pendiente', MENSAJE_ENVIADO:'Enviado', RESPONDIO:'Respondió',
+    COMPROBANTE_RECIBIDO:'Comprobante', VALIDADO:'Validado',
+    COBRADO:'✓ Cobrado', DISPUTA:'⚠ Disputa'
+  };
+  return m[e] || e;
+}
+
+function filtrar(estado, btn) {
+  filtroActivo = estado;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderLista();
+}
+
+// ── DETAIL VIEW ───────────────────────────────────────────────
+async function seleccionarCobro(id) {
+  cobroSeleccionado = cobros.find(c => c.id === id);
+  if (!cobroSeleccionado) return;
+  renderLista();
+  renderDetail(cobroSeleccionado);
+  await cargarMensajes(id);
+  cargarHistorial(id);
+}
+
+function renderDetail(c) {
+  const main = document.getElementById('mainArea');
+  document.getElementById('mainEmpty')?.remove();
+
+  main.innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div class="detail-name">${c.razon_social}</div>
+        <div class="detail-sub">
+          <span>📍 ${c.localidad || '—'}</span>
+          <span>📞 ${c.telefono}</span>
+          <span>🗓 ${c.mes_periodo}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="status ${c.estado}" style="font-size:12px">${estadoLabel(c.estado)}</span>
+        ${c.estado === 'DISPUTA' ? `<button class="btn btn-secondary btn-sm" onclick="cambiarEstado('${c.id}','PENDIENTE')">↩ Reabrir</button>` : ''}
+        ${c.estado === 'COMPROBANTE_RECIBIDO' ? `<button class="btn btn-primary btn-sm" onclick="cambiarEstado('${c.id}','COBRADO')">✓ Confirmar cobro</button>` : ''}
+      </div>
+    </div>
+    <div class="detail-body">
+      <div class="conversation" id="conversationPane">
+        <div class="conversation-empty" id="convEmpty">
+          <span style="font-size:13px;color:var(--muted)">Sin mensajes aún</span>
+        </div>
+      </div>
+      <aside class="info-panel">
+        <div>
+          <div class="info-section-title">Factura</div>
+          <div class="info-row"><span class="lbl">N° factura</span><span class="val">${c.nro_factura || '—'}</span></div>
+          <div class="info-row"><span class="lbl">Emisión</span><span class="val">${c.fecha_emision || '—'}</span></div>
+          <div class="info-row"><span class="lbl">Importe</span><span class="val green">$${Number(c.importe).toLocaleString('es-AR')}</span></div>
+          <div class="info-row"><span class="lbl">Cod. cliente</span><span class="val">${c.cod_cliente || '—'}</span></div>
+        </div>
+        ${c.importe_pagado ? `
+        <div>
+          <div class="info-section-title">Pago recibido</div>
+          <div class="info-row"><span class="lbl">Tipo</span><span class="val">${c.tipo_comprobante || '—'}</span></div>
+          <div class="info-row"><span class="lbl">Importe</span><span class="val green">$${Number(c.importe_pagado).toLocaleString('es-AR')}</span></div>
+          <div class="info-row"><span class="lbl">Fecha</span><span class="val">${c.fecha_pago || '—'}</span></div>
+          <div class="info-row"><span class="lbl">N° op.</span><span class="val">${c.nro_comprobante || '—'}</span></div>
+          ${c.imagen_comprobante_url ? `<img src="${c.imagen_comprobante_url}" class="msg-image" style="width:100%;max-width:100%;margin-top:8px" onclick="window.open(this.src,'_blank')">` : ''}
+        </div>` : ''}
+        <div>
+          <div class="info-section-title">Acciones</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn btn-secondary btn-full btn-sm" onclick="enviarMensajeManual('${c.id}')">💬 Enviar mensaje</button>
+            ${c.estado === 'PENDIENTE' || c.estado === 'MENSAJE_ENVIADO' ? `
+              <button class="btn btn-warn btn-full btn-sm" onclick="cambiarEstado('${c.id}','DISPUTA')">⚠ Marcar disputa</button>
+            ` : ''}
+          </div>
+        </div>
+        <div>
+          <div class="info-section-title">Domicilio</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.5">${c.domicilio || '—'}<br>${c.localidad || ''}</div>
+        </div>
+        <div>
+          <div class="info-section-title">Historial de cobranzas</div>
+          <div id="historialContainer" style="font-size:12px;color:var(--muted)">Cargando...</div>
+        </div>
+      </aside>
+    </div>
+  `;
+}
+
+async function cargarMensajes(id, silent = false) {
+  try {
+    const res = await fetch(`${API}/${id}/mensajes`);
+    const mensajes = await res.json();
+    renderMensajes(mensajes);
+  } catch (err) {
+    if (!silent) console.error('Error cargando mensajes:', err);
+  }
+}
+
+function renderMensajes(mensajes) {
+  const pane = document.getElementById('conversationPane');
+  if (!pane) return;
+
+  if (!mensajes.length) {
+    pane.innerHTML = `<div class="conversation-empty"><span style="font-size:13px;color:var(--muted)">Sin mensajes aún</span></div>`;
+    return;
+  }
+
+  pane.innerHTML = mensajes.map(m => `
+    <div class="msg ${m.direccion === 'OUTBOUND' ? 'outbound' : 'inbound'}">
+      <div class="msg-bubble">${escHtml(m.contenido || '')}${
+        m.imagen_url ? `<br><img src="${m.imagen_url}" class="msg-image" onclick="window.open(this.src,'_blank')">` : ''
+      }</div>
+      <div class="msg-time">${m.direccion === 'OUTBOUND' ? '🤖 Bot' : '👤 Cliente'} · ${formatTime(m.created_at)}</div>
+    </div>
+  `).join('');
+
+  // Auto-scroll al último mensaje
+  pane.scrollTop = pane.scrollHeight;
+}
+
+// ── CAMPAÑA ───────────────────────────────────────────────────
+function openCampanaModal() {
+  const pendientes = cobros.filter(c => c.estado === 'PENDIENTE');
+  document.getElementById('campanaResumen').innerHTML = `
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+      <span style="color:var(--muted)">Período</span>
+      <strong>${document.getElementById('periodoLabel').textContent}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+      <span style="color:var(--muted)">Contactos a notificar</span>
+      <strong style="color:var(--accent-lt)">${pendientes.length}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <span style="color:var(--muted)">Importe total</span>
+      <strong style="color:var(--accent-lt)">$${pendientes.reduce((s,c)=>s+(c.importe||0),0).toLocaleString('es-AR')}</strong>
+    </div>
+  `;
+  document.getElementById('modalCampana').classList.remove('hidden');
+}
+
+async function lanzarCampana() {
+  const btn = document.getElementById('btnLanzar');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    const res = await fetch(`${API}/enviar-campana`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ periodo: periodoActual })
+    });
+    const data = await res.json();
+    closeModal('modalCampana');
+    toast(`✅ ${data.enviados} mensajes enviados`, 'success');
+    cargarCobros();
+  } catch (err) {
+    toast('Error al lanzar campaña: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '🚀 Enviar mensajes';
+  }
+}
+
+// ── UPLOAD EXCEL ──────────────────────────────────────────────
+async function subirArchivo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const label = document.getElementById('uploadText');
+  label.textContent = '⏳ Procesando...';
+  try {
+    const form = new FormData();
+    form.append('archivo', file);
+    form.append('periodo', periodoActual);
+    form.append('limite', '3'); // Solo 3 contactos para la simulación — quitar en producción
+
+    const res = await fetch(`${API}/upload`, { method: 'POST', body: form });
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+    toast(`✅ ${data.insertados} registros cargados`, 'success');
+    label.textContent = `✅ ${file.name}`;
+    cargarCobros();
+  } catch (err) {
+    toast('Error al subir: ' + err.message, 'error');
+    label.textContent = '📂 Subir planilla del mes';
+  }
+}
+
+// ── HISTORIAL ────────────────────────────────────────────────
+async function cargarHistorial(cobroId) {
+  const container = document.getElementById('historialContainer');
+  if (!container) return;
+  try {
+    const res = await fetch(`${API}/${cobroId}/historial`);
+    const historial = await res.json();
+    if (!historial.length) {
+      container.innerHTML = '<span style="color:var(--muted);font-size:12px">Sin historial previo</span>';
+      return;
+    }
+    const mesesNombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    container.innerHTML = historial.map(h => {
+      const [anio, mes] = (h.mes_periodo || '').split('-');
+      const periodoLabel = mes ? `${mesesNombres[parseInt(mes)-1]} ${anio}` : h.mes_periodo;
+      const importeLabel = `$${Number(h.importe_pagado || h.importe || 0).toLocaleString('es-AR')}`;
+      const fechaCobro = h.fecha_cobrado ? new Date(h.fecha_cobrado).toLocaleDateString('es-AR') : '';
+      return `
+        <div class="historial-card" id="hist-${h.id}">
+          <div class="historial-header" onclick="toggleHistorial('${h.id}')">
+            <span class="periodo">${periodoLabel}</span>
+            <span class="meta">
+              <span>${importeLabel}</span>
+              <span class="status ${h.estado}" style="font-size:11px;padding:2px 6px">${estadoLabel(h.estado)}</span>
+              <span class="arrow">▶</span>
+            </span>
+          </div>
+          <div class="historial-body">
+            <div class="info-row"><span class="lbl">Importe</span><span class="val green">${importeLabel}</span></div>
+            ${fechaCobro ? `<div class="info-row"><span class="lbl">Cobrado</span><span class="val">${fechaCobro}</span></div>` : ''}
+            ${h.tipo_comprobante ? `<div class="info-row"><span class="lbl">Tipo</span><span class="val">${h.tipo_comprobante}</span></div>` : ''}
+            ${h.nro_comprobante ? `<div class="info-row"><span class="lbl">N° comp.</span><span class="val">${h.nro_comprobante}</span></div>` : ''}
+            ${h.notas ? `<div class="historial-notas">📋 ${h.notas}</div>` : ''}
+            <div class="historial-msgs" id="hist-msgs-${h.id}"><span style="color:var(--muted)">Click para ver mensajes...</span></div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch {
+    container.innerHTML = '<span style="color:var(--muted);font-size:12px">Error cargando historial</span>';
+  }
+}
+
+async function toggleHistorial(id) {
+  const card = document.getElementById(`hist-${id}`);
+  if (!card) return;
+  const wasOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+
+  // Cargar mensajes al abrir por primera vez
+  if (!wasOpen) {
+    const msgsContainer = document.getElementById(`hist-msgs-${id}`);
+    if (msgsContainer && msgsContainer.dataset.loaded !== 'true') {
+      try {
+        const res = await fetch(`${API}/${id}/mensajes`);
+        const msgs = await res.json();
+        if (msgs.length) {
+          msgsContainer.innerHTML = msgs.map(m => {
+            const hora = new Date(m.created_at).toLocaleString('es-AR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+            const contenido = m.tipo === 'IMAGE' ? '📷 Imagen' + (m.imagen_url ? `<br><img src="${m.imagen_url}" style="max-width:120px;border-radius:6px;margin-top:4px;cursor:zoom-in" onclick="window.open(this.src,'_blank')">` : '') : (m.contenido || '').slice(0, 150) + ((m.contenido || '').length > 150 ? '...' : '');
+            return `<div class="historial-msg ${m.direccion.toLowerCase()}">${hora} — ${contenido}</div>`;
+          }).join('');
+        } else {
+          msgsContainer.innerHTML = '<span style="color:var(--muted)">Sin mensajes</span>';
+        }
+        msgsContainer.dataset.loaded = 'true';
+      } catch {
+        msgsContainer.innerHTML = '<span style="color:var(--muted)">Error</span>';
+      }
+    }
+  }
+}
+
+// ── EXPORTAR ─────────────────────────────────────────────────
+function exportar() {
+  toast('Generando archivo...', 'success');
+  window.location.href = `${API}/exportar?periodo=${periodoActual}`;
+}
+
+// ── PLANTILLAS ────────────────────────────────────────────────
+async function openPlantillasModal() {
+  document.getElementById('modalPlantillas').classList.remove('hidden');
+  try {
+    const res = await fetch(`${API}/plantillas`);
+    const plantillas = await res.json();
+    document.getElementById('plantillasList').innerHTML = plantillas.map(p => `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="font-size:13px">${p.nombre}</strong>
+          <span class="status ${p.tipo}" style="background:var(--info-bg);color:var(--info)">${p.tipo}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;white-space:pre-wrap">${escHtml(p.contenido)}</div>
+      </div>
+    `).join('');
+  } catch {}
+}
+
+// ── CAMBIO MANUAL DE ESTADO ───────────────────────────────────
+async function cambiarEstado(id, estado) {
+  try {
+    await fetch(`${API}/${id}/estado`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado })
+    });
+    toast(`Estado actualizado a ${estadoLabel(estado)}`, 'success');
+    await cargarCobros();
+    const cobro = cobros.find(c => c.id === id);
+    if (cobro) { cobroSeleccionado = cobro; renderDetail(cobro); cargarMensajes(id); }
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function enviarMensajeManual(id) {
+  const texto = prompt('Escribí el mensaje a enviar:');
+  if (!texto?.trim()) return;
+  // Aquí podrías hacer POST al backend para enviar mensaje puntual
+  toast('Funcionalidad en desarrollo', 'error');
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function renderMainEmpty() {
+  const main = document.getElementById('mainArea');
+  main.innerHTML = `<div class="main-empty" id="mainEmpty">
+    <div class="icon">💧</div>
+    <div style="font-size:15px;font-weight:500;color:var(--text)">Seleccioná un cobro</div>
+    <div style="font-size:13px;">para ver la conversación y el estado del pago</div>
+  </div>`;
+}
+
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function formatTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit' }) + ' ' +
+         d.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

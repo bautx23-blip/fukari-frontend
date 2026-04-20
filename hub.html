@@ -150,6 +150,15 @@
     .task-card.papelera:hover .task-icon { background: #7f8c8d; }
     .task-card.papelera:hover .task-arrow { color: #7f8c8d; }
 
+    /* Card de cobranzas: acento verde agua */
+    .task-card.cobranzas:hover {
+      border-color: #1a9e6b;
+      box-shadow: 0 6px 20px rgba(26,158,107,0.12);
+    }
+    .task-card.cobranzas::after { background: #1a9e6b; }
+    .task-card.cobranzas:hover .task-icon { background: #1a9e6b; }
+    .task-card.cobranzas:hover .task-arrow { color: #1a9e6b; }
+
     /* Card de competencia: acento violeta */
     .task-card.competencia:hover {
       border-color: #7c3aed;
@@ -172,7 +181,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 22px;
     }
-    .task-card:not(.baja):not(.reportes):not(.clientes):not(.venta):hover .task-icon { background: #1a1a2e; }
+    .task-card:not(.baja):not(.reportes):not(.clientes):not(.venta):not(.cobranzas):hover .task-icon { background: #1a1a2e; }
 
     .task-body {}
     .task-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 5px; }
@@ -304,6 +313,18 @@
       </div>
       <div class="task-footer">
         <span class="task-badge" style="background:#ede9fe;color:#7c3aed;">Admin</span>
+        <span class="task-arrow">&rarr;</span>
+      </div>
+    </a>
+
+    <a href="/cobranzas.html" class="task-card cobranzas">
+      <div class="task-icon">&#128167;</div>
+      <div class="task-body">
+        <div class="task-title">Cobranzas</div>
+        <div class="task-desc">Gestión de cobranzas, seguimiento de pagos y análisis de deuda.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge" style="background:#d1fae5;color:#1a9e6b;">Activo</span>
         <span class="task-arrow">&rarr;</span>
       </div>
     </a>
