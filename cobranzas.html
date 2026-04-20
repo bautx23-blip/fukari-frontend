@@ -397,6 +397,44 @@
       margin: 8px 0;
     }
 
+    /* ── CHAT COMPOSER ── */
+    .chat-composer {
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      background: var(--surface);
+      display: flex; align-items: flex-end; gap: 10px;
+    }
+    .chat-composer textarea {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13.5px; line-height: 1.5;
+      padding: 10px 14px;
+      border-radius: 20px;
+      outline: none;
+      resize: none;
+      min-height: 40px;
+      max-height: 140px;
+      transition: border-color .15s;
+    }
+    .chat-composer textarea:focus { border-color: var(--accent); }
+    .chat-composer textarea::placeholder { color: var(--muted); }
+    .chat-send-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background .15s, transform .15s;
+    }
+    .chat-send-btn:hover:not(:disabled) { background: var(--accent-lt); transform: translateY(-1px); }
+    .chat-send-btn:disabled { opacity: .35; cursor: not-allowed; }
+
     .loading-dot {
       display: inline-block; width: 6px; height: 6px; border-radius: 50%;
       background: var(--accent-lt); animation: pulse 1.2s infinite;
@@ -1163,6 +1201,7 @@ function renderChatDetail(data) {
         ${pendientes ? `<span style="color:var(--warn)">● ${pendientes} pendiente${pendientes===1?'':'s'} · $${Math.round(deudaPend).toLocaleString('es-AR')}</span>` : ''}
       `;
 
+  const primerCobroId = (cobros && cobros[0] && cobros[0].id) || '';
   main.innerHTML = `
     <div class="chat-detail-header">
       <div class="chat-avatar" style="${avatarStyle}">${escHtml(iniciales(iniSrc))}</div>
@@ -1172,6 +1211,18 @@ function renderChatDetail(data) {
       </div>
     </div>
     <div class="chat-stream" id="chatStream"></div>
+    <form class="chat-composer" onsubmit="event.preventDefault(); enviarMensajeChat('${escHtml(cliente.telefono)}', '${primerCobroId}')">
+      <textarea id="chatComposerInput"
+        placeholder="Escribí un mensaje…"
+        rows="1"
+        onkeydown="handleComposerKey(event, '${escHtml(cliente.telefono)}', '${primerCobroId}')"
+        oninput="autoresizeComposer(this)"></textarea>
+      <button type="submit" class="chat-send-btn" id="chatSendBtn" title="Enviar (Enter)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 2 11 13"></path><path d="M22 2 15 22l-4-9-9-4 20-7z"></path>
+        </svg>
+      </button>
+    </form>
   `;
 
   const stream = document.getElementById('chatStream');
@@ -1213,6 +1264,64 @@ function formatDay(d) {
   const yest = new Date(now); yest.setDate(now.getDate() - 1);
   if (d.toDateString() === yest.toDateString()) return 'Ayer';
   return d.toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' });
+}
+
+// ── COMPOSER (envío manual) ───────────────────────────────────
+function autoresizeComposer(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+
+function handleComposerKey(e, telefono, cobranzaId) {
+  // Enter envía, Shift+Enter hace salto de línea
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    enviarMensajeChat(telefono, cobranzaId);
+  }
+}
+
+async function enviarMensajeChat(telefono, cobranzaId) {
+  const input = document.getElementById('chatComposerInput');
+  const btn = document.getElementById('chatSendBtn');
+  if (!input || !btn) return;
+  const texto = (input.value || '').trim();
+  if (!texto) return;
+
+  btn.disabled = true;
+  input.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/mensaje`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        telefono,
+        contenido: texto,
+        cobranza_id: cobranzaId || null,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al enviar');
+
+    // Refrescar chat
+    input.value = '';
+    autoresizeComposer(input);
+    if (chatSeleccionado?.telefono === telefono) {
+      const r = await fetch(`${API}/conversaciones/${encodeURIComponent(telefono)}`);
+      if (r.ok) {
+        const d = await r.json();
+        renderChatDetail(d);
+      }
+    }
+    cargarConversaciones(true);
+    toast('Mensaje enviado', 'success');
+  } catch (err) {
+    toast('Error al enviar: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    input.disabled = false;
+    document.getElementById('chatComposerInput')?.focus();
+  }
 }
 
 // Polling extra para conversaciones cuando la tab está activa
