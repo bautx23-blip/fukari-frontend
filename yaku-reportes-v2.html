@@ -217,6 +217,11 @@ function cargarDatos() {
   if (hasta) rp.push('fecha_hasta=' + hasta);
   if (rp.length) rechazosQs = '?' + rp.join('&');
 
+  // Órdenes para calcular "Cerrados por promoción por mes"
+  // No uso desde/hasta acá porque esos filtran por fecha_orden en el backend,
+  // y necesitamos agrupar por fecha_completada. El filtrado del rango se hace en computePromoStats.
+  var ordenesQs = '';
+
   Promise.all([
     fetch(API_URL + '/api/reportes/resumen' + qs).then(function(r){ if(!r.ok) throw new Error('resumen '+r.status); return r.json(); }),
     fetch(API_URL + '/api/reportes/instalaciones' + qs).then(function(r){ if(!r.ok) throw new Error('instalaciones '+r.status); return r.json(); }),
@@ -224,21 +229,43 @@ function cargarDatos() {
     fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); }),
     fetch(API_URL + '/api/rechazos-crediticios' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
     fetch(API_URL + '/api/ordenes/no-factibles').then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
-    fetch(API_URL + '/api/ordenes/fuentes-resumen' + qs).then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; })
+    fetch(API_URL + '/api/ordenes/fuentes-resumen' + qs).then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; }),
+    fetch(API_URL + '/api/ordenes' + ordenesQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; })
   ]).then(function(results) {
     destroyCharts();
-    renderAll(results[0], results[1], results[2], results[3], results[4], results[5], results[6]);
+    var promoStats = computePromoStats(results[7] || [], desde, hasta);
+    renderAll(results[0], results[1], results[2], results[3], results[4], results[5], results[6], promoStats);
   }).catch(function(err) {
     contenido.innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
   });
 }
 
+/* ── Stats: cerrados por promoción por mes ── */
+function computePromoStats(ordenes, desde, hasta) {
+  var porMes = {};
+  var total = 0;
+  (ordenes || []).forEach(function(o) {
+    if (!o) return;
+    if (o.anulada || o.deleted_at) return;
+    if (!o.completada || !o.es_promocion) return;
+    var ref = o.fecha_completada || o.fecha_orden;
+    if (!ref) return;
+    if (desde && ref < desde) return;
+    if (hasta && ref > hasta) return;
+    var key = String(ref).substring(0, 7); // YYYY-MM
+    porMes[key] = (porMes[key] || 0) + 1;
+    total += 1;
+  });
+  var keys = Object.keys(porMes).sort();
+  return { total: total, por_mes: keys.map(function(k){ return { mes: k, cantidad: porMes[k] }; }) };
+}
+
 /* ── RENDER ALL ── */
-function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactibles, fuentesResumen) {
+function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactibles, fuentesResumen, promoStats) {
   var contenido = document.getElementById('contenido');
   var html = '';
   html += renderResumen(resumen, instalaciones);
-  html += renderInstalaciones(instalaciones);
+  html += renderInstalaciones(instalaciones, promoStats);
   html += renderBajas(bajas, resumen);
   html += renderRechazos(rechazos || []);
   html += renderNoFactibles(noFactibles || []);
@@ -250,6 +277,7 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
   setTimeout(function() {
     renderChartFacturadoMes(instalaciones.por_mes);
     renderChartOrdenesMes2026(instalaciones.por_mes);
+    renderChartPromoMes(promoStats && promoStats.por_mes || []);
     renderChartBajasMes2026(bajas.por_mes);
     renderChartMotivos(bajas.por_motivo);
     renderChartFuentes(fuentesResumen || {});
@@ -283,8 +311,9 @@ function renderResumen(resumen, instalaciones) {
 /* ══════════════════════════════════════════
    ORDENES DE INSTALACION
    ══════════════════════════════════════════ */
-function renderInstalaciones(data) {
+function renderInstalaciones(data, promoStats) {
   var t = data.totales;
+  promoStats = promoStats || { total: 0, por_mes: [] };
   var html = '<div class="report-section">';
   html += '<div class="section-header"><div class="bar blue"></div><h2 class="blue">Ordenes de instalacion</h2></div>';
 
@@ -294,6 +323,7 @@ function renderInstalaciones(data) {
   html += '<div class="stat-card green"><div class="label">Completadas</div><div class="value">' + (t.completadas || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">' + (t.completadas || 0) + ' de ' + t.activas + ' solicitadas</div></div>';
   html += '<div class="stat-card blue"><div class="label">Facturado sin IVA</div><div class="value">' + fmt(t.facturado_sin_iva) + '</div></div>';
   html += '<div class="stat-card blue"><div class="label">Ticket promedio</div><div class="value">' + fmt(t.ticket_promedio) + '</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#7c3aed"><div class="label" style="color:#7c3aed">Cerrados por promo (período)</div><div class="value" style="color:#7c3aed">' + (promoStats.total || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">Completadas con promoción</div></div>';
   html += '</div>';
 
   // Chart facturado por mes
@@ -303,6 +333,10 @@ function renderInstalaciones(data) {
   // Chart ordenes por mes 2026
   html += '<div class="chart-wrap"><div class="chart-header"><h3>Ordenes por mes — 2026</h3></div>';
   html += '<div class="chart-body"><canvas id="chart-ordenes-mes-2026"></canvas></div></div>';
+
+  // Chart: Cerrados por promoción por mes
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Cerrados por promoción por mes</h3></div>';
+  html += '<div class="chart-body"><canvas id="chart-promo-mes"></canvas></div></div>';
 
   // Tabla vendedores
   html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Facturado por vendedor</h3></div>';
@@ -591,6 +625,61 @@ function renderChartOrdenesMes2026(porMes) {
       });
       _chartInstances.push(chart);
     });
+}
+
+/* ══════════════════════════════════════════
+   CHART.JS — Cerrados por promoción por mes
+   ══════════════════════════════════════════ */
+function renderChartPromoMes(porMes) {
+  var canvas = document.getElementById('chart-promo-mes');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  var labels = (porMes || []).map(function(m) { return mesLabel(m.mes); });
+  var values = (porMes || []).map(function(m) { return m.cantidad; });
+
+  if (!labels.length) {
+    labels = ['Sin datos'];
+    values = [0];
+  }
+
+  var chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Cerrados por promoción',
+        data: values,
+        backgroundColor: '#7c3aed',
+        borderRadius: 4,
+        maxBarThickness: 48
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ctx.parsed.y + ' cerrados'; }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { font: { size: 11 }, stepSize: 1, precision: 0 },
+          grid: { color: '#f3f4f6' }
+        },
+        x: {
+          ticks: { font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+  _chartInstances.push(chart);
 }
 
 /* ══════════════════════════════════════════

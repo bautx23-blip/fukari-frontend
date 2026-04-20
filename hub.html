@@ -150,6 +150,15 @@
     .task-card.papelera:hover .task-icon { background: #7f8c8d; }
     .task-card.papelera:hover .task-arrow { color: #7f8c8d; }
 
+    /* Card de competencia: acento violeta */
+    .task-card.competencia:hover {
+      border-color: #7c3aed;
+      box-shadow: 0 6px 20px rgba(124,58,237,0.12);
+    }
+    .task-card.competencia::after { background: #7c3aed; }
+    .task-card.competencia:hover .task-icon { background: #7c3aed; }
+    .task-card.competencia:hover .task-arrow { color: #7c3aed; }
+
     .task-card.disabled {
       opacity: 0.45;
       cursor: not-allowed;
@@ -287,6 +296,18 @@
       </div>
     </a>
 
+    <a href="/yaku-competencia.html" class="task-card competencia" id="card-competencia" style="display:none;">
+      <div class="task-icon">&#127919;</div>
+      <div class="task-body">
+        <div class="task-title">Competencia</div>
+        <div class="task-desc">Registrá llamadas a la competencia con precios, equipos y condiciones comerciales.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge" style="background:#ede9fe;color:#7c3aed;">Admin</span>
+        <span class="task-arrow">&rarr;</span>
+      </div>
+    </a>
+
     <a href="/yaku-papelera.html" class="task-card papelera" id="card-papelera" style="display:none;">
       <div class="task-icon" style="font-size:20px;">&#128465;</div>
       <div class="task-body">
@@ -320,6 +341,7 @@
     if (email === 'renebiagioni@yakuagua.com.ar') {
       document.getElementById('card-papelera').style.display = '';
       document.getElementById('card-crm').style.display = '';
+      document.getElementById('card-competencia').style.display = '';
     }
     // Pia: solo ve Órdenes de Instalación y Órdenes de Baja
     if (email === 'ventas@yakuagua.com.ar') {
