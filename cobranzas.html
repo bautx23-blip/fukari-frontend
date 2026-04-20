@@ -297,6 +297,106 @@
     .campaign-banner .title { font-weight: 600; font-size: 14px; color: var(--accent-lt); }
     .campaign-banner .sub { font-size: 12px; color: var(--muted); }
 
+    /* ── TAB SWITCHER (Campaña / Conversaciones) ── */
+    .tab-switcher {
+      display: inline-flex; gap: 2px; padding: 3px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .tab-btn {
+      border: none; background: transparent; color: var(--muted);
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      padding: 7px 14px; border-radius: 7px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background .15s, color .15s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { background: var(--accent); color: #fff; }
+    .tab-count {
+      font-size: 10.5px; font-weight: 700;
+      padding: 1px 7px; border-radius: 999px;
+      background: rgba(255,255,255,.12); color: inherit;
+    }
+    .tab-btn:not(.active) .tab-count { background: var(--bg); color: var(--muted); }
+
+    /* ── CHAT LIST (vista Conversaciones) ── */
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 8px 12px;
+    }
+    .search-box input {
+      background: none; border: none; color: var(--text);
+      font-family: var(--font); font-size: 13px; flex: 1; outline: none;
+    }
+    .search-box input::placeholder { color: var(--muted); }
+
+    .chats-list { flex: 1; overflow-y: auto; }
+    .chat-item {
+      padding: 12px 16px; border-bottom: 1px solid var(--border2);
+      cursor: pointer; transition: background .1s;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .chat-item:hover { background: var(--surface2); }
+    .chat-item.selected { background: var(--surface2); border-left: 3px solid var(--accent); padding-left: 13px; }
+    .chat-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-lt) 100%);
+      color: #fff; font-weight: 600; font-size: 13px;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .chat-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .chat-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .chat-name { font-weight: 500; font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .chat-time { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+    .chat-preview {
+      font-size: 12px; color: var(--muted); line-height: 1.4;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .chat-preview .dir-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .chat-preview .dir-dot.out { background: var(--accent); }
+    .chat-preview .dir-dot.in  { background: var(--info); }
+    .chat-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--muted); margin-top: 3px;
+    }
+    .chat-meta .total { font-family: var(--mono); color: var(--text); font-size: 11.5px; }
+
+    /* ── CHAT DETAIL ── */
+    .chat-detail-header {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface);
+    }
+    .chat-detail-header .chat-avatar { width: 42px; height: 42px; font-size: 14px; }
+    .chat-detail-info { flex: 1; min-width: 0; }
+    .chat-detail-name { font-weight: 600; font-size: 15px; color: var(--text); }
+    .chat-detail-sub { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .chat-detail-sub span { display: inline-flex; align-items: center; gap: 4px; }
+
+    .chat-stream {
+      flex: 1; overflow-y: auto;
+      padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 8px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(26,158,107,.04), transparent 60%),
+        var(--bg);
+    }
+    .chat-divider {
+      align-self: center;
+      font-size: 10.5px; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--muted);
+      background: var(--surface2); border: 1px solid var(--border2);
+      padding: 3px 10px; border-radius: 20px;
+      margin: 8px 0;
+    }
+
     .loading-dot {
       display: inline-block; width: 6px; height: 6px; border-radius: 50%;
       background: var(--accent-lt); animation: pulse 1.2s infinite;
@@ -316,6 +416,16 @@
     💧 Cobranzas
     <span class="badge-pill" id="periodoLabel">—</span>
   </div>
+
+  <div class="tab-switcher" role="tablist" style="margin-left: 18px;">
+    <button class="tab-btn active" data-tab="campana" onclick="setTab('campana')" role="tab">
+      📊 Campaña
+    </button>
+    <button class="tab-btn" data-tab="conversaciones" onclick="setTab('conversaciones')" role="tab">
+      💬 Conversaciones <span class="tab-count" id="tabCountConv">0</span>
+    </button>
+  </div>
+
   <div class="topbar-actions">
     <button class="btn btn-secondary btn-sm" onclick="openPlantillasModal()">📋 Plantillas</button>
     <button class="btn btn-secondary btn-sm" id="btnExportar" onclick="exportar()" disabled title="Sin cobros para exportar">⬇ Exportar XLS Cobranzas</button>
@@ -325,8 +435,8 @@
   </div>
 </div>
 
-<!-- LAYOUT -->
-<div class="layout">
+<!-- LAYOUT — Campaña -->
+<div class="layout" id="viewCampana">
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -377,6 +487,37 @@
       <div style="font-size:13px;">para ver la conversación y el estado del pago</div>
     </div>
     <!-- Detail se renderiza acá dinámicamente -->
+  </main>
+
+</div>
+
+<!-- LAYOUT — Conversaciones (inbox tipo WhatsApp, unificado por cliente) -->
+<div class="layout" id="viewConversaciones" style="display:none">
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="search-box">
+        <span style="color:var(--muted);font-size:14px">🔍</span>
+        <input type="text" id="chatSearch" placeholder="Buscar cliente, teléfono…" oninput="filtrarChats(this.value)">
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;letter-spacing:.04em;text-transform:uppercase">
+        <span id="chatsSummary">— conversaciones</span>
+      </div>
+    </div>
+
+    <div class="chats-list" id="chatsList">
+      <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">
+        <span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main" id="chatMainArea">
+    <div class="main-empty" id="chatMainEmpty">
+      <div class="icon">💬</div>
+      <div style="font-size:15px;font-weight:500;color:var(--text)">Seleccioná una conversación</div>
+      <div style="font-size:13px;">vas a ver el chat completo del cliente, sin importar el mes</div>
+    </div>
   </main>
 
 </div>
@@ -844,6 +985,221 @@ function formatTime(iso) {
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// ══════════════════════════════════════════════════════════════
+// TAB SWITCHER — Campaña / Conversaciones
+// ══════════════════════════════════════════════════════════════
+let tabActiva = 'campana';
+let conversaciones = [];
+let chatSeleccionado = null;   // { telefono, razon_social, ... }
+
+function setTab(tab) {
+  tabActiva = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  const vC = document.getElementById('viewCampana');
+  const vM = document.getElementById('viewConversaciones');
+  if (tab === 'campana') {
+    vC.style.display = '';
+    vM.style.display = 'none';
+  } else {
+    vC.style.display = 'none';
+    vM.style.display = '';
+    cargarConversaciones();
+  }
+}
+
+// ── LISTA DE CHATS ───────────────────────────────────────────
+async function cargarConversaciones(silent = false) {
+  try {
+    const res = await fetch(`${API}/conversaciones`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    conversaciones = await res.json();
+    document.getElementById('tabCountConv').textContent = conversaciones.length;
+    document.getElementById('chatsSummary').textContent =
+      conversaciones.length + (conversaciones.length === 1 ? ' conversación' : ' conversaciones');
+    renderChats(conversaciones);
+  } catch (err) {
+    if (!silent) toast('Error al cargar chats: ' + err.message, 'error');
+    document.getElementById('chatsList').innerHTML =
+      `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Sin chats para mostrar</div>`;
+  }
+}
+
+function filtrarChats(q) {
+  q = (q || '').trim().toLowerCase();
+  if (!q) return renderChats(conversaciones);
+  const filtradas = conversaciones.filter(c =>
+    (c.razon_social || '').toLowerCase().includes(q) ||
+    (c.telefono || '').toLowerCase().includes(q) ||
+    (c.cod_cliente || '').toLowerCase().includes(q)
+  );
+  renderChats(filtradas);
+}
+
+function iniciales(nombre) {
+  const parts = (nombre || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
+}
+
+function previewUltimo(m) {
+  if (!m) return '';
+  if (m.tipo === 'IMAGE') return '📷 Comprobante';
+  const t = (m.contenido || '').replace(/\s+/g, ' ').trim();
+  return t.length > 60 ? t.slice(0, 60) + '…' : t;
+}
+
+function relativeTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.round(diffMs / 60000);
+  if (diffMin < 1) return 'ahora';
+  if (diffMin < 60) return diffMin + ' min';
+  const diffH = Math.round(diffMin / 60);
+  if (diffH < 24) return diffH + ' h';
+  const esMismoAnio = d.getFullYear() === now.getFullYear();
+  return d.toLocaleDateString('es-AR', { day:'2-digit', month:'short', ...(esMismoAnio ? {} : {year:'2-digit'}) });
+}
+
+function renderChats(lista) {
+  const el = document.getElementById('chatsList');
+  if (!lista.length) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Sin resultados</div>`;
+    return;
+  }
+  el.innerHTML = lista.map(c => {
+    const sel = chatSeleccionado?.telefono === c.telefono ? 'selected' : '';
+    const m = c.ultimo_mensaje || {};
+    const dir = m.direccion === 'OUTBOUND' ? 'out' : 'in';
+    const total = Number(c.total_facturado || 0).toLocaleString('es-AR');
+    return `
+      <div class="chat-item ${sel}" onclick="abrirChat('${c.telefono}')">
+        <div class="chat-avatar">${escHtml(iniciales(c.razon_social))}</div>
+        <div class="chat-body">
+          <div class="chat-row">
+            <div class="chat-name">${escHtml(c.razon_social || c.telefono)}</div>
+            <div class="chat-time">${relativeTime(c.ultima_actividad)}</div>
+          </div>
+          <div class="chat-preview">
+            <span class="dir-dot ${dir}"></span>
+            ${escHtml(previewUltimo(m))}
+          </div>
+          <div class="chat-meta">
+            <span>${c.cantidad_cobros || 0} cobro${(c.cantidad_cobros||0) === 1 ? '' : 's'} · ${c.localidad || '—'}</span>
+            <span class="total">$${total}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── DETALLE DE UN CHAT ───────────────────────────────────────
+async function abrirChat(telefono) {
+  try {
+    const res = await fetch(`${API}/conversaciones/${encodeURIComponent(telefono)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    chatSeleccionado = data.cliente;
+    renderChats(conversaciones); // para resaltar
+    renderChatDetail(data);
+  } catch (err) {
+    toast('Error al abrir chat: ' + err.message, 'error');
+  }
+}
+
+function renderChatDetail(data) {
+  const { cliente, cobros, mensajes } = data;
+  const main = document.getElementById('chatMainArea');
+  document.getElementById('chatMainEmpty')?.remove();
+
+  const pendientes = cobros.filter(c => c.estado !== 'COBRADO' && c.estado !== 'DISPUTA').length;
+  const deudaPend = cobros
+    .filter(c => c.estado !== 'COBRADO')
+    .reduce((s, c) => s + (parseFloat(c.importe) || 0), 0);
+
+  main.innerHTML = `
+    <div class="chat-detail-header">
+      <div class="chat-avatar">${escHtml(iniciales(cliente.razon_social))}</div>
+      <div class="chat-detail-info">
+        <div class="chat-detail-name">${escHtml(cliente.razon_social || cliente.telefono)}</div>
+        <div class="chat-detail-sub">
+          <span>📞 ${escHtml(cliente.telefono)}</span>
+          <span>📍 ${escHtml(cliente.localidad || '—')}</span>
+          <span>🗂 ${cliente.cantidad_cobros} cobro${cliente.cantidad_cobros===1?'':'s'}</span>
+          <span>✓ ${cliente.cobrado} cobrado${cliente.cobrado===1?'':'s'}</span>
+          ${pendientes ? `<span style="color:var(--warn)">● ${pendientes} pendiente${pendientes===1?'':'s'} · $${Math.round(deudaPend).toLocaleString('es-AR')}</span>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="chat-stream" id="chatStream"></div>
+  `;
+
+  const stream = document.getElementById('chatStream');
+  if (!mensajes.length) {
+    stream.innerHTML = `<div class="conversation-empty"><span style="font-size:13px;color:var(--muted)">Sin mensajes aún</span></div>`;
+    return;
+  }
+
+  // Renderizar con dividers por día
+  let lastDay = '';
+  stream.innerHTML = mensajes.map(m => {
+    const d = new Date(m.created_at);
+    const dayKey = d.toISOString().slice(0,10);
+    let divider = '';
+    if (dayKey !== lastDay) {
+      divider = `<div class="chat-divider">${formatDay(d)}</div>`;
+      lastDay = dayKey;
+    }
+    const who = m.direccion === 'OUTBOUND' ? 'outbound' : 'inbound';
+    const label = m.direccion === 'OUTBOUND' ? '🤖 Bot' : '👤 Cliente';
+    const img = m.imagen_url ? `<br><img src="${escHtml(m.imagen_url)}" class="msg-image" onclick="window.open(this.src,'_blank')">` : '';
+    const contenido = m.contenido ? escHtml(m.contenido) : (m.tipo === 'IMAGE' ? '<em style="color:var(--muted)">(imagen)</em>' : '');
+    return divider + `
+      <div class="msg ${who}">
+        <div class="msg-bubble">${contenido}${img}</div>
+        <div class="msg-time">${label} · ${formatTime(m.created_at)}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Auto-scroll al final
+  stream.scrollTop = stream.scrollHeight;
+}
+
+function formatDay(d) {
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  if (sameDay) return 'Hoy';
+  const yest = new Date(now); yest.setDate(now.getDate() - 1);
+  if (d.toDateString() === yest.toDateString()) return 'Ayer';
+  return d.toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' });
+}
+
+// Polling extra para conversaciones cuando la tab está activa
+setInterval(() => {
+  if (tabActiva === 'conversaciones') {
+    cargarConversaciones(true);
+    if (chatSeleccionado) {
+      fetch(`${API}/conversaciones/${encodeURIComponent(chatSeleccionado.telefono)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d) renderChatDetail(d); })
+        .catch(() => {});
+    }
+  }
+}, 10000);
+
+// Prefetch contador al cargar la página (para que el tab muestre total desde el arranque)
+window.addEventListener('DOMContentLoaded', () => {
+  fetch(`${API}/conversaciones`)
+    .then(r => r.ok ? r.json() : [])
+    .then(arr => { document.getElementById('tabCountConv').textContent = (arr && arr.length) || 0; })
+    .catch(() => {});
+});
 </script>
 </body>
 </html>
