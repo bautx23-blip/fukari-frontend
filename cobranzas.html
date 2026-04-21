@@ -481,11 +481,7 @@
     <div class="sidebar-header">
       <div class="periodo-selector">
         📅
-        <select id="periodoSelect" onchange="cambiarPeriodo(this.value)">
-          <option value="2026-03">Marzo 2026</option>
-          <option value="2026-02">Febrero 2026</option>
-          <option value="2026-01">Enero 2026</option>
-        </select>
+        <select id="periodoSelect" onchange="cambiarPeriodo(this.value)"></select>
       </div>
       <label class="upload-area" id="uploadArea">
         <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="subirArchivo(event)">
@@ -593,7 +589,11 @@ const API = (location.hostname.indexOf('staging') !== -1
   ? 'https://fukari-backend-production-92f1.up.railway.app'
   : 'https://fukari-backend-production.up.railway.app') + '/api/cobranzas';
 
-let periodoActual = '2026-03';
+// Período por defecto = mes actual (YYYY-MM)
+let periodoActual = (function () {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+})();
 let cobros = [];
 let filtroActivo = null;
 let cobroSeleccionado = null;
@@ -601,8 +601,9 @@ let pollingInterval = null;
 
 // ── INIT ──────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  cargarCobros();
+  poblarPeriodoSelector();
   actualizarPeriodoLabel();
+  cargarCobros();
   startPolling();
 });
 
@@ -614,12 +615,28 @@ function startPolling() {
   }, 8000); // refresh cada 8s
 }
 
+function nombrePeriodo(p) {
+  if (!p) return '';
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const [a, m] = p.split('-');
+  return `${meses[parseInt(m,10) - 1] || m} ${a}`;
+}
+
+function poblarPeriodoSelector() {
+  const sel = document.getElementById('periodoSelect');
+  if (!sel) return;
+  const ahora = new Date();
+  const opciones = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+    const value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    opciones.push(`<option value="${value}" ${value === periodoActual ? 'selected' : ''}>${nombrePeriodo(value)}</option>`);
+  }
+  sel.innerHTML = opciones.join('');
+}
+
 function actualizarPeriodoLabel() {
-  const meses = {
-    '2026-03':'Marzo 2026','2026-02':'Febrero 2026','2026-01':'Enero 2026',
-    '2025-12':'Diciembre 2025'
-  };
-  document.getElementById('periodoLabel').textContent = meses[periodoActual] || periodoActual;
+  document.getElementById('periodoLabel').textContent = nombrePeriodo(periodoActual);
 }
 
 function cambiarPeriodo(val) {
@@ -863,7 +880,6 @@ async function subirArchivo(event) {
     const form = new FormData();
     form.append('archivo', file);
     form.append('periodo', periodoActual);
-    form.append('limite', '3'); // Solo 3 contactos para la simulación — quitar en producción
 
     const res = await fetch(`${API}/upload`, { method: 'POST', body: form });
     const data = await res.json();
