@@ -726,10 +726,14 @@ function renderDetail(c) {
           <span>🗓 ${c.mes_periodo}</span>
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
         <span class="status ${c.estado}" style="font-size:12px">${estadoLabel(c.estado)}</span>
+        ${c.metodo_validacion === 'manual' && c.validado_por ? `<span class="status COBRADO" title="Validado por ${c.validado_por} el ${c.validado_at || ''}" style="font-size:11px">✓ Manual · ${c.validado_por}</span>` : ''}
         ${c.estado === 'DISPUTA' ? `<button class="btn btn-secondary btn-sm" onclick="cambiarEstado('${c.id}','PENDIENTE')">↩ Reabrir</button>` : ''}
-        ${c.estado === 'COMPROBANTE_RECIBIDO' ? `<button class="btn btn-primary btn-sm" onclick="cambiarEstado('${c.id}','COBRADO')">✓ Confirmar cobro</button>` : ''}
+        ${c.estado === 'COMPROBANTE_RECIBIDO' ? `
+          <button class="btn btn-primary btn-sm" onclick="validarManual('${c.id}', true)">✓ Aprobar</button>
+          <button class="btn btn-danger btn-sm" onclick="validarManual('${c.id}', false)">✗ Rechazar</button>
+        ` : ''}
       </div>
     </div>
     <div class="detail-body">
@@ -988,10 +992,61 @@ async function cambiarEstado(id, estado) {
 }
 
 async function enviarMensajeManual(id) {
+  const cobro = cobros.find(c => c.id === id);
+  if (!cobro) return;
   const texto = prompt('Escribí el mensaje a enviar:');
   if (!texto?.trim()) return;
-  // Aquí podrías hacer POST al backend para enviar mensaje puntual
-  toast('Funcionalidad en desarrollo', 'error');
+  try {
+    const res = await fetch(`${API}/mensaje`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telefono: cobro.telefono, contenido: texto.trim(), cobranza_id: id }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al enviar');
+    toast('Mensaje enviado', 'success');
+    cargarMensajes(id, true);
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function validarManual(id, aprobado) {
+  const accion = aprobado ? 'APROBAR' : 'RECHAZAR';
+  const cobro = cobros.find(c => c.id === id);
+  const nombre = cobro?.razon_social || '';
+  if (!confirm(`${accion} el comprobante de ${nombre}?\n\nSe va a notificar al cliente por WhatsApp.`)) return;
+
+  let observaciones = '';
+  if (!aprobado) {
+    observaciones = prompt('Motivo del rechazo (opcional, queda en notas):') || '';
+  }
+
+  // Email del operador: usar el de Supabase auth si existe, si no pedirlo
+  let email = '';
+  try {
+    if (window._sb) {
+      const { data } = await window._sb.auth.getSession();
+      email = data?.session?.user?.email || '';
+    }
+  } catch {}
+  if (!email) email = prompt('Tu email de operador:') || '';
+  if (!email) return toast('Necesitamos tu email para registrar la validación', 'error');
+
+  try {
+    const res = await fetch(`${API}/${id}/validar-manual`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aprobado, email, observaciones }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error');
+    toast(aprobado ? '✓ Aprobado y cliente notificado' : 'Rechazado y cliente notificado', 'success');
+    await cargarCobros();
+    await seleccionarCobro(id);
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────
