@@ -99,6 +99,26 @@
     .upload-area:hover { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-lt); }
     .upload-area input { display: none; }
 
+    .btn-borrar-planilla {
+      width: 100%;
+      margin-top: 8px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .btn-borrar-planilla:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: var(--danger-bg);
+    }
+    .btn-borrar-planilla:disabled { opacity: .35; cursor: not-allowed; }
+
     /* ── STATS CHIPS ── */
     .stats-grid {
       display: grid; grid-template-columns: 1fr 1fr;
@@ -487,6 +507,9 @@
         <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="subirArchivo(event)">
         <div id="uploadText">📂 Subir planilla del mes</div>
       </label>
+      <button class="btn-borrar-planilla" id="btnBorrarPlanilla" onclick="borrarPlanilla()" title="Borrar todos los cobros del período seleccionado">
+        🗑 Borrar planilla del mes
+      </button>
     </div>
 
     <!-- STATS -->
@@ -1004,6 +1027,42 @@ async function cambiarEstado(id, estado) {
     if (cobro) { cobroSeleccionado = cobro; renderDetail(cobro); cargarMensajes(id); }
   } catch (err) {
     toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function borrarPlanilla() {
+  const periodoLabel = nombrePeriodo(periodoActual);
+  const total = cobros.length;
+
+  if (total === 0) {
+    return toast(`No hay cobros cargados en ${periodoLabel}`, 'error');
+  }
+
+  if (!confirm(`¿Borrar la planilla de ${periodoLabel}?\n\nSe van a eliminar ${total} cobro${total === 1 ? '' : 's'} y todos sus mensajes asociados. Esta acción no se puede deshacer.`)) {
+    return;
+  }
+
+  // Segunda confirmación: tipear el período
+  const confirma = prompt(`Para confirmar, escribí el período exacto: ${periodoActual}`);
+  if (confirma !== periodoActual) {
+    return toast('Cancelado: el texto no coincide', 'error');
+  }
+
+  const btn = document.getElementById('btnBorrarPlanilla');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Borrando...'; }
+
+  try {
+    const res = await fetch(`${API}/periodo/${periodoActual}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error');
+    toast(`✓ ${data.cobros_borrados} cobros borrados (${data.mensajes_borrados} mensajes)`, 'success');
+    cobroSeleccionado = null;
+    renderMainEmpty();
+    await cargarCobros();
+  } catch (err) {
+    toast('Error al borrar: ' + err.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🗑 Borrar planilla del mes'; }
   }
 }
 
