@@ -322,6 +322,17 @@ function renderInstalaciones(data, promoStats) {
   });
   html += '</tbody></table></div>';
 
+  // Cards — equipos vendidos por vendedor (se adapta al número de vendedores)
+  var vendedoresConEquipos = (data.por_vendedor || []).filter(function(v) { return (v.equipos || 0) > 0; });
+  if (vendedoresConEquipos.length > 0) {
+    html += '<div style="margin-top:8px;margin-bottom:8px;"><h3 style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px;">Equipos vendidos por vendedor</h3>';
+    html += '<div class="stats-row">';
+    vendedoresConEquipos.forEach(function(v) {
+      html += '<div class="stat-card blue"><div class="label">' + v.vendedor + '</div><div class="value">' + (v.equipos || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Equipos en ' + v.ordenes + ' ' + (v.ordenes === 1 ? 'orden' : 'ordenes') + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
   // Tabla productos
   html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Productos mas vendidos</h3></div>';
   html += '<table><thead><tr><th>Modelo</th><th class="right">Cantidad total</th><th class="right">Aparece en ordenes</th></tr></thead><tbody>';
