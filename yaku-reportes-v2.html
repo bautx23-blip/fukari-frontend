@@ -217,11 +217,6 @@ function cargarDatos() {
   if (hasta) rp.push('fecha_hasta=' + hasta);
   if (rp.length) rechazosQs = '?' + rp.join('&');
 
-  // Órdenes para calcular "Cerrados por promoción por mes"
-  // No uso desde/hasta acá porque esos filtran por fecha_orden en el backend,
-  // y necesitamos agrupar por fecha_completada. El filtrado del rango se hace en computePromoStats.
-  var ordenesQs = '';
-
   Promise.all([
     fetch(API_URL + '/api/reportes/resumen' + qs).then(function(r){ if(!r.ok) throw new Error('resumen '+r.status); return r.json(); }),
     fetch(API_URL + '/api/reportes/instalaciones' + qs).then(function(r){ if(!r.ok) throw new Error('instalaciones '+r.status); return r.json(); }),
@@ -229,35 +224,15 @@ function cargarDatos() {
     fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); }),
     fetch(API_URL + '/api/rechazos-crediticios' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
     fetch(API_URL + '/api/ordenes/no-factibles').then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
-    fetch(API_URL + '/api/ordenes/fuentes-resumen' + qs).then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; }),
-    fetch(API_URL + '/api/ordenes' + ordenesQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; })
+    fetch(API_URL + '/api/ordenes/fuentes-resumen' + qs).then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; })
   ]).then(function(results) {
     destroyCharts();
-    var promoStats = computePromoStats(results[7] || [], desde, hasta);
+    var inst = results[1] || {};
+    var promoStats = { total: inst.cerrados_promo_periodo || 0, por_mes: inst.promo_por_mes || [] };
     renderAll(results[0], results[1], results[2], results[3], results[4], results[5], results[6], promoStats);
   }).catch(function(err) {
     contenido.innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
   });
-}
-
-/* ── Stats: cerrados por promoción por mes ── */
-function computePromoStats(ordenes, desde, hasta) {
-  var porMes = {};
-  var total = 0;
-  (ordenes || []).forEach(function(o) {
-    if (!o) return;
-    if (o.anulada || o.deleted_at) return;
-    if (!o.completada || !o.es_promocion) return;
-    var ref = o.fecha_completada || o.fecha_orden;
-    if (!ref) return;
-    if (desde && ref < desde) return;
-    if (hasta && ref > hasta) return;
-    var key = String(ref).substring(0, 7); // YYYY-MM
-    porMes[key] = (porMes[key] || 0) + 1;
-    total += 1;
-  });
-  var keys = Object.keys(porMes).sort();
-  return { total: total, por_mes: keys.map(function(k){ return { mes: k, cantidad: porMes[k] }; }) };
 }
 
 /* ── RENDER ALL ── */
@@ -299,7 +274,7 @@ function renderResumen(resumen, instalaciones) {
   html += '</div>';
   // Segunda fila: equipos y bajas
   html += '<div class="stats-row">';
-  html += '<div class="stat-card blue"><div class="label">Equipos instalados</div><div class="value">' + (resumen.equipos_instalados || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Unidades en ' + resumen.total_instalaciones + ' ordenes</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Equipos instalados</div><div class="value">' + (resumen.equipos_instalados || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Unidades en ' + (resumen.total_completadas != null ? resumen.total_completadas : resumen.total_instalaciones) + ' ordenes completadas</div></div>';
   html += '<div class="stat-card red"><div class="label">Equipos dados de baja</div><div class="value">' + (resumen.equipos_baja || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Unidades retiradas</div></div>';
   html += '<div class="stat-card red"><div class="label">Solicitudes de baja</div><div class="value">' + (resumen.total_bajas || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Ordenes de baja activas</div></div>';
   html += '<div class="stat-card blue"><div class="label">Ordenes de instalacion</div><div class="value">' + (resumen.total_instalaciones || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Solicitadas en el periodo</div></div>';
@@ -320,7 +295,8 @@ function renderInstalaciones(data, promoStats) {
   // Cards
   html += '<div class="stats-row">';
   html += '<div class="stat-card blue"><div class="label">Solicitadas</div><div class="value">' + t.activas + '</div></div>';
-  html += '<div class="stat-card green"><div class="label">Completadas</div><div class="value">' + (t.completadas || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">' + (t.completadas || 0) + ' de ' + t.activas + ' solicitadas</div></div>';
+  html += '<div class="stat-card green"><div class="label">Órdenes completadas</div><div class="value">' + (t.completadas || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">' + (t.completadas || 0) + ' de ' + t.activas + ' solicitadas</div></div>';
+  html += '<div class="stat-card green"><div class="label">Equipos instalados</div><div class="value">' + (t.equipos_instalados || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">Unidades en órdenes completadas</div></div>';
   html += '<div class="stat-card blue"><div class="label">Facturado sin IVA</div><div class="value">' + fmt(t.facturado_sin_iva) + '</div></div>';
   html += '<div class="stat-card blue"><div class="label">Ticket promedio</div><div class="value">' + fmt(t.ticket_promedio) + '</div></div>';
   html += '<div class="stat-card" style="border-top-color:#7c3aed"><div class="label" style="color:#7c3aed">Cerrados por promo (período)</div><div class="value" style="color:#7c3aed">' + (promoStats.total || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">Completadas con promoción</div></div>';
@@ -340,9 +316,9 @@ function renderInstalaciones(data, promoStats) {
 
   // Tabla vendedores
   html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Facturado por vendedor</h3></div>';
-  html += '<table><thead><tr><th>Vendedor</th><th class="right">Ordenes</th><th class="right">Total facturado sin IVA</th></tr></thead><tbody>';
+  html += '<table><thead><tr><th>Vendedor</th><th class="right">Ordenes</th><th class="right">Equipos vendidos</th><th class="right">Total facturado sin IVA</th></tr></thead><tbody>';
   data.por_vendedor.forEach(function(v) {
-    html += '<tr><td class="bold">' + v.vendedor + '</td><td class="right">' + v.ordenes + '</td><td class="right money">' + fmt(v.facturado) + '</td></tr>';
+    html += '<tr><td class="bold">' + v.vendedor + '</td><td class="right">' + v.ordenes + '</td><td class="right">' + (v.equipos || 0) + '</td><td class="right money">' + fmt(v.facturado) + '</td></tr>';
   });
   html += '</tbody></table></div>';
 
