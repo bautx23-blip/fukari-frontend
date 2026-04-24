@@ -465,7 +465,7 @@ function renderTabla() {
   pagina.forEach(function(o) {
     var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
     var tot = o.total_general ? '$' + parseFloat(o.total_general).toLocaleString('es-AR', {minimumFractionDigits:2}) : '—';
-    var pdfHref = o.pdf_url ? o.pdf_url + '?t=' + Date.now() : '';
+    var pdfHref = o.pdf_url ? o.pdf_url + (o.pdf_url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now() : '';
     var pdfBtn = o.pdf_url ? '<a class="btn-ver" href="' + pdfHref + '" target="_blank">&#128196; PDF</a>' : '<span class="sin-pdf">Sin PDF</span>';
     var anuladaBadge = o.anulada ? '<span class="badge-anulada">ANULADA</span>' : '';
     var filaClass = o.anulada ? ' class="fila-anulada"' : '';
@@ -491,6 +491,7 @@ function renderTabla() {
     else if (o.fuente_adquisicion === 'Referidos') fuenteBadge = '<span style="display:inline-block;background:#dcfce7;color:#166534;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Referidos</span>';
     else if (o.fuente_adquisicion === 'Vía pública') fuenteBadge = '<span style="display:inline-block;background:#ffedd5;color:#9a3412;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Vía pública</span>';
     else if (o.fuente_adquisicion === 'Ya era cliente') fuenteBadge = '<span style="display:inline-block;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Ya era cliente</span>';
+    else if (o.fuente_adquisicion === 'Concurso / Licitación') fuenteBadge = '<span style="display:inline-block;background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Concurso / Licitación</span>';
     var completadaCell = '';
     if (esAdmin) {
       var checked = o.completada ? ' checked' : '';
@@ -685,7 +686,7 @@ function verDetalle(o) {
     '<div style="margin-top:14px;"><label style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;display:block;margin-bottom:8px;">Productos</label>' + prodHtml + '</div>';
 
   var pdfBtn = document.getElementById('modal-pdf-btn');
-  if (o.pdf_url) { pdfBtn.href = o.pdf_url + '?t=' + Date.now(); pdfBtn.style.display = 'inline-block'; }
+  if (o.pdf_url) { pdfBtn.href = o.pdf_url + (o.pdf_url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now(); pdfBtn.style.display = 'inline-block'; }
   else { pdfBtn.style.display = 'none'; }
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -900,6 +901,10 @@ async function guardarEdicion() {
       var err = await res.json();
       throw new Error(err.error || 'Error al guardar');
     }
+    var putJson = await res.json();
+    if (putJson && putJson.pdf_regenerado === false) {
+      alert('La orden se guardó pero el PDF no se pudo regenerar. Detalle: ' + (putJson.pdf_error || 'sin detalle'));
+    }
 
     // Toggle es_promocion (solo admin — endpoint valida email)
     if (_currentUserEmail === ADMIN_EMAIL) {
@@ -994,10 +999,10 @@ function renderRechazos(data) {
 
 // ── Fuente de Adquisición ──
 function abrirFuente(id, actual) {
-  var opciones = ['CRM', 'Referidos', 'Vía pública', 'Ya era cliente'];
+  var opciones = ['CRM', 'Referidos', 'Vía pública', 'Ya era cliente', 'Concurso / Licitación'];
   var msg = 'Fuente de adquisición:\n';
   opciones.forEach(function(o, i) { msg += (i+1) + '. ' + o + (o === actual ? ' (actual)' : '') + '\n'; });
-  msg += '\nIngresá el número (1, 2, 3 o 4):';
+  msg += '\nIngresá el número (1, 2, 3, 4 o 5):';
   var sel = prompt(msg);
   if (!sel) return;
   var idx = parseInt(sel) - 1;

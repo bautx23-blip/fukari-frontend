@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relevamiento de Competencia — Yakú</title>
+<title>Monitoreo — Yakú</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -107,7 +107,7 @@ tbody td.muted{color:#9ca3af;}
     <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yaku">
     <div class="fuk-wrap"><img class="fuk" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
   </div>
-  <span class="topbar-title">Relevamiento de Competencia</span>
+  <span class="topbar-title">Monitoreo</span>
   <div class="topbar-right">
     <span id="topbar-fecha"></span>
     <a href="/hub.html" class="btn-logout">&#8592; Inicio</a>
@@ -118,13 +118,44 @@ tbody td.muted{color:#9ca3af;}
 <div class="contenido">
   <div class="page-head">
     <div>
-      <h1>Relevamiento de Competencia</h1>
-      <p>Registrá llamadas a competidores con precios, equipos y condiciones.</p>
+      <h1>Monitoreo</h1>
+      <p>Proveedores de referencia por localidad y registro de llamadas de relevamiento.</p>
     </div>
     <button class="btn-primary" onclick="abrirModalNuevo()">+ Nueva llamada</button>
   </div>
 
+  <!-- ── Proveedores por localidad ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+    <div class="tabla-wrap" id="prov-santafe-wrap" style="padding:0;">
+      <div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <h2 style="font-size:14px;font-weight:700;color:#1a1a2e;letter-spacing:0.2px;">Santa Fe</h2>
+          <p style="font-size:11.5px;color:#6b7280;margin-top:2px;">Ordenados por prioridad del servicio</p>
+        </div>
+        <button class="btn-clear" onclick="abrirModalProveedorNuevo('Santa Fe')">+ Proveedor</button>
+      </div>
+      <div id="prov-santafe-body"><div class="loading">Cargando…</div></div>
+    </div>
+    <div class="tabla-wrap" id="prov-rosario-wrap" style="padding:0;">
+      <div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <h2 style="font-size:14px;font-weight:700;color:#1a1a2e;letter-spacing:0.2px;">Rosario</h2>
+          <p style="font-size:11.5px;color:#6b7280;margin-top:2px;">Ordenados por prioridad del servicio</p>
+        </div>
+        <button class="btn-clear" onclick="abrirModalProveedorNuevo('Rosario')">+ Proveedor</button>
+      </div>
+      <div id="prov-rosario-body"><div class="loading">Cargando…</div></div>
+    </div>
+  </div>
+
+  <h2 style="font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px;">Historial de llamadas</h2>
   <div class="filtros">
+    <label>Localidad</label>
+    <select id="filtro-localidad" onchange="aplicarFiltros()">
+      <option value="">Todas</option>
+      <option value="Santa Fe">Santa Fe</option>
+      <option value="Rosario">Rosario</option>
+    </select>
     <label>Competidor</label>
     <select id="filtro-competidor" onchange="aplicarFiltros()">
       <option value="">Todos</option>
@@ -141,6 +172,48 @@ tbody td.muted{color:#9ca3af;}
   </div>
 </div>
 
+<!-- Modal: Nuevo/Editar proveedor -->
+<div id="modal-prov-overlay" onclick="if(event.target===this)cerrarModalProv()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-prov-titulo">Nuevo proveedor</h3>
+      <button class="modal-close" onclick="cerrarModalProv()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="full">
+        <label>Nombre *</label>
+        <input type="text" id="pf-nombre" placeholder="Ej: LATURQUITA">
+      </div>
+      <div>
+        <label>Localidad *</label>
+        <select id="pf-localidad">
+          <option value="Santa Fe">Santa Fe</option>
+          <option value="Rosario">Rosario</option>
+        </select>
+      </div>
+      <div>
+        <label>Prioridad</label>
+        <input type="number" id="pf-prioridad" min="0" placeholder="1">
+      </div>
+      <div class="full">
+        <label>Servicios</label>
+        <div class="radio-group">
+          <label><input type="checkbox" id="pf-serv-bidon"> Bidón</label>
+          <label><input type="checkbox" id="pf-serv-red"> Red</label>
+        </div>
+      </div>
+      <div class="full">
+        <label>Notas</label>
+        <textarea id="pf-notas" placeholder="Observaciones generales sobre el proveedor"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="cerrarModalProv()">Cancelar</button>
+      <button class="btn-save" id="btn-save-prov" onclick="guardarProv()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal crear/editar -->
 <div id="modal-overlay" onclick="if(event.target===this)cerrarModal()">
   <div class="modal">
@@ -154,8 +227,19 @@ tbody td.muted{color:#9ca3af;}
         <input type="date" id="f-fecha">
       </div>
       <div>
+        <label>Localidad</label>
+        <select id="f-localidad" onchange="onLocalidadChange()">
+          <option value="">—</option>
+          <option value="Santa Fe">Santa Fe</option>
+          <option value="Rosario">Rosario</option>
+        </select>
+      </div>
+      <div class="full">
         <label>Nombre del competidor *</label>
-        <input type="text" id="f-competidor" placeholder="Ej: Aquavita">
+        <select id="f-competidor-sel" onchange="onCompetidorSelChange()" style="margin-bottom:8px;">
+          <option value="">— Elegir del catálogo —</option>
+        </select>
+        <input type="text" id="f-competidor" placeholder="O escribí otro (ej: Aquavita)">
       </div>
       <div>
         <label>Precio mensual del servicio (ARS)</label>
@@ -218,6 +302,8 @@ var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
 var _currentUserEmail = '';
 var _todas = [];
 var _editId = null;
+var _proveedores = [];       // catálogo { id, nombre, localidad, servicios, prioridad, notas }
+var _editProvId = null;
 
 sb.auth.getSession().then(function(result) {
   var session = result.data.session;
@@ -226,6 +312,7 @@ sb.auth.getSession().then(function(result) {
   if (_currentUserEmail !== ADMIN_EMAIL) { window.location.href = '/hub.html'; return; }
   document.body.classList.add('ready');
   document.getElementById('topbar-fecha').textContent = new Date().toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'});
+  cargarProveedores();
   cargar();
 });
 
@@ -286,6 +373,7 @@ function aplicarFiltros() {
 }
 
 function limpiarFiltros() {
+  document.getElementById('filtro-localidad').value = '';
   document.getElementById('filtro-competidor').value = '';
   document.getElementById('filtro-desde').value = '';
   document.getElementById('filtro-hasta').value = '';
@@ -293,10 +381,12 @@ function limpiarFiltros() {
 }
 
 function filtrar() {
+  var loc  = document.getElementById('filtro-localidad').value;
   var comp = document.getElementById('filtro-competidor').value;
   var desde = document.getElementById('filtro-desde').value;
   var hasta = document.getElementById('filtro-hasta').value;
   return _todas.filter(function(l) {
+    if (loc && (l.localidad || '') !== loc) return false;
     if (comp && l.competidor_nombre !== comp) return false;
     if (desde && l.fecha_llamada < desde) return false;
     if (hasta && l.fecha_llamada > hasta) return false;
@@ -312,7 +402,7 @@ function render() {
     return;
   }
   var html = '<table><thead><tr>';
-  html += '<th>Fecha</th><th>Competidor</th><th class="right">Precio mensual</th><th>Modelo básico</th><th>Tipo equipo</th><th class="right">$ Dispenser</th><th class="right">$ Bidones</th><th>Instalación</th><th>Acciones</th>';
+  html += '<th>Fecha</th><th>Localidad</th><th>Competidor</th><th class="right">Precio mensual</th><th>Modelo básico</th><th>Tipo equipo</th><th class="right">$ Dispenser</th><th class="right">$ Bidones</th><th>Instalación</th><th>Acciones</th>';
   html += '</tr></thead><tbody>';
   rows.forEach(function(l) {
     var tipo = l.tipo_equipo ? '<span class="badge-tipo ' + l.tipo_equipo + '">' + l.tipo_equipo + '</span>' : '<span class="muted">—</span>';
@@ -324,6 +414,7 @@ function render() {
     }
     html += '<tr>';
     html += '<td>' + esc(fmtFecha(l.fecha_llamada)) + '</td>';
+    html += '<td>' + esc(l.localidad || '—') + '</td>';
     html += '<td style="font-weight:600">' + esc(l.competidor_nombre || '—') + '</td>';
     html += '<td class="right">' + esc(fmtMoney(l.precio_mensual_servicio)) + '</td>';
     html += '<td>' + esc(l.modelo_basico || '—') + '</td>';
@@ -341,10 +432,204 @@ function render() {
   wrap.innerHTML = html;
 }
 
+// ── Proveedores monitoreados ────────────────────────────────────────────────
+function cargarProveedores() {
+  var url = API_URL + '/api/monitoreo-proveedores?email=' + encodeURIComponent(_currentUserEmail);
+  fetch(url, { headers: { 'x-user-email': _currentUserEmail } })
+    .then(function(r) { if (!r.ok) throw new Error('Error ' + r.status); return r.json(); })
+    .then(function(data) {
+      _proveedores = data || [];
+      renderProveedores();
+      actualizarDropdownCompetidorCatalogo();
+    })
+    .catch(function(err) {
+      ['prov-santafe-body','prov-rosario-body'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (el) el.innerHTML = '<div class="error-msg" style="padding:18px;">' + esc(err.message) + '</div>';
+      });
+    });
+}
+
+function renderProveedoresLocalidad(localidad, elId) {
+  var lista = _proveedores
+    .filter(function(p) { return p.localidad === localidad; })
+    .sort(function(a,b) {
+      if ((a.prioridad||0) !== (b.prioridad||0)) return (a.prioridad||0) - (b.prioridad||0);
+      return (a.nombre||'').localeCompare(b.nombre||'', 'es');
+    });
+  var el = document.getElementById(elId);
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty-msg" style="padding:18px;font-size:12.5px;">Sin proveedores cargados.</div>';
+    return;
+  }
+  var html = '<table><thead><tr><th style="width:38px;">#</th><th>Proveedor</th><th>Servicios</th><th style="width:90px;"></th></tr></thead><tbody>';
+  lista.forEach(function(p, i) {
+    var servs = (p.servicios || []).map(function(s) {
+      var cls = s === 'bidon' ? 'bidones' : s === 'red' ? 'dispenser' : 'ambos';
+      var label = s === 'bidon' ? 'BIDÓN' : s === 'red' ? 'RED' : s.toUpperCase();
+      return '<span class="badge-tipo ' + cls + '" style="margin-right:4px;">' + label + '</span>';
+    }).join('') || '<span class="muted">—</span>';
+    html += '<tr>';
+    html += '<td class="muted">' + (i+1) + '</td>';
+    html += '<td style="font-weight:600">' + esc(p.nombre) + '</td>';
+    html += '<td>' + servs + '</td>';
+    html += '<td><div class="acciones-wrap">';
+    html += '<button class="btn-row btn-edit" onclick="abrirModalProveedorEditar(' + p.id + ')" title="Editar">✎</button>';
+    html += '<button class="btn-row btn-del" onclick="eliminarProveedor(' + p.id + ')" title="Eliminar">🗑</button>';
+    html += '</div></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function renderProveedores() {
+  renderProveedoresLocalidad('Santa Fe', 'prov-santafe-body');
+  renderProveedoresLocalidad('Rosario',  'prov-rosario-body');
+}
+
+function actualizarDropdownCompetidorCatalogo() {
+  var sel = document.getElementById('f-competidor-sel');
+  if (!sel) return;
+  var loc = document.getElementById('f-localidad').value;
+  var lista = _proveedores.filter(function(p) { return !loc || p.localidad === loc; });
+  lista.sort(function(a,b) {
+    if (a.localidad !== b.localidad) return a.localidad.localeCompare(b.localidad, 'es');
+    if ((a.prioridad||0) !== (b.prioridad||0)) return (a.prioridad||0) - (b.prioridad||0);
+    return (a.nombre||'').localeCompare(b.nombre||'', 'es');
+  });
+  var prev = sel.value;
+  var html = '<option value="">— Elegir del catálogo —</option>';
+  lista.forEach(function(p) {
+    html += '<option value="' + esc(p.nombre) + '" data-localidad="' + esc(p.localidad) + '">' + esc(p.nombre) + ' · ' + esc(p.localidad) + '</option>';
+  });
+  sel.innerHTML = html;
+  if (prev) sel.value = prev;
+}
+
+function onLocalidadChange() {
+  actualizarDropdownCompetidorCatalogo();
+}
+
+function onCompetidorSelChange() {
+  var sel = document.getElementById('f-competidor-sel');
+  var inp = document.getElementById('f-competidor');
+  var locSel = document.getElementById('f-localidad');
+  if (sel.value) {
+    inp.value = sel.value;
+    var opt = sel.options[sel.selectedIndex];
+    var loc = opt.getAttribute('data-localidad') || '';
+    if (loc && !locSel.value) locSel.value = loc;
+  }
+}
+
+function abrirModalProveedorNuevo(loc) {
+  _editProvId = null;
+  document.getElementById('modal-prov-titulo').textContent = 'Nuevo proveedor';
+  document.getElementById('pf-nombre').value = '';
+  document.getElementById('pf-localidad').value = loc || 'Santa Fe';
+  document.getElementById('pf-prioridad').value = '';
+  document.getElementById('pf-serv-bidon').checked = false;
+  document.getElementById('pf-serv-red').checked = false;
+  document.getElementById('pf-notas').value = '';
+  document.getElementById('modal-prov-overlay').style.display = 'flex';
+}
+
+function abrirModalProveedorEditar(id) {
+  var p = _proveedores.find(function(x) { return x.id === id; });
+  if (!p) return;
+  _editProvId = id;
+  document.getElementById('modal-prov-titulo').textContent = 'Editar proveedor';
+  document.getElementById('pf-nombre').value = p.nombre || '';
+  document.getElementById('pf-localidad').value = p.localidad || 'Santa Fe';
+  document.getElementById('pf-prioridad').value = p.prioridad != null ? p.prioridad : '';
+  document.getElementById('pf-serv-bidon').checked = (p.servicios || []).indexOf('bidon') !== -1;
+  document.getElementById('pf-serv-red').checked = (p.servicios || []).indexOf('red') !== -1;
+  document.getElementById('pf-notas').value = p.notas || '';
+  document.getElementById('modal-prov-overlay').style.display = 'flex';
+}
+
+function cerrarModalProv() {
+  document.getElementById('modal-prov-overlay').style.display = 'none';
+  _editProvId = null;
+}
+
+function guardarProv() {
+  var nombre = document.getElementById('pf-nombre').value.trim();
+  var localidad = document.getElementById('pf-localidad').value;
+  if (!nombre) { alert('Nombre es requerido'); return; }
+  if (!localidad) { alert('Localidad es requerida'); return; }
+
+  var servicios = [];
+  if (document.getElementById('pf-serv-bidon').checked) servicios.push('bidon');
+  if (document.getElementById('pf-serv-red').checked)   servicios.push('red');
+
+  var prioridadVal = document.getElementById('pf-prioridad').value;
+  var prioridad = prioridadVal === '' ? 0 : parseInt(prioridadVal);
+  if (isNaN(prioridad)) prioridad = 0;
+
+  var payload = {
+    email: _currentUserEmail,
+    nombre: nombre,
+    localidad: localidad,
+    servicios: servicios,
+    prioridad: prioridad,
+    notas: document.getElementById('pf-notas').value.trim() || null,
+  };
+
+  var btn = document.getElementById('btn-save-prov');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+
+  var url, method;
+  if (_editProvId) {
+    url = API_URL + '/api/monitoreo-proveedores/' + _editProvId + '?email=' + encodeURIComponent(_currentUserEmail);
+    method = 'PATCH';
+  } else {
+    url = API_URL + '/api/monitoreo-proveedores?email=' + encodeURIComponent(_currentUserEmail);
+    method = 'POST';
+  }
+
+  fetch(url, {
+    method: method,
+    headers: { 'Content-Type': 'application/json', 'x-user-email': _currentUserEmail },
+    body: JSON.stringify(payload)
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(j){ throw new Error(j.error || ('Error ' + r.status)); });
+    return r.json();
+  }).then(function() {
+    cerrarModalProv();
+    cargarProveedores();
+  }).catch(function(err) {
+    alert('Error al guardar: ' + err.message);
+  }).finally(function() {
+    btn.disabled = false; btn.textContent = 'Guardar';
+  });
+}
+
+function eliminarProveedor(id) {
+  var p = _proveedores.find(function(x) { return x.id === id; });
+  var nombre = p ? (p.nombre + ' — ' + p.localidad) : ('#' + id);
+  if (!confirm('¿Eliminar proveedor ' + nombre + '?')) return;
+  var url = API_URL + '/api/monitoreo-proveedores/' + id + '?email=' + encodeURIComponent(_currentUserEmail);
+  fetch(url, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', 'x-user-email': _currentUserEmail },
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(j){ throw new Error(j.error || ('Error ' + r.status)); });
+    return r.json();
+  }).then(function() {
+    cargarProveedores();
+  }).catch(function(err) {
+    alert('Error al eliminar: ' + err.message);
+  });
+}
+
 function abrirModalNuevo() {
   _editId = null;
   document.getElementById('modal-titulo').textContent = 'Nueva llamada';
   document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f-localidad').value = '';
+  document.getElementById('f-competidor-sel').value = '';
   document.getElementById('f-competidor').value = '';
   document.getElementById('f-precio-mensual').value = '';
   document.getElementById('f-modelo-basico').value = '';
@@ -357,6 +642,7 @@ function abrirModalNuevo() {
   document.getElementById('f-notas').value = '';
   onTipoChange();
   onInstChange();
+  actualizarDropdownCompetidorCatalogo();
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -366,6 +652,13 @@ function abrirModalEditar(id) {
   _editId = id;
   document.getElementById('modal-titulo').textContent = 'Editar llamada';
   document.getElementById('f-fecha').value = l.fecha_llamada || '';
+  document.getElementById('f-localidad').value = l.localidad || '';
+  actualizarDropdownCompetidorCatalogo();
+  var sel = document.getElementById('f-competidor-sel');
+  sel.value = '';
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === (l.competidor_nombre || '')) { sel.value = l.competidor_nombre; break; }
+  }
   document.getElementById('f-competidor').value = l.competidor_nombre || '';
   document.getElementById('f-precio-mensual').value = l.precio_mensual_servicio != null ? l.precio_mensual_servicio : '';
   document.getElementById('f-modelo-basico').value = l.modelo_basico || '';
@@ -414,6 +707,7 @@ function guardar() {
   var payload = {
     email: _currentUserEmail,
     fecha_llamada: fecha,
+    localidad: document.getElementById('f-localidad').value || null,
     competidor_nombre: competidor,
     precio_mensual_servicio: document.getElementById('f-precio-mensual').value || null,
     modelo_basico: document.getElementById('f-modelo-basico').value.trim() || null,

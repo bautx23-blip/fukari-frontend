@@ -95,6 +95,49 @@ tbody tr:hover{background:#f8fafc;}
 /* ── BUTTONS ── */
 .btn-ver{background:transparent;border:1px solid #e5e7eb;color:#6b7280;padding:5px 12px;border-radius:5px;font-family:inherit;font-size:11.5px;cursor:pointer;transition:all .15s;}
 .btn-ver:hover{border-color:#1a1a2e;color:#1a1a2e;}
+.btn-trash{background:transparent;border:1px solid #fecaca;color:#dc2626;padding:5px 9px;border-radius:5px;font-family:inherit;font-size:13px;cursor:pointer;transition:all .15s;margin-left:6px;line-height:1;}
+.btn-trash:hover{background:#fee2e2;border-color:#dc2626;}
+.btn-trash-sm{background:transparent;border:none;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;}
+.btn-trash-sm:hover{color:#dc2626;background:#fee2e2;}
+
+/* ── LEAD PIPELINE / STEPPER (panel) ── */
+.pipeline{display:flex;align-items:center;gap:0;margin-top:6px;margin-bottom:4px;}
+.pipe-step{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;cursor:pointer;user-select:none;}
+.pipe-step .pipe-dot{width:22px;height:22px;border-radius:50%;background:#e5e7eb;border:2px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#9ca3af;transition:all .15s;z-index:1;}
+.pipe-step .pipe-label{font-size:10.5px;color:#9ca3af;font-weight:600;text-align:center;line-height:1.2;}
+.pipe-step.done .pipe-dot{background:#2563eb;border-color:#2563eb;color:#fff;}
+.pipe-step.done .pipe-label{color:#2563eb;}
+.pipe-step.current .pipe-dot{background:#fff;border-color:#2563eb;color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.18);}
+.pipe-step.current .pipe-label{color:#1a1a2e;font-weight:700;}
+.pipe-step.lost .pipe-dot{background:#dc2626;border-color:#dc2626;color:#fff;}
+.pipe-step.lost .pipe-label{color:#dc2626;}
+.pipe-step::after{content:"";position:absolute;top:10px;left:60%;width:80%;height:2px;background:#e5e7eb;z-index:0;}
+.pipe-step.done::after{background:#2563eb;}
+.pipe-step:last-child::after{display:none;}
+.pipe-step:hover .pipe-dot{transform:scale(1.1);}
+.pipeline-actions{display:flex;gap:8px;margin-top:14px;}
+.btn-pipe{flex:1;padding:8px 10px;border:1px solid #e5e7eb;background:#fff;color:#374151;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-pipe:hover:not(:disabled){border-color:#2563eb;color:#2563eb;}
+.btn-pipe:disabled{opacity:0.45;cursor:not-allowed;}
+.btn-pipe-lost{border-color:#fecaca;color:#dc2626;}
+.btn-pipe-lost:hover:not(:disabled){background:#fee2e2;border-color:#dc2626;}
+
+/* ── LEAD CALL REPORTS ── */
+.calls-list{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
+.call-item{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;position:relative;}
+.call-item .call-meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#6b7280;margin-bottom:4px;gap:6px;}
+.call-item .call-autor{font-weight:600;color:#374151;}
+.call-item .call-text{font-size:13px;color:#111827;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;}
+.call-empty{font-size:12px;color:#9ca3af;font-style:italic;padding:8px 0;}
+.call-add-row{display:flex;gap:8px;margin-top:10px;}
+.call-add-row textarea{flex:1;min-height:60px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;resize:vertical;color:#111827;}
+.call-add-row textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
+.btn-call-add{background:#2563eb;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;align-self:flex-start;transition:background .15s;}
+.btn-call-add:hover{background:#1d4ed8;}
+.btn-call-add:disabled{opacity:0.55;cursor:not-allowed;}
+.panel-section-title{font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin:20px 0 8px;padding-top:14px;border-top:1px solid #f1f5f9;}
+.panel-section-title:first-child{margin-top:0;padding-top:0;border-top:none;}
+.panel-actions-footer{padding:14px 24px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:space-between;background:#fafafa;}
 
 /* ── EMPTY STATE ── */
 .empty-state{text-align:center;padding:80px 20px;color:#9ca3af;}
@@ -836,7 +879,9 @@ function renderTabla() {
     var popoverHtml = '<div class="status-popover" id="pop-' + l.id + '">';
     ESTADOS.forEach(function(e) { var isCurrent = e.value === l.estado ? ' current' : ''; popoverHtml += '<div class="status-option' + isCurrent + '" onclick="cambiarEstado(event,\'' + l.id + '\',\'' + e.value + '\')"><span class="opt-badge ' + e.dot + '"></span><span class="opt-label">' + e.label + '</span><span class="opt-check">&#10003;</span></div>'; });
     popoverHtml += '</div>';
-    html += '<tr><td class="empresa-name">' + esc(l.empresa) + '</td><td>' + esc(l.contacto_nombre) + (l.cargo ? '<div class="contacto-cargo">' + esc(l.cargo) + '</div>' : '') + '</td><td class="contacto-detail">' + esc(l.contacto_telefono) + '<br>' + esc(l.contacto_email) + '</td><td>' + esc(l.cantidad_empleados || '—') + '</td><td class="desafio-cell" title="' + esc(desafioText) + '">' + esc(desafioText) + '</td><td class="fecha-cell">' + formatFecha(l.created_at) + '</td><td class="status-cell"><span class="badge ' + ei.cls + '" id="badge-' + l.id + '" onclick="togglePopover(event,\'' + l.id + '\')">' + esc(ei.label) + '</span>' + popoverHtml + '</td><td><button class="btn-ver" onclick=\'abrirPanel(' + JSON.stringify(l).replace(/'/g, '&#39;') + ')\'>Ver</button></td></tr>';
+    var nLlamadas = Array.isArray(l.llamadas) ? l.llamadas.length : 0;
+    var llamadasHint = nLlamadas > 0 ? ' <span title="Informes de llamada" style="color:#2563eb;font-size:10px;font-weight:700;margin-left:4px;">📞 ' + nLlamadas + '</span>' : '';
+    html += '<tr><td class="empresa-name">' + esc(l.empresa) + llamadasHint + '</td><td>' + esc(l.contacto_nombre) + (l.cargo ? '<div class="contacto-cargo">' + esc(l.cargo) + '</div>' : '') + '</td><td class="contacto-detail">' + esc(l.contacto_telefono) + '<br>' + esc(l.contacto_email) + '</td><td>' + esc(l.cantidad_empleados || '—') + '</td><td class="desafio-cell" title="' + esc(desafioText) + '">' + esc(desafioText) + '</td><td class="fecha-cell">' + formatFecha(l.created_at) + '</td><td class="status-cell"><span class="badge ' + ei.cls + '" id="badge-' + l.id + '" onclick="togglePopover(event,\'' + l.id + '\')">' + esc(ei.label) + '</span>' + popoverHtml + '</td><td style="white-space:nowrap;"><button class="btn-ver" onclick=\'abrirPanel(' + JSON.stringify(l).replace(/'/g, '&#39;') + ')\'>Ver</button><button class="btn-trash" title="Eliminar lead" onclick="eliminarLead(\'' + l.id + '\')">🗑</button></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tabla-contenido').innerHTML = html;
@@ -861,17 +906,188 @@ async function cambiarEstado(e, id, nuevoEstado) {
   try { var res = await fetch(API_URL + '/api/leads/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: nuevoEstado }) }); if (!res.ok) throw new Error('Error'); var updated = await res.json(); for (var i = 0; i < allLeads.length; i++) { if (allLeads[i].id === id) { allLeads[i] = updated; break; } } actualizarMetricas(); renderTabla(); } catch (err) { alert('Error al cambiar estado'); renderTabla(); }
 }
 
+// Los estados del pipeline (excluye "perdido", que es terminal fuera del flujo)
+var PIPELINE = ['nuevo', 'contactado', 'en negociacion', 'ganado'];
+var PIPELINE_LABELS = { 'nuevo': 'Nuevo', 'contactado': 'Contactado', 'en negociacion': 'En negociación', 'ganado': 'Ganado' };
+
+var _panelLeadId = null; // id del lead abierto en el panel
+
 function abrirPanel(lead) {
-  var ei = estadoInfo(lead.estado); var desafioText = DESAFIOS[lead.desafio] || lead.desafio || '—';
-  var html = '<div class="panel-field"><div class="pf-label">Empresa</div><div class="pf-value">' + esc(lead.empresa) + '</div></div><div class="panel-field"><div class="pf-label">Contacto</div><div class="pf-value">' + esc(lead.contacto_nombre) + '</div></div><div class="panel-field"><div class="pf-label">Email</div><div class="pf-value">' + esc(lead.contacto_email) + '</div></div><div class="panel-field"><div class="pf-label">Teléfono</div><div class="pf-value">' + esc(lead.contacto_telefono) + '</div></div>' + (lead.cargo ? '<div class="panel-field"><div class="pf-label">Cargo</div><div class="pf-value">' + esc(lead.cargo) + '</div></div>' : '') + (lead.cantidad_empleados ? '<div class="panel-field"><div class="pf-label">Empleados</div><div class="pf-value">' + esc(lead.cantidad_empleados) + '</div></div>' : '') + '<div class="panel-field"><div class="pf-label">Desafío</div><div class="pf-value">' + esc(desafioText) + '</div></div><div class="panel-field"><div class="pf-label">Estado</div><div class="pf-value"><span class="badge ' + ei.cls + '">' + esc(ei.label) + '</span></div></div><div class="panel-field"><div class="pf-label">Ingreso</div><div class="pf-value">' + (lead.created_at ? new Date(lead.created_at).toLocaleString('es-AR') : '—') + '</div></div><div class="panel-field"><div class="pf-label">Notas</div><textarea id="panel-notas">' + esc(lead.notas || '') + '</textarea></div><button class="btn-save" onclick="guardarNotas(\'' + lead.id + '\')">Guardar notas</button>';
-  document.getElementById('panel-body').innerHTML = html;
+  _panelLeadId = lead.id;
+  renderPanel(lead);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('side-panel').classList.add('open');
 }
-function cerrarPanel() { document.getElementById('overlay').classList.remove('open'); document.getElementById('side-panel').classList.remove('open'); }
+
+function renderPanel(lead) {
+  var ei = estadoInfo(lead.estado);
+  var desafioText = DESAFIOS[lead.desafio] || lead.desafio || '—';
+
+  // ── Pipeline visual ──
+  var isLost = lead.estado === 'perdido';
+  var currentIdx = PIPELINE.indexOf(lead.estado);
+  var pipeHtml = '<div class="pipeline">';
+  PIPELINE.forEach(function(s, i) {
+    var klass = 'pipe-step';
+    if (!isLost) {
+      if (i < currentIdx) klass += ' done';
+      else if (i === currentIdx) klass += ' current';
+    }
+    pipeHtml += '<div class="' + klass + '" onclick="cambiarEstadoPanel(\'' + lead.id + '\',\'' + s + '\')">';
+    pipeHtml += '<div class="pipe-dot">' + (i+1) + '</div>';
+    pipeHtml += '<div class="pipe-label">' + PIPELINE_LABELS[s] + '</div>';
+    pipeHtml += '</div>';
+  });
+  pipeHtml += '</div>';
+
+  var prevEstado = currentIdx > 0 ? PIPELINE[currentIdx - 1] : null;
+  var nextEstado = (currentIdx >= 0 && currentIdx < PIPELINE.length - 1) ? PIPELINE[currentIdx + 1] : null;
+  var canAvanzar = !isLost && !!nextEstado;
+  var canRetroceder = !isLost && !!prevEstado;
+
+  var pipelineActions =
+    '<div class="pipeline-actions">' +
+      '<button class="btn-pipe" ' + (canRetroceder ? '' : 'disabled') + ' onclick="cambiarEstadoPanel(\'' + lead.id + '\',\'' + (prevEstado || '') + '\')">← Atrás' + (prevEstado ? ' · ' + PIPELINE_LABELS[prevEstado] : '') + '</button>' +
+      '<button class="btn-pipe" ' + (canAvanzar ? '' : 'disabled') + ' onclick="cambiarEstadoPanel(\'' + lead.id + '\',\'' + (nextEstado || '') + '\')"' + (canAvanzar ? ' style="border-color:#2563eb;color:#2563eb;font-weight:700;"' : '') + '>Avanzar' + (nextEstado ? ' · ' + PIPELINE_LABELS[nextEstado] : '') + ' →</button>' +
+    '</div>' +
+    '<div style="margin-top:8px;">' +
+      (isLost
+        ? '<button class="btn-pipe" style="width:100%;" onclick="cambiarEstadoPanel(\'' + lead.id + '\',\'nuevo\')">↺ Reabrir lead (Nuevo)</button>'
+        : '<button class="btn-pipe btn-pipe-lost" style="width:100%;" onclick="cambiarEstadoPanel(\'' + lead.id + '\',\'perdido\')">✕ Marcar como perdido</button>'
+      ) +
+    '</div>';
+
+  // ── Llamadas ──
+  var llamadas = Array.isArray(lead.llamadas) ? lead.llamadas : [];
+  var callsHtml = '';
+  if (llamadas.length === 0) {
+    callsHtml = '<div class="call-empty">Sin informes aún. Cuando René llame, dejá acá qué pasó.</div>';
+  } else {
+    callsHtml = '<div class="calls-list">';
+    llamadas.forEach(function(c) {
+      var fecha = c.fecha ? new Date(c.fecha).toLocaleString('es-AR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+      callsHtml += '<div class="call-item">' +
+        '<div class="call-meta"><span class="call-autor">' + esc(c.autor || 'Sin autor') + '</span><span>' + esc(fecha) + ' <button class="btn-trash-sm" title="Eliminar informe" onclick="eliminarLlamada(\'' + lead.id + '\',\'' + esc(c.id || '') + '\')">🗑</button></span></div>' +
+        '<div class="call-text">' + esc(c.comentario || '') + '</div>' +
+      '</div>';
+    });
+    callsHtml += '</div>';
+  }
+
+  var html = '' +
+    '<div class="panel-section-title">Estado del lead</div>' +
+    '<div class="panel-field"><div class="pf-value"><span class="badge ' + ei.cls + '">' + esc(ei.label) + '</span></div></div>' +
+    pipeHtml + pipelineActions +
+
+    '<div class="panel-section-title">Datos</div>' +
+    '<div class="panel-field"><div class="pf-label">Empresa</div><div class="pf-value">' + esc(lead.empresa) + '</div></div>' +
+    '<div class="panel-field"><div class="pf-label">Contacto</div><div class="pf-value">' + esc(lead.contacto_nombre) + '</div></div>' +
+    '<div class="panel-field"><div class="pf-label">Email</div><div class="pf-value">' + esc(lead.contacto_email) + '</div></div>' +
+    '<div class="panel-field"><div class="pf-label">Teléfono</div><div class="pf-value">' + esc(lead.contacto_telefono) + '</div></div>' +
+    (lead.cargo ? '<div class="panel-field"><div class="pf-label">Cargo</div><div class="pf-value">' + esc(lead.cargo) + '</div></div>' : '') +
+    (lead.cantidad_empleados ? '<div class="panel-field"><div class="pf-label">Empleados</div><div class="pf-value">' + esc(lead.cantidad_empleados) + '</div></div>' : '') +
+    '<div class="panel-field"><div class="pf-label">Desafío</div><div class="pf-value">' + esc(desafioText) + '</div></div>' +
+    '<div class="panel-field"><div class="pf-label">Ingreso</div><div class="pf-value">' + (lead.created_at ? new Date(lead.created_at).toLocaleString('es-AR') : '—') + '</div></div>' +
+
+    '<div class="panel-section-title">Informe de llamadas</div>' +
+    callsHtml +
+    '<div class="call-add-row"><textarea id="panel-nueva-llamada" placeholder="Ej: Llamé a Juan. Confirmó interés, quedamos en enviar cotización mañana."></textarea></div>' +
+    '<button class="btn-call-add" id="btn-agregar-llamada" onclick="agregarLlamada(\'' + lead.id + '\')">+ Registrar llamada</button>' +
+
+    '<div class="panel-section-title">Notas generales</div>' +
+    '<div class="panel-field"><textarea id="panel-notas">' + esc(lead.notas || '') + '</textarea></div>' +
+    '<button class="btn-save" onclick="guardarNotas(\'' + lead.id + '\')">Guardar notas</button>';
+
+  document.getElementById('panel-body').innerHTML = html;
+}
+
+function cerrarPanel() {
+  _panelLeadId = null;
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('side-panel').classList.remove('open');
+}
+
+function refrescarLeadEnPanel(updated) {
+  for (var i = 0; i < allLeads.length; i++) {
+    if (allLeads[i].id === updated.id) { allLeads[i] = updated; break; }
+  }
+  actualizarMetricas();
+  renderTabla();
+  if (_panelLeadId === updated.id) renderPanel(updated);
+}
+
+async function cambiarEstadoPanel(id, nuevoEstado) {
+  if (!nuevoEstado) return;
+  try {
+    var res = await fetch(API_URL + '/api/leads/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: nuevoEstado }) });
+    if (!res.ok) throw new Error('Error');
+    var updated = await res.json();
+    refrescarLeadEnPanel(updated);
+  } catch (err) {
+    alert('Error al cambiar estado');
+  }
+}
+
+async function agregarLlamada(id) {
+  var txt = document.getElementById('panel-nueva-llamada');
+  var comentario = (txt.value || '').trim();
+  if (!comentario) { alert('Escribí qué pasó en la llamada antes de guardar'); return; }
+  var btn = document.getElementById('btn-agregar-llamada');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    var res = await fetch(API_URL + '/api/leads/' + id + '/llamadas', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comentario: comentario, autor: _currentUserEmail || null })
+    });
+    if (!res.ok) { var j = await res.json().catch(function(){return{};}); throw new Error(j.error || 'Error'); }
+    var updated = await res.json();
+    refrescarLeadEnPanel(updated);
+  } catch (err) {
+    alert('No se pudo registrar: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '+ Registrar llamada';
+  }
+}
+
+async function eliminarLlamada(leadId, llamadaId) {
+  if (!llamadaId) return;
+  if (!confirm('¿Eliminar este informe de llamada?')) return;
+  try {
+    var res = await fetch(API_URL + '/api/leads/' + leadId + '/llamadas/' + encodeURIComponent(llamadaId), { method: 'DELETE' });
+    if (!res.ok) throw new Error('Error');
+    var updated = await res.json();
+    refrescarLeadEnPanel(updated);
+  } catch (err) {
+    alert('No se pudo eliminar');
+  }
+}
+
+async function eliminarLead(id) {
+  var lead = allLeads.find(function(l) { return l.id === id; });
+  var nombre = lead ? lead.empresa : 'este lead';
+  if (!confirm('¿Eliminar el lead de "' + nombre + '"?\n\nEsta acción es irreversible y borra también sus informes de llamada.')) return;
+  try {
+    var res = await fetch(API_URL + '/api/leads/' + id, { method: 'DELETE' });
+    if (!res.ok) { var j = await res.json().catch(function(){return{};}); throw new Error(j.error || 'Error'); }
+    allLeads = allLeads.filter(function(l) { return l.id !== id; });
+    if (_panelLeadId === id) cerrarPanel();
+    actualizarMetricas();
+    renderTabla();
+  } catch (err) {
+    alert('No se pudo eliminar: ' + err.message);
+  }
+}
+
 async function guardarNotas(id) {
   var notas = document.getElementById('panel-notas').value;
-  try { var res = await fetch(API_URL + '/api/leads/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notas: notas }) }); if (!res.ok) throw new Error('Error'); var updated = await res.json(); for (var i = 0; i < allLeads.length; i++) { if (allLeads[i].id === id) { allLeads[i] = updated; break; } } cerrarPanel(); renderTabla(); } catch (err) { alert('Error al guardar notas'); }
+  try {
+    var res = await fetch(API_URL + '/api/leads/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notas: notas }) });
+    if (!res.ok) throw new Error('Error');
+    var updated = await res.json();
+    for (var i = 0; i < allLeads.length; i++) { if (allLeads[i].id === id) { allLeads[i] = updated; break; } }
+    cerrarPanel();
+    renderTabla();
+  } catch (err) { alert('Error al guardar notas'); }
 }
 
 // ════════════════════════════════════════════════════════════════════

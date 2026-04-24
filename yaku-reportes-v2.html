@@ -823,9 +823,10 @@ function renderFuentes(data) {
   var ref = data.Referidos || 0;
   var via = data['Vía pública'] || 0;
   var yec = data['Ya era cliente'] || 0;
+  var con = data['Concurso / Licitación'] || 0;
   var sinAsignar = data.sin_asignar || 0;
   var total = data.total || 0;
-  var asignadas = crm + ref + via + yec;
+  var asignadas = crm + ref + via + yec + con;
   var pctAsig = total > 0 ? Math.round((asignadas / total) * 100) : 0;
 
   html += '<div class="stats-row">';
@@ -833,6 +834,7 @@ function renderFuentes(data) {
   html += '<div class="stat-card" style="border-top-color:#16a34a"><div class="label">Referidos</div><div class="value" style="color:#16a34a">' + ref + '</div></div>';
   html += '<div class="stat-card" style="border-top-color:#d97706"><div class="label">Vía pública</div><div class="value" style="color:#d97706">' + via + '</div></div>';
   html += '<div class="stat-card" style="border-top-color:#7c3aed"><div class="label">Ya era cliente</div><div class="value" style="color:#7c3aed">' + yec + '</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#dc2626"><div class="label">Concurso / Licitación</div><div class="value" style="color:#dc2626">' + con + '</div></div>';
   html += '<div class="stat-card" style="border-top-color:#9ca3af"><div class="label">Con fuente asignada</div><div class="value">' + pctAsig + '%</div><div style="font-size:11px;color:#9ca3af;margin-top:2px;">' + asignadas + ' de ' + total + '</div></div>';
   html += '</div>';
 
@@ -850,6 +852,7 @@ function renderFuentes(data) {
     html += '<th class="right" style="color:#16a34a;">Referidos</th>';
     html += '<th class="right" style="color:#d97706;">Vía pública</th>';
     html += '<th class="right" style="color:#7c3aed;">Ya era cliente</th>';
+    html += '<th class="right" style="color:#dc2626;">Concurso / Licitación</th>';
     html += '<th class="right" style="color:#9ca3af;">Sin asignar</th>';
     html += '<th class="right">Total</th>';
     html += '</tr></thead><tbody>';
@@ -860,6 +863,7 @@ function renderFuentes(data) {
       html += '<td class="right">' + (r.Referidos || 0) + '</td>';
       html += '<td class="right">' + (r['Vía pública'] || 0) + '</td>';
       html += '<td class="right">' + (r['Ya era cliente'] || 0) + '</td>';
+      html += '<td class="right">' + (r['Concurso / Licitación'] || 0) + '</td>';
       html += '<td class="right" style="color:#9ca3af;">' + (r.sin_asignar || 0) + '</td>';
       html += '<td class="right bold">' + r.total + '</td>';
       html += '</tr>';
@@ -871,6 +875,7 @@ function renderFuentes(data) {
     html += '<td class="right">' + ref + '</td>';
     html += '<td class="right">' + via + '</td>';
     html += '<td class="right">' + yec + '</td>';
+    html += '<td class="right">' + con + '</td>';
     html += '<td class="right" style="color:#9ca3af;">' + sinAsignar + '</td>';
     html += '<td class="right bold">' + total + '</td>';
     html += '</tr>';
@@ -888,13 +893,14 @@ function renderChartFuentes(data) {
   var ref = data.Referidos || 0;
   var via = data['Vía pública'] || 0;
   var yec = data['Ya era cliente'] || 0;
-  if (crm + ref + via + yec === 0) return;
+  var con = data['Concurso / Licitación'] || 0;
+  if (crm + ref + via + yec + con === 0) return;
   var ctx = el.getContext('2d');
   var chart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['CRM', 'Referidos', 'Vía pública', 'Ya era cliente'],
-      datasets: [{ data: [crm, ref, via, yec], backgroundColor: ['#2563eb', '#16a34a', '#d97706', '#7c3aed'], borderWidth: 0, hoverOffset: 6 }]
+      labels: ['CRM', 'Referidos', 'Vía pública', 'Ya era cliente', 'Concurso / Licitación'],
+      datasets: [{ data: [crm, ref, via, yec, con], backgroundColor: ['#2563eb', '#16a34a', '#d97706', '#7c3aed', '#dc2626'], borderWidth: 0, hoverOffset: 6 }]
     },
     options: {
       responsive: true,
