@@ -844,18 +844,34 @@ async function guardarEdicion() {
   btn.textContent = 'Guardando...';
 
   try {
-    // Recolectar productos
+    var nuevoDomOrden = document.getElementById('edit-dom_instalacion').value.trim();
+    var nuevaLocOrden = document.getElementById('edit-localidad').value.trim();
+    var viejoDomOrden = (_editOrdenActual.dom_instalacion || '').trim();
+    var viejaLocOrden = (_editOrdenActual.localidad || '').trim();
+
+    // Recolectar productos. Si el domicilio/localidad a nivel orden cambió,
+    // propagar el nuevo valor a los productos que tenían el viejo valor o
+    // estaban vacíos — así un edit "normal" queda consistente en el PDF,
+    // pero productos en otras direcciones (multi-site) quedan intactos.
     var prodRows = document.querySelectorAll('.edit-prod-row');
     var productos = [];
     prodRows.forEach(function(row) {
       var modelo = row.querySelector('.edit-prod-modelo').value.trim();
       if (!modelo) return;
+      var dom = row.querySelector('.edit-prod-domicilio').value.trim();
+      var loc = row.querySelector('.edit-prod-localidad').value.trim();
+      if (nuevoDomOrden !== viejoDomOrden && (dom === viejoDomOrden || dom === '')) {
+        dom = nuevoDomOrden;
+      }
+      if (nuevaLocOrden !== viejaLocOrden && (loc === viejaLocOrden || loc === '')) {
+        loc = nuevaLocOrden;
+      }
       productos.push({
         modelo: modelo,
         cantidad: parseInt(row.querySelector('.edit-prod-cantidad').value) || 1,
         precio_unitario: parseFloat(row.querySelector('.edit-prod-precio').value) || 0,
-        domicilio: row.querySelector('.edit-prod-domicilio').value.trim(),
-        localidad: row.querySelector('.edit-prod-localidad').value.trim()
+        domicilio: dom,
+        localidad: loc
       });
     });
 
@@ -866,8 +882,8 @@ async function guardarEdicion() {
       email: document.getElementById('edit-email').value.trim(),
       rubro: document.getElementById('edit-rubro').value,
       metodo_pago: document.getElementById('edit-metodo_pago').value.trim(),
-      dom_instalacion: document.getElementById('edit-dom_instalacion').value.trim(),
-      localidad: document.getElementById('edit-localidad').value.trim(),
+      dom_instalacion: nuevoDomOrden,
+      localidad: nuevaLocOrden,
       plano: document.getElementById('edit-plano').value.trim(),
       fecha_orden: document.getElementById('edit-fecha_orden').value,
       vendedor: document.getElementById('edit-vendedor').value,
