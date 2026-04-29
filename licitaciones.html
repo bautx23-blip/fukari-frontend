@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Licitaciones — Yaku Filtros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;background:#f1f5f9;color:#111827;visibility:hidden;}
+body.ready{visibility:visible;}
+
+/* topbar */
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.topbar-logos img.yaku{height:36px;}
+.topbar-logos .fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
+.topbar-logos img.fuk{height:26px;}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:0.3px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-right span{color:#9ca3af;font-size:12px;}
+.btn-link{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;}
+.btn-link:hover{border-color:#9ca3af;color:#fff;}
+
+/* layout */
+.contenido{padding:24px 32px;max-width:1280px;margin:0 auto;}
+.page-header{margin-bottom:18px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.page-header h1{font-size:22px;font-weight:700;color:#1a1a2e;margin-bottom:4px;}
+.page-header p{font-size:13px;color:#6b7280;}
+
+/* tabs */
+.tabs{display:flex;gap:2px;background:#e2e8f0;border-radius:10px;padding:4px;width:fit-content;margin-bottom:20px;}
+.tab-btn{background:transparent;border:none;font-family:inherit;font-size:13.5px;font-weight:600;color:#475569;padding:8px 16px;border-radius:7px;cursor:pointer;transition:background 0.15s,color 0.15s;display:inline-flex;align-items:center;gap:8px;}
+.tab-btn.active{background:#fff;color:#1a1a2e;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.tab-count{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:#cbd5e1;color:#475569;}
+.tab-btn.active .tab-count{background:#dcfce7;color:#16a34a;}
+
+/* card surfaces */
+.surface{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.07);padding:18px 20px;margin-bottom:18px;}
+.surface-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.surface-toolbar h2{font-size:14px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.5px;}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;border:1px solid transparent;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s,border-color 0.15s,color 0.15s;}
+.btn-primary{background:#1a1a2e;color:#fff;}
+.btn-primary:hover{background:#2d2d4e;}
+.btn-secondary{background:#fff;border-color:#e5e7eb;color:#374151;}
+.btn-secondary:hover{border-color:#94a3b8;}
+.btn-danger{background:#fff;border-color:#fecaca;color:#dc2626;}
+.btn-danger:hover{background:#fef2f2;border-color:#dc2626;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* table */
+table{width:100%;border-collapse:collapse;}
+thead th{background:#f9fafb;padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #e5e7eb;white-space:nowrap;}
+thead th.right{text-align:right;}
+tbody tr{border-bottom:1px solid #f3f4f6;}
+tbody tr:hover{background:#f9fafb;}
+tbody td{padding:11px 14px;font-size:13px;color:#374151;vertical-align:middle;}
+tbody td.right{text-align:right;font-variant-numeric:tabular-nums;}
+tbody td.bold{font-weight:600;color:#1a1a2e;}
+tbody td.muted{color:#9ca3af;font-size:12px;}
+
+/* status badges */
+.estado{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:0.04em;}
+.estado.activa{background:#dcfce7;color:#15803d;}
+.estado.por_vencerse{background:#fef3c7;color:#b45309;}
+.estado.vencida{background:#fee2e2;color:#b91c1c;}
+
+/* equipos chips */
+.equipos-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.equipo-chip{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#4338ca;}
+
+/* form modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:120;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:560px;padding:24px;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow-y:auto;}
+.modal h3{font-size:17px;font-weight:700;color:#1a1a2e;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-row{display:flex;flex-direction:column;gap:4px;}
+.form-row.full{grid-column:1/-1;}
+.form-row label{font-size:11.5px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+.form-row input,.form-row select,.form-row textarea{font-family:inherit;font-size:13.5px;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:7px;outline:none;transition:border-color 0.1s;}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:#1a1a2e;}
+.form-row textarea{resize:vertical;min-height:80px;}
+.form-row.checkbox{flex-direction:row;align-items:center;gap:8px;}
+.form-row.checkbox label{text-transform:none;letter-spacing:0;font-size:13px;color:#374151;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;}
+
+/* upload zone */
+.upload-zone{border:2px dashed #cbd5e1;border-radius:10px;padding:18px;background:#f8fafc;display:flex;align-items:center;justify-content:center;gap:10px;color:#6b7280;font-size:13px;cursor:pointer;transition:border-color 0.15s,background 0.15s;}
+.upload-zone:hover{border-color:#1a1a2e;background:#f1f5f9;}
+.upload-zone input{display:none;}
+
+/* toast */
+.toast{position:fixed;bottom:20px;right:20px;background:#1a1a2e;color:#fff;padding:11px 18px;border-radius:8px;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,0.18);transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.34,1.56,.64,1);z-index:130;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{border-left:3px solid #22c55e;}
+.toast.error{border-left:3px solid #ef4444;}
+
+/* empty / loading */
+.empty{padding:48px 20px;text-align:center;color:#9ca3af;font-size:13px;}
+.loading{padding:60px 20px;text-align:center;color:#6b7280;}
+
+/* values */
+.values-line{display:flex;flex-direction:column;font-size:13px;}
+.values-line .v1{color:#1a1a2e;font-weight:600;}
+.values-line .v2{color:#6b7280;font-size:11.5px;font-weight:500;}
+
+/* responsive */
+@media(max-width:768px){
+  .form-grid{grid-template-columns:1fr;}
+  .contenido{padding:14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yaku">
+    <div class="fuk-wrap"><img class="fuk" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari"></div>
+  </div>
+  <span class="topbar-title">Licitaciones</span>
+  <div class="topbar-right">
+    <span id="topbar-fecha"></span>
+    <a href="/hub.html" class="btn-link">&#8592; Inicio</a>
+    <button class="btn-link" onclick="logout()">Cerrar sesion</button>
+  </div>
+</div>
+
+<div class="contenido">
+  <div class="page-header">
+    <div>
+      <h1>Licitaciones</h1>
+      <p>Cronograma de licitaciones activas y planificación de las próximas.</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="activas" onclick="setTab('activas')">
+      Activas <span class="tab-count" id="tabCountActivas">0</span>
+    </button>
+    <button class="tab-btn" data-tab="presentarse" onclick="setTab('presentarse')">
+      A presentarse <span class="tab-count" id="tabCountPresentarse">0</span>
+    </button>
+  </div>
+
+  <!-- ACTIVAS -->
+  <div id="viewActivas">
+    <div class="surface">
+      <div class="surface-toolbar">
+        <h2>Cronograma activo</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label class="upload-zone" id="uploadZone">
+            <input type="file" id="uploadInput" accept=".xlsx,.xls" onchange="subirCronograma(event)">
+            <span>📂 <strong>Subir cronograma</strong> · reemplaza el actual</span>
+          </label>
+        </div>
+      </div>
+      <div id="activasContent">
+        <div class="loading">Cargando…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- A PRESENTARSE -->
+  <div id="viewPresentarse" style="display:none;">
+    <div class="surface">
+      <div class="surface-toolbar">
+        <h2>Licitaciones a presentarse</h2>
+        <button class="btn btn-primary" onclick="openModalPresentarse()">+ Nueva</button>
+      </div>
+      <div id="presentarseContent">
+        <div class="loading">Cargando…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL Activa: editar / cambiar estado / prórroga -->
+<div class="modal-overlay" id="modalActiva">
+  <div class="modal">
+    <h3 id="modalActivaTitle">Licitación</h3>
+    <div class="form-grid">
+      <div class="form-row full">
+        <label>Organismo</label>
+        <input type="text" id="ma-organismo">
+      </div>
+      <div class="form-row">
+        <label>Cód. cliente</label>
+        <input type="text" id="ma-codigo">
+      </div>
+      <div class="form-row">
+        <label>Orden de compra</label>
+        <input type="text" id="ma-oc">
+      </div>
+      <div class="form-row">
+        <label>Vigencia desde</label>
+        <input type="date" id="ma-vdesde">
+      </div>
+      <div class="form-row">
+        <label>Vigencia hasta</label>
+        <input type="date" id="ma-vhasta">
+      </div>
+      <div class="form-row">
+        <label>Valor 1</label>
+        <input type="number" step="0.01" id="ma-v1">
+      </div>
+      <div class="form-row">
+        <label>Valor 2</label>
+        <input type="number" step="0.01" id="ma-v2">
+      </div>
+      <div class="form-row full">
+        <label>Estado</label>
+        <select id="ma-estado">
+          <option value="activa">Activa</option>
+          <option value="por_vencerse">Por vencerse</option>
+          <option value="vencida">Vencida</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Prórroga desde</label>
+        <input type="date" id="ma-pdesde">
+      </div>
+      <div class="form-row">
+        <label>Prórroga hasta</label>
+        <input type="date" id="ma-phasta">
+      </div>
+      <div class="form-row checkbox full">
+        <input type="checkbox" id="ma-pindef">
+        <label for="ma-pindef">Prórroga indefinida</label>
+      </div>
+      <div class="form-row full">
+        <label>Observaciones</label>
+        <textarea id="ma-obs" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalActiva')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarActiva()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL A presentarse: crear / editar -->
+<div class="modal-overlay" id="modalPresentarse">
+  <div class="modal">
+    <h3 id="modalPresTitle">Licitación a presentarse</h3>
+    <div class="form-grid">
+      <div class="form-row full">
+        <label>Organismo</label>
+        <input type="text" id="mp-organismo">
+      </div>
+      <div class="form-row">
+        <label>Fecha inicio</label>
+        <input type="date" id="mp-finicio">
+      </div>
+      <div class="form-row">
+        <label>Fecha cierre</label>
+        <input type="date" id="mp-fcierre">
+      </div>
+      <div class="form-row full">
+        <label>Quiénes compiten</label>
+        <input type="text" id="mp-competidores" placeholder="Ej: Aguared, Welko, Aguas Pacífico">
+      </div>
+      <div class="form-row">
+        <label>Quién ganó</label>
+        <input type="text" id="mp-ganador">
+      </div>
+      <div class="form-row">
+        <label>Oferta ganador (por equipo)</label>
+        <input type="number" step="0.01" id="mp-oferta">
+      </div>
+      <div class="form-row checkbox full">
+        <input type="checkbox" id="mp-anmat">
+        <label for="mp-anmat">Se requieren filtros con certificados ANMAT</label>
+      </div>
+      <div class="form-row full">
+        <label>Notas</label>
+        <textarea id="mp-notas" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalPresentarse')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPresentarse()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/licitaciones-alertas.js"></script>
+<script>
+// --- API base (igual patrón que el resto del frontend) ---
+const API_URL = location.hostname.indexOf('staging') !== -1
+  ? 'https://fukari-backend-production-92f1.up.railway.app'
+  : 'https://fukari-backend-production.up.railway.app';
+
+const SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+
+let _email = '';
+let _activas = [];
+let _presentarse = [];
+let _editingActivaId = null;
+let _editingPresId = null;
+
+// --- Auth gate ---
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (!session) { location.href = '/index.html'; return; }
+  _email = session.user.email.toLowerCase();
+  document.body.classList.add('ready');
+  document.getElementById('topbar-fecha').textContent =
+    new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+  cargarActivas();
+  cargarPresentarse();
+});
+
+function logout() { sb.auth.signOut().then(() => location.href = '/index.html'); }
+
+// --- Tabs ---
+function setTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('viewActivas').style.display = tab === 'activas' ? '' : 'none';
+  document.getElementById('viewPresentarse').style.display = tab === 'presentarse' ? '' : 'none';
+}
+
+// --- Toast ---
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.className = 'toast show ' + type;
+  el.textContent = msg;
+  setTimeout(() => { el.className = 'toast'; }, 2400);
+}
+
+// --- Modales ---
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// --- Helpers ---
+function fmtFecha(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+function fmtMoney(n) {
+  if (n == null || n === '') return '—';
+  return '$' + Number(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+function estadoLabel(e) {
+  return ({ activa: 'Activa', por_vencerse: 'Por vencerse', vencida: 'Vencida' })[e] || e;
+}
+function diasAVencer(lic) {
+  const fin = lic.prorroga_indefinida ? null : (lic.prorroga_hasta || lic.vigencia_hasta);
+  if (!fin) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const f = new Date(fin); f.setHours(0,0,0,0);
+  return Math.ceil((f - today) / (1000 * 60 * 60 * 24));
+}
+
+// ==================================================================
+// ACTIVAS
+// ==================================================================
+async function cargarActivas() {
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/activas`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    _activas = await r.json();
+    renderActivas();
+  } catch (err) {
+    document.getElementById('activasContent').innerHTML = `<div class="empty">Error: ${err.message}</div>`;
+  }
+}
+
+function renderActivas() {
+  document.getElementById('tabCountActivas').textContent = _activas.length;
+  const c = document.getElementById('activasContent');
+  if (!_activas.length) {
+    c.innerHTML = `<div class="empty">No hay licitaciones cargadas. Subí el Excel de cronograma para empezar.</div>`;
+    return;
+  }
+  c.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Estado</th>
+          <th>Organismo</th>
+          <th>OC</th>
+          <th>Vigencia</th>
+          <th>Equipos</th>
+          <th class="right">Valor</th>
+          <th>Observaciones</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${_activas.map(a => {
+          const dias = diasAVencer(a);
+          const fin = a.prorroga_indefinida ? 'indefinido' : fmtFecha(a.prorroga_hasta || a.vigencia_hasta);
+          const inicio = fmtFecha(a.prorroga_desde || a.vigencia_desde);
+          const equipos = (a.equipos || []).map(e => `<span class="equipo-chip">${e.tipo}: ${e.cantidad}</span>`).join(' ');
+          const isAdmin = _email === ADMIN_EMAIL;
+          return `
+            <tr>
+              <td><span class="estado ${a.estado}">${estadoLabel(a.estado)}</span>${dias != null && dias >= 0 && a.estado !== 'vencida' ? `<div class="muted" style="margin-top:3px;">en ${dias} d.</div>` : ''}</td>
+              <td class="bold">${escHtml(a.organismo)}${a.codigo_cliente ? `<div class="muted">${escHtml(a.codigo_cliente)}</div>` : ''}</td>
+              <td>${escHtml(a.orden_compra || '—')}</td>
+              <td>
+                <div>${inicio}</div>
+                <div class="muted">→ ${fin}</div>
+                ${a.prorroga_desde || a.prorroga_hasta || a.prorroga_indefinida ? `<div class="muted" style="color:#7c3aed;">prórroga vigente</div>` : ''}
+              </td>
+              <td><div class="equipos-chips">${equipos || '<span class="muted">—</span>'}</div></td>
+              <td class="right">
+                <div class="values-line">
+                  <span class="v1">${fmtMoney(a.valor_1)}</span>
+                  ${a.valor_2 ? `<span class="v2">2do tramo: ${fmtMoney(a.valor_2)}</span>` : ''}
+                </div>
+              </td>
+              <td class="muted" style="max-width:220px;">${escHtml(a.observaciones || '')}</td>
+              <td>${isAdmin ? `<button class="btn btn-secondary" onclick='editarActiva("${a.id}")' style="padding:5px 10px;font-size:12px;">Editar</button>` : ''}</td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function editarActiva(id) {
+  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede editar', 'error');
+  const a = _activas.find(x => x.id === id);
+  if (!a) return;
+  _editingActivaId = id;
+  document.getElementById('modalActivaTitle').textContent = a.organismo;
+  document.getElementById('ma-organismo').value = a.organismo || '';
+  document.getElementById('ma-codigo').value = a.codigo_cliente || '';
+  document.getElementById('ma-oc').value = a.orden_compra || '';
+  document.getElementById('ma-vdesde').value = a.vigencia_desde || '';
+  document.getElementById('ma-vhasta').value = a.vigencia_hasta || '';
+  document.getElementById('ma-v1').value = a.valor_1 ?? '';
+  document.getElementById('ma-v2').value = a.valor_2 ?? '';
+  document.getElementById('ma-estado').value = a.estado;
+  document.getElementById('ma-pdesde').value = a.prorroga_desde || '';
+  document.getElementById('ma-phasta').value = a.prorroga_hasta || '';
+  document.getElementById('ma-pindef').checked = !!a.prorroga_indefinida;
+  document.getElementById('ma-obs').value = a.observaciones || '';
+  openModal('modalActiva');
+}
+
+async function guardarActiva() {
+  const body = {
+    organismo: document.getElementById('ma-organismo').value.trim(),
+    codigo_cliente: document.getElementById('ma-codigo').value.trim() || null,
+    orden_compra: document.getElementById('ma-oc').value.trim() || null,
+    vigencia_desde: document.getElementById('ma-vdesde').value || null,
+    vigencia_hasta: document.getElementById('ma-vhasta').value || null,
+    valor_1: parseFloat(document.getElementById('ma-v1').value) || null,
+    valor_2: parseFloat(document.getElementById('ma-v2').value) || null,
+    estado: document.getElementById('ma-estado').value,
+    prorroga_desde: document.getElementById('ma-pdesde').value || null,
+    prorroga_hasta: document.getElementById('ma-phasta').value || null,
+    prorroga_indefinida: document.getElementById('ma-pindef').checked,
+    observaciones: document.getElementById('ma-obs').value.trim() || null,
+    email: _email,
+  };
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/activas/${_editingActivaId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-user-email': _email },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error');
+    toast('Guardado', 'success');
+    closeModal('modalActiva');
+    cargarActivas();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function subirCronograma(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  if (!confirm('Subir el cronograma reemplazará el actual. ¿Continuar?')) {
+    ev.target.value = '';
+    return;
+  }
+  const fd = new FormData();
+  fd.append('archivo', file);
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/activas/upload`, {
+      method: 'POST',
+      body: fd,
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error');
+    toast(`✓ ${d.insertadas} licitaciones cargadas`, 'success');
+    cargarActivas();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  } finally {
+    ev.target.value = '';
+  }
+}
+
+// ==================================================================
+// A PRESENTARSE
+// ==================================================================
+async function cargarPresentarse() {
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/presentarse`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    _presentarse = await r.json();
+    renderPresentarse();
+  } catch (err) {
+    document.getElementById('presentarseContent').innerHTML = `<div class="empty">Error: ${err.message}</div>`;
+  }
+}
+
+function renderPresentarse() {
+  document.getElementById('tabCountPresentarse').textContent = _presentarse.length;
+  const c = document.getElementById('presentarseContent');
+  if (!_presentarse.length) {
+    c.innerHTML = `<div class="empty">No hay licitaciones a presentarse. Cargá la primera con el botón "+ Nueva".</div>`;
+    return;
+  }
+  c.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Organismo</th>
+          <th>Inicio</th>
+          <th>Cierre</th>
+          <th>Compiten</th>
+          <th>Ganó</th>
+          <th class="right">Oferta gan./eq</th>
+          <th>ANMAT</th>
+          <th>Notas</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${_presentarse.map(p => {
+          const isAdmin = _email === ADMIN_EMAIL;
+          let cierreInfo = fmtFecha(p.fecha_cierre);
+          if (p.fecha_cierre) {
+            const dias = Math.ceil((new Date(p.fecha_cierre) - new Date()) / (1000*60*60*24));
+            if (dias >= 0 && dias <= 30) {
+              cierreInfo += `<div class="muted" style="color:#b45309;">en ${dias} d.</div>`;
+            } else if (dias < 0) {
+              cierreInfo += `<div class="muted" style="color:#b91c1c;">cerrada</div>`;
+            }
+          }
+          return `
+            <tr>
+              <td class="bold">${escHtml(p.organismo)}</td>
+              <td>${fmtFecha(p.fecha_inicio)}</td>
+              <td>${cierreInfo}</td>
+              <td class="muted" style="max-width:200px;">${escHtml(p.competidores || '—')}</td>
+              <td>${escHtml(p.ganador || '—')}</td>
+              <td class="right">${fmtMoney(p.oferta_ganador_por_equipo)}</td>
+              <td>${p.filtros_anmat ? '<span class="estado activa">Sí</span>' : '<span class="muted">No</span>'}</td>
+              <td class="muted" style="max-width:200px;">${escHtml(p.notas || '')}</td>
+              <td>${isAdmin ? `
+                <button class="btn btn-secondary" onclick='editarPresentarse("${p.id}")' style="padding:5px 10px;font-size:12px;">Editar</button>
+                <button class="btn btn-danger" onclick='borrarPresentarse("${p.id}")' style="padding:5px 10px;font-size:12px;">×</button>
+              ` : ''}</td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function openModalPresentarse() {
+  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede crear', 'error');
+  _editingPresId = null;
+  document.getElementById('modalPresTitle').textContent = 'Nueva licitación a presentarse';
+  ['mp-organismo','mp-finicio','mp-fcierre','mp-competidores','mp-ganador','mp-oferta','mp-notas'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('mp-anmat').checked = false;
+  openModal('modalPresentarse');
+}
+
+function editarPresentarse(id) {
+  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede editar', 'error');
+  const p = _presentarse.find(x => x.id === id);
+  if (!p) return;
+  _editingPresId = id;
+  document.getElementById('modalPresTitle').textContent = p.organismo;
+  document.getElementById('mp-organismo').value = p.organismo || '';
+  document.getElementById('mp-finicio').value = p.fecha_inicio || '';
+  document.getElementById('mp-fcierre').value = p.fecha_cierre || '';
+  document.getElementById('mp-competidores').value = p.competidores || '';
+  document.getElementById('mp-ganador').value = p.ganador || '';
+  document.getElementById('mp-oferta').value = p.oferta_ganador_por_equipo ?? '';
+  document.getElementById('mp-anmat').checked = !!p.filtros_anmat;
+  document.getElementById('mp-notas').value = p.notas || '';
+  openModal('modalPresentarse');
+}
+
+async function guardarPresentarse() {
+  const body = {
+    organismo: document.getElementById('mp-organismo').value.trim(),
+    fecha_inicio: document.getElementById('mp-finicio').value || null,
+    fecha_cierre: document.getElementById('mp-fcierre').value || null,
+    competidores: document.getElementById('mp-competidores').value.trim() || null,
+    ganador: document.getElementById('mp-ganador').value.trim() || null,
+    oferta_ganador_por_equipo: parseFloat(document.getElementById('mp-oferta').value) || null,
+    filtros_anmat: document.getElementById('mp-anmat').checked,
+    notas: document.getElementById('mp-notas').value.trim() || null,
+    email: _email,
+  };
+  if (!body.organismo) return toast('Falta organismo', 'error');
+  try {
+    const url = _editingPresId
+      ? `${API_URL}/api/licitaciones/presentarse/${_editingPresId}`
+      : `${API_URL}/api/licitaciones/presentarse`;
+    const method = _editingPresId ? 'PATCH' : 'POST';
+    const r = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'x-user-email': _email },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error');
+    toast('Guardado', 'success');
+    closeModal('modalPresentarse');
+    cargarPresentarse();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function borrarPresentarse(id) {
+  if (_email !== ADMIN_EMAIL) return;
+  if (!confirm('¿Eliminar esta licitación?')) return;
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/presentarse/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-user-email': _email },
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error');
+    toast('Eliminada', 'success');
+    cargarPresentarse();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+function escHtml(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>

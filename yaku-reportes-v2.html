@@ -152,6 +152,7 @@ var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 sb.auth.getSession().then(function(result) {
   var session = result.data.session;
   if (!session) { window.location.href = '/index.html'; return; }
+  window._currentUserEmail = session.user.email;
   document.body.classList.add('ready');
   iniciar();
 });
@@ -224,19 +225,20 @@ function cargarDatos() {
     fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); }),
     fetch(API_URL + '/api/rechazos-crediticios' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
     fetch(API_URL + '/api/ordenes/no-factibles').then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
-    fetch(API_URL + '/api/ordenes/fuentes-resumen' + qs).then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; })
+    fetch(API_URL + '/api/ordenes/fuentes-resumen' + qs).then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; }),
+    fetch(API_URL + '/api/llamadas-competencia', { headers: { 'x-user-email': window._currentUserEmail || '' } }).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; })
   ]).then(function(results) {
     destroyCharts();
     var inst = results[1] || {};
     var promoStats = { total: inst.cerrados_promo_periodo || 0, por_mes: inst.promo_por_mes || [] };
-    renderAll(results[0], results[1], results[2], results[3], results[4], results[5], results[6], promoStats);
+    renderAll(results[0], results[1], results[2], results[3], results[4], results[5], results[6], promoStats, results[7] || []);
   }).catch(function(err) {
     contenido.innerHTML = '<div class="error-msg">Error al cargar datos: ' + err.message + '</div>';
   });
 }
 
 /* ── RENDER ALL ── */
-function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactibles, fuentesResumen, promoStats) {
+function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactibles, fuentesResumen, promoStats, llamadasCompetencia) {
   var contenido = document.getElementById('contenido');
   var html = '';
   html += renderResumen(resumen, instalaciones);
@@ -245,8 +247,11 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
   html += renderRechazos(rechazos || []);
   html += renderNoFactibles(noFactibles || []);
   html += renderFuentes(fuentesResumen || {});
+  html += renderMonitoreoCompetencia(llamadasCompetencia || []);
   html += renderClientes(clientes);
   contenido.innerHTML = html;
+  // Bind del selector de mes (después de pegar el HTML)
+  bindMonitoreoCompetencia(llamadasCompetencia || []);
 
   // Render Chart.js charts after DOM is ready
   setTimeout(function() {
@@ -955,6 +960,149 @@ function renderNoFactibles(data) {
   html += '</div>';
   return html;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   MONITOREO COMPETENCIA — vista mensualizada con desplegable
+   ════════════════════════════════════════════════════════════════ */
+function renderMonitoreoCompetencia(llamadas) {
+  if (!Array.isArray(llamadas) || llamadas.length === 0) {
+    return '<div class="report-section">' +
+      '<div class="section-header"><div class="bar blue"></div><h2 class="blue">MONITOREO COMPETENCIA</h2></div>' +
+      '<div class="tabla-wrap" style="padding:18px;color:#6b7280;font-size:13px;">Sin llamadas registradas para mostrar.</div>' +
+      '</div>';
+  }
+
+  // Agrupar por mes (YYYY-MM)
+  var meses = {};
+  llamadas.forEach(function(l) {
+    if (!l.fecha_llamada) return;
+    var k = String(l.fecha_llamada).slice(0, 7);
+    if (!meses[k]) meses[k] = [];
+    meses[k].push(l);
+  });
+  var keysOrdenadas = Object.keys(meses).sort().reverse(); // más reciente primero
+
+  // El selector se construye con esas keys; default = la primera
+  var defaultKey = keysOrdenadas[0];
+
+  var html = '';
+  html += '<div class="report-section">';
+  html += '<div class="section-header"><div class="bar blue"></div><h2 class="blue">MONITOREO COMPETENCIA</h2></div>';
+
+  // Mini-stat: total + meses con datos
+  var total = llamadas.length;
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card blue"><div class="label">Total Llamadas</div><div class="value">' + total + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Meses con Datos</div><div class="value">' + keysOrdenadas.length + '</div></div>';
+  // Promedios del mes default
+  var llamMesDef = meses[defaultKey] || [];
+  var preciosDef = llamMesDef.map(function(x){ return parseFloat(x.precio_mensual_servicio); }).filter(function(n){ return !isNaN(n) && n>0; });
+  var promDef = preciosDef.length ? Math.round(preciosDef.reduce(function(a,b){return a+b;},0) / preciosDef.length) : 0;
+  html += '<div class="stat-card blue"><div class="label">Llamadas en Mes Seleccionado</div><div class="value" id="mon-comp-stat-cant">' + llamMesDef.length + '</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Precio Mensual Promedio</div><div class="value" id="mon-comp-stat-prom">$' + promDef.toLocaleString('es-AR') + '</div></div>';
+  html += '</div>';
+
+  // Tabla con selector de mes en el header
+  html += '<div class="tabla-wrap">';
+  html += '<div class="tabla-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">';
+  html += '<h3>Llamadas a la competencia</h3>';
+  html += '<div style="display:flex;align-items:center;gap:8px;">';
+  html += '<label style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;font-weight:600;">Mes</label>';
+  html += '<select id="mon-comp-mes" style="padding:6px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12.5px;">';
+  keysOrdenadas.forEach(function(k) {
+    html += '<option value="' + k + '">' + mesLabelLargo(k) + ' (' + meses[k].length + ')</option>';
+  });
+  html += '</select>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div id="mon-comp-tabla"></div>';
+  html += '</div>';
+
+  html += '</div>';
+  return html;
+}
+
+function mesLabelLargo(key) {
+  var parts = key.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+  var s = d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function bindMonitoreoCompetencia(llamadas) {
+  var sel = document.getElementById('mon-comp-mes');
+  if (!sel) return;
+  // Agrupar
+  var meses = {};
+  llamadas.forEach(function(l) {
+    if (!l.fecha_llamada) return;
+    var k = String(l.fecha_llamada).slice(0, 7);
+    if (!meses[k]) meses[k] = [];
+    meses[k].push(l);
+  });
+
+  function renderMes(key) {
+    var arr = meses[key] || [];
+    var precios = arr.map(function(x){ return parseFloat(x.precio_mensual_servicio); }).filter(function(n){ return !isNaN(n) && n>0; });
+    var prom = precios.length ? Math.round(precios.reduce(function(a,b){return a+b;},0) / precios.length) : 0;
+    var statCant = document.getElementById('mon-comp-stat-cant');
+    var statProm = document.getElementById('mon-comp-stat-prom');
+    if (statCant) statCant.textContent = arr.length;
+    if (statProm) statProm.textContent = '$' + prom.toLocaleString('es-AR');
+
+    var cont = document.getElementById('mon-comp-tabla');
+    if (!cont) return;
+    if (!arr.length) {
+      cont.innerHTML = '<div style="padding:30px 20px;text-align:center;color:#6b7280;font-size:13px;">Sin llamadas en este mes.</div>';
+      return;
+    }
+    var html = '<table>';
+    html += '<thead><tr>';
+    html += '<th>Fecha</th>';
+    html += '<th>Localidad</th>';
+    html += '<th>Competidor</th>';
+    html += '<th>Modelo</th>';
+    html += '<th>Tipo equipo</th>';
+    html += '<th class="right">$ Mensual</th>';
+    html += '<th class="right">$ Dispenser</th>';
+    html += '<th class="right">$ Bidones</th>';
+    html += '<th class="right">$ Instalación</th>';
+    html += '<th>Notas</th>';
+    html += '</tr></thead><tbody>';
+    arr.sort(function(a,b){ return String(b.fecha_llamada).localeCompare(String(a.fecha_llamada)); }).forEach(function(l) {
+      var fecha = formatFechaCorta(l.fecha_llamada);
+      var inst = l.tiene_costo_instalacion ? ('$' + Number(l.costo_instalacion || 0).toLocaleString('es-AR')) : 'Sin costo';
+      html += '<tr>';
+      html += '<td>' + fecha + '</td>';
+      html += '<td>' + escHtmlReporte(l.localidad || '—') + '</td>';
+      html += '<td class="bold">' + escHtmlReporte(l.competidor_nombre || '—') + '</td>';
+      html += '<td>' + escHtmlReporte(l.modelo_basico || '—') + '</td>';
+      html += '<td>' + (l.tipo_equipo ? l.tipo_equipo.toUpperCase() : '—') + '</td>';
+      html += '<td class="right money">' + (l.precio_mensual_servicio ? '$' + Number(l.precio_mensual_servicio).toLocaleString('es-AR') : '—') + '</td>';
+      html += '<td class="right">' + (l.costo_dispenser ? '$' + Number(l.costo_dispenser).toLocaleString('es-AR') : '—') + '</td>';
+      html += '<td class="right">' + (l.costo_bidones ? '$' + Number(l.costo_bidones).toLocaleString('es-AR') : '—') + '</td>';
+      html += '<td class="right">' + inst + '</td>';
+      html += '<td style="max-width:240px;color:#6b7280;font-size:12px;">' + escHtmlReporte(l.notas || '') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    cont.innerHTML = html;
+  }
+
+  sel.addEventListener('change', function() { renderMes(sel.value); });
+  renderMes(sel.value);
+}
+
+function formatFechaCorta(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  if (isNaN(d)) return '—';
+  return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+function escHtmlReporte(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 </script>
+<script src="/licitaciones-alertas.js"></script>
 </body>
 </html>
