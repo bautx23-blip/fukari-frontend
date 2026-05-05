@@ -145,6 +145,9 @@ tbody td.muted{color:#9ca3af;font-size:12px;}
     <button class="tab-btn" data-tab="presentarse" onclick="setTab('presentarse')">
       A presentarse <span class="tab-count" id="tabCountPresentarse">0</span>
     </button>
+    <button class="tab-btn" data-tab="perdidas" onclick="setTab('perdidas')">
+      Perdidas <span class="tab-count" id="tabCountPerdidas">0</span>
+    </button>
   </div>
 
   <!-- ACTIVAS -->
@@ -173,6 +176,19 @@ tbody td.muted{color:#9ca3af;font-size:12px;}
         <button class="btn btn-primary" onclick="openModalPresentarse()">+ Nueva</button>
       </div>
       <div id="presentarseContent">
+        <div class="loading">Cargando…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERDIDAS -->
+  <div id="viewPerdidas" style="display:none;">
+    <div class="surface">
+      <div class="surface-toolbar">
+        <h2>Licitaciones perdidas</h2>
+        <span style="font-size:12px;color:#6b7280;">Las perdidas se cargan desde "A presentarse" con el botón <strong>Perdida</strong></span>
+      </div>
+      <div id="perdidasContent">
         <div class="loading">Cargando…</div>
       </div>
     </div>
@@ -266,14 +282,6 @@ tbody td.muted{color:#9ca3af;font-size:12px;}
         <label>Quiénes compiten</label>
         <input type="text" id="mp-competidores" placeholder="Ej: Aguared, Welko, Aguas Pacífico">
       </div>
-      <div class="form-row">
-        <label>Quién ganó</label>
-        <input type="text" id="mp-ganador">
-      </div>
-      <div class="form-row">
-        <label>Oferta ganador (por equipo)</label>
-        <input type="number" step="0.01" id="mp-oferta">
-      </div>
       <div class="form-row checkbox full">
         <input type="checkbox" id="mp-anmat">
         <label for="mp-anmat">Se requieren filtros con certificados ANMAT</label>
@@ -286,6 +294,120 @@ tbody td.muted{color:#9ca3af;font-size:12px;}
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modalPresentarse')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarPresentarse()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL Ganada x Yakú -->
+<div class="modal-overlay" id="modalGanar">
+  <div class="modal">
+    <h3 style="color:#15803d;">Ganada x Yakú</h3>
+    <p style="font-size:13px;color:#6b7280;">Cargá los datos de la adjudicación. Al confirmar, la licitación se mueve a <strong>Activas</strong>.</p>
+    <div class="form-grid">
+      <div class="form-row full">
+        <label>Organismo</label>
+        <input type="text" id="mg-organismo" disabled style="background:#f3f4f6;">
+      </div>
+      <div class="form-row full">
+        <label>Equipos</label>
+        <div id="mg-equipos-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <button type="button" class="btn btn-secondary" onclick="agregarEquipoGanar()" style="align-self:flex-start;margin-top:6px;padding:5px 10px;font-size:12px;">+ Agregar equipo</button>
+      </div>
+      <div class="form-row">
+        <label>Precio por equipo (Valor 1) *</label>
+        <input type="number" step="0.01" id="mg-v1" required>
+      </div>
+      <div class="form-row">
+        <label>Valor 2 (opcional)</label>
+        <input type="number" step="0.01" id="mg-v2">
+      </div>
+      <div class="form-row">
+        <label>Vigencia desde</label>
+        <input type="date" id="mg-vdesde">
+      </div>
+      <div class="form-row">
+        <label>Vigencia hasta</label>
+        <input type="date" id="mg-vhasta">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalGanar')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-confirmar-ganar" onclick="confirmarGanar()" style="background:#15803d;">Confirmar adjudicación</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL Perdida -->
+<div class="modal-overlay" id="modalPerder">
+  <div class="modal">
+    <h3 style="color:#b91c1c;">Perdida</h3>
+    <p style="font-size:13px;color:#6b7280;">Cargá los datos del competidor que ganó. Al confirmar, la licitación se mueve a <strong>Perdidas</strong>.</p>
+    <div class="form-grid">
+      <div class="form-row full">
+        <label>Organismo</label>
+        <input type="text" id="mpd-organismo" disabled style="background:#f3f4f6;">
+      </div>
+      <div class="form-row full">
+        <label>Competidor que ganó *</label>
+        <input type="text" id="mpd-competidor" list="competidores-list" placeholder="Elegí o tipeá un competidor nuevo" autocomplete="off">
+        <datalist id="competidores-list"></datalist>
+        <small style="font-size:10.5px;color:#6b7280;">Si no figura, escribilo y se va a agregar al catálogo automáticamente.</small>
+      </div>
+      <div class="form-row">
+        <label>Tipo de servicio</label>
+        <select id="mpd-tipo">
+          <option value="">— elegir —</option>
+          <option value="basico">Básico</option>
+          <option value="medio">Medio</option>
+          <option value="complejo">Complejo</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Precio por equipo</label>
+        <input type="number" step="0.01" id="mpd-precio">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalPerder')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-confirmar-perder" onclick="confirmarPerder()" style="background:#b91c1c;">Confirmar pérdida</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL Editar Perdida -->
+<div class="modal-overlay" id="modalEditarPerdida">
+  <div class="modal">
+    <h3 id="modalEditPerdidaTitle">Editar perdida</h3>
+    <div class="form-grid">
+      <div class="form-row full">
+        <label>Organismo</label>
+        <input type="text" id="mep-organismo">
+      </div>
+      <div class="form-row full">
+        <label>Competidor</label>
+        <input type="text" id="mep-competidor" list="competidores-list" autocomplete="off">
+      </div>
+      <div class="form-row">
+        <label>Tipo de servicio</label>
+        <select id="mep-tipo">
+          <option value="">— elegir —</option>
+          <option value="basico">Básico</option>
+          <option value="medio">Medio</option>
+          <option value="complejo">Complejo</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Precio por equipo</label>
+        <input type="number" step="0.01" id="mep-precio">
+      </div>
+      <div class="form-row full">
+        <label>Notas</label>
+        <textarea id="mep-notas" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalEditarPerdida')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPerdidaEdit()">Guardar</button>
     </div>
   </div>
 </div>
@@ -309,8 +431,13 @@ const ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
 let _email = '';
 let _activas = [];
 let _presentarse = [];
+let _perdidas = [];
+let _competidores = [];
 let _editingActivaId = null;
 let _editingPresId = null;
+let _editingPerdidaId = null;
+let _ganarPresId = null;
+let _perderPresId = null;
 let _stockModelos = []; // [{id, modelo, precio}, ...] modelos de alquiler activos
 
 // --- Auth gate ---
@@ -322,7 +449,9 @@ sb.auth.getSession().then(({ data: { session } }) => {
     new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
   cargarActivas();
   cargarPresentarse();
+  cargarPerdidas();
   cargarStockModelos();
+  cargarCompetidores();
 });
 
 async function cargarStockModelos() {
@@ -337,6 +466,21 @@ async function cargarStockModelos() {
   } catch {}
 }
 
+async function cargarCompetidores() {
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/competidores`);
+    if (!r.ok) return;
+    _competidores = await r.json() || [];
+    refrescarDatalistCompetidores();
+  } catch {}
+}
+
+function refrescarDatalistCompetidores() {
+  const dl = document.getElementById('competidores-list');
+  if (!dl) return;
+  dl.innerHTML = _competidores.map(c => `<option value="${escHtml(c.nombre)}"></option>`).join('');
+}
+
 function logout() { sb.auth.signOut().then(() => location.href = '/index.html'); }
 
 // --- Tabs ---
@@ -344,6 +488,7 @@ function setTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.getElementById('viewActivas').style.display = tab === 'activas' ? '' : 'none';
   document.getElementById('viewPresentarse').style.display = tab === 'presentarse' ? '' : 'none';
+  document.getElementById('viewPerdidas').style.display = tab === 'perdidas' ? '' : 'none';
 }
 
 // --- Toast ---
@@ -655,10 +800,9 @@ function renderPresentarse() {
           <th>Organismo</th>
           <th>Apertura de sobres</th>
           <th>Compiten</th>
-          <th>Ganó</th>
-          <th class="right">Oferta gan./eq</th>
           <th>ANMAT</th>
           <th>Notas</th>
+          <th>Veredicto</th>
           <th></th>
         </tr>
       </thead>
@@ -676,22 +820,22 @@ function renderPresentarse() {
               cierreInfo += `<div class="muted" style="color:#b91c1c;">cerrada</div>`;
             }
           }
-          const ganoYaku = (p.ganador || '').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().match(/\byaku\b/);
-          const ganadorCell = ganoYaku
-            ? `<span class="estado activa">${escHtml(p.ganador)}</span>${p.promovida_a_activa_id ? '<div class="muted" style="font-size:10px;margin-top:2px;">→ pasó a Activas</div>' : ''}`
-            : escHtml(p.ganador || '—');
           return `
             <tr>
               <td class="bold">${escHtml(p.organismo)}</td>
               <td>${cierreInfo}</td>
               <td class="muted" style="max-width:200px;">${escHtml(p.competidores || '—')}</td>
-              <td>${ganadorCell}</td>
-              <td class="right">${fmtMoney(p.oferta_ganador_por_equipo)}</td>
               <td>${p.filtros_anmat ? '<span class="estado activa">Sí</span>' : '<span class="muted">No</span>'}</td>
               <td class="muted" style="max-width:200px;">${escHtml(p.notas || '')}</td>
               <td>${isAdmin ? `
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <button class="btn" onclick='openModalGanar("${p.id}")' style="background:#15803d;color:#fff;padding:4px 9px;font-size:11.5px;white-space:nowrap;">✓ Ganada x Yakú</button>
+                  <button class="btn" onclick='openModalPerder("${p.id}")' style="background:#b91c1c;color:#fff;padding:4px 9px;font-size:11.5px;">✗ Perdida</button>
+                </div>
+              ` : '<span class="muted">—</span>'}</td>
+              <td>${isAdmin ? `
                 <button class="btn btn-secondary" onclick='editarPresentarse("${p.id}")' style="padding:5px 10px;font-size:12px;">Editar</button>
-                <button class="btn btn-danger" onclick='borrarPresentarse("${p.id}")' style="padding:5px 10px;font-size:12px;">×</button>
+                <button class="btn btn-danger" onclick='borrarPresentarse("${p.id}")' style="padding:5px 10px;font-size:12px;" title="Eliminar sin veredicto">×</button>
               ` : ''}</td>
             </tr>
           `;
@@ -705,7 +849,7 @@ function openModalPresentarse() {
   if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede crear', 'error');
   _editingPresId = null;
   document.getElementById('modalPresTitle').textContent = 'Nueva licitación a presentarse';
-  ['mp-organismo','mp-fcierre','mp-competidores','mp-ganador','mp-oferta','mp-notas'].forEach(id=>{
+  ['mp-organismo','mp-fcierre','mp-competidores','mp-notas'].forEach(id=>{
     document.getElementById(id).value = '';
   });
   document.getElementById('mp-anmat').checked = false;
@@ -721,8 +865,6 @@ function editarPresentarse(id) {
   document.getElementById('mp-organismo').value = p.organismo || '';
   document.getElementById('mp-fcierre').value = toDatetimeLocal(p.fecha_cierre);
   document.getElementById('mp-competidores').value = p.competidores || '';
-  document.getElementById('mp-ganador').value = p.ganador || '';
-  document.getElementById('mp-oferta').value = p.oferta_ganador_por_equipo ?? '';
   document.getElementById('mp-anmat').checked = !!p.filtros_anmat;
   document.getElementById('mp-notas').value = p.notas || '';
   openModal('modalPresentarse');
@@ -735,8 +877,6 @@ async function guardarPresentarse() {
     organismo: document.getElementById('mp-organismo').value.trim(),
     fecha_cierre: fcierreISO,
     competidores: document.getElementById('mp-competidores').value.trim() || null,
-    ganador: document.getElementById('mp-ganador').value.trim() || null,
-    oferta_ganador_por_equipo: parseFloat(document.getElementById('mp-oferta').value) || null,
     filtros_anmat: document.getElementById('mp-anmat').checked,
     notas: document.getElementById('mp-notas').value.trim() || null,
     email: _email,
@@ -754,14 +894,284 @@ async function guardarPresentarse() {
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'Error');
-    if (d.promovida_a_activa_id) {
-      toast('Guardado · Yakú ganó → pasó a Activas', 'success');
-    } else {
-      toast('Guardado', 'success');
-    }
+    toast('Guardado', 'success');
     closeModal('modalPresentarse');
     cargarPresentarse();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+// ==================================================================
+// VEREDICTOS — Ganada x Yakú / Perdida
+// ==================================================================
+function openModalGanar(presId) {
+  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede confirmar', 'error');
+  const p = _presentarse.find(x => x.id === presId);
+  if (!p) return;
+  _ganarPresId = presId;
+  document.getElementById('mg-organismo').value = p.organismo || '';
+  document.getElementById('mg-v1').value = '';
+  document.getElementById('mg-v2').value = '';
+  document.getElementById('mg-vdesde').value = '';
+  document.getElementById('mg-vhasta').value = '';
+  // Empieza con una fila vacía para que se vea el selector inmediatamente
+  const cont = document.getElementById('mg-equipos-list');
+  cont.innerHTML = '';
+  cont.appendChild(crearFilaEquipoGanar({ tipo: '', cantidad: 1 }));
+  openModal('modalGanar');
+}
+
+function crearFilaEquipoGanar(eq) {
+  const row = document.createElement('div');
+  row.className = 'equipo-row-ganar';
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 32px;gap:8px;align-items:center;';
+
+  const sel = document.createElement('select');
+  sel.dataset.role = 'modelo';
+  sel.style.cssText = 'font-family:inherit;font-size:13px;padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:7px;outline:none;';
+  const ph = document.createElement('option');
+  ph.value = ''; ph.textContent = '— elegí un modelo —';
+  sel.appendChild(ph);
+  _stockModelos.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m.modelo; o.textContent = m.modelo + (m.precio ? ` — $${Number(m.precio).toLocaleString('es-AR')}` : '');
+    o.dataset.precio = m.precio || '';
+    sel.appendChild(o);
+  });
+  sel.value = (eq && eq.tipo) || '';
+  // Auto-completa el precio por equipo (mg-v1) cuando se elige un modelo y el campo está vacío
+  sel.addEventListener('change', () => {
+    const opt = sel.options[sel.selectedIndex];
+    const precio = opt && opt.dataset && opt.dataset.precio;
+    const v1 = document.getElementById('mg-v1');
+    if (precio && !v1.value) v1.value = precio;
+  });
+
+  const cant = document.createElement('input');
+  cant.type = 'number'; cant.min = '1'; cant.step = '1';
+  cant.dataset.role = 'cantidad';
+  cant.value = (eq && eq.cantidad) || 1;
+  cant.style.cssText = 'font-family:inherit;font-size:13px;padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:7px;outline:none;text-align:center;';
+
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.textContent = '×';
+  del.style.cssText = 'background:#fff;border:1.5px solid #fecaca;color:#dc2626;border-radius:7px;font-size:18px;line-height:1;font-weight:600;cursor:pointer;height:34px;';
+  del.onclick = () => row.remove();
+
+  row.appendChild(sel); row.appendChild(cant); row.appendChild(del);
+  return row;
+}
+
+function agregarEquipoGanar() {
+  document.getElementById('mg-equipos-list').appendChild(crearFilaEquipoGanar({ tipo: '', cantidad: 1 }));
+}
+
+async function confirmarGanar() {
+  const equipos = [];
+  document.querySelectorAll('#mg-equipos-list .equipo-row-ganar').forEach(row => {
+    const modelo = row.querySelector('[data-role="modelo"]').value.trim();
+    const cantidad = parseInt(row.querySelector('[data-role="cantidad"]').value) || 0;
+    if (modelo && cantidad > 0) equipos.push({ tipo: modelo, cantidad });
+  });
+  if (equipos.length === 0) return toast('Cargá al menos un equipo (modelo + cantidad)', 'error');
+
+  const v1 = parseFloat(document.getElementById('mg-v1').value);
+  if (!v1 || v1 <= 0) return toast('Precio por equipo (Valor 1) requerido', 'error');
+
+  const body = {
+    equipos,
+    valor_1: v1,
+    valor_2: parseFloat(document.getElementById('mg-v2').value) || null,
+    vigencia_desde: document.getElementById('mg-vdesde').value || null,
+    vigencia_hasta: document.getElementById('mg-vhasta').value || null,
+  };
+
+  const btn = document.getElementById('btn-confirmar-ganar');
+  btn.disabled = true; btn.textContent = 'Procesando...';
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/presentarse/${_ganarPresId}/ganar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-email': _email },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error');
+    toast('Adjudicada → pasó a Activas', 'success');
+    closeModal('modalGanar');
+    cargarPresentarse();
     cargarActivas();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Confirmar adjudicación';
+  }
+}
+
+function openModalPerder(presId) {
+  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede confirmar', 'error');
+  const p = _presentarse.find(x => x.id === presId);
+  if (!p) return;
+  _perderPresId = presId;
+  document.getElementById('mpd-organismo').value = p.organismo || '';
+  document.getElementById('mpd-competidor').value = '';
+  document.getElementById('mpd-tipo').value = '';
+  document.getElementById('mpd-precio').value = '';
+  refrescarDatalistCompetidores();
+  openModal('modalPerder');
+}
+
+async function confirmarPerder() {
+  const nombre = document.getElementById('mpd-competidor').value.trim();
+  if (!nombre) return toast('Cargá el nombre del competidor', 'error');
+  const tipo = document.getElementById('mpd-tipo').value || null;
+  const precio = parseFloat(document.getElementById('mpd-precio').value) || null;
+
+  // Si el nombre matchea uno existente (case-insensitive), mando el id
+  const match = _competidores.find(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+  const body = {
+    competidor_id: match ? match.id : null,
+    competidor_nombre: nombre,
+    tipo_servicio: tipo,
+    precio_por_equipo: precio,
+  };
+
+  const btn = document.getElementById('btn-confirmar-perder');
+  btn.disabled = true; btn.textContent = 'Procesando...';
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/presentarse/${_perderPresId}/perder`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-email': _email },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error');
+    toast('Marcada como perdida → pasó a Perdidas', 'success');
+    closeModal('modalPerder');
+    cargarPresentarse();
+    cargarPerdidas();
+    cargarCompetidores(); // por si se creó uno nuevo
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Confirmar pérdida';
+  }
+}
+
+// ==================================================================
+// PERDIDAS
+// ==================================================================
+async function cargarPerdidas() {
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/perdidas`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    _perdidas = await r.json();
+    renderPerdidas();
+  } catch (err) {
+    document.getElementById('perdidasContent').innerHTML = `<div class="empty">Error: ${err.message}</div>`;
+  }
+}
+
+function renderPerdidas() {
+  document.getElementById('tabCountPerdidas').textContent = _perdidas.length;
+  const c = document.getElementById('perdidasContent');
+  if (!_perdidas.length) {
+    c.innerHTML = `<div class="empty">Aún no hay licitaciones perdidas registradas.</div>`;
+    return;
+  }
+  const tipoLabel = (t) => ({ basico: 'Básico', medio: 'Medio', complejo: 'Complejo' })[t] || '—';
+  c.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Organismo</th>
+          <th>Apertura de sobres</th>
+          <th>Competidor</th>
+          <th>Tipo de servicio</th>
+          <th class="right">Precio / equipo</th>
+          <th>Notas</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${_perdidas.map(p => {
+          const isAdmin = _email === ADMIN_EMAIL;
+          return `
+            <tr>
+              <td class="bold">${escHtml(p.organismo)}</td>
+              <td>${fmtFechaHora(p.fecha_cierre)}</td>
+              <td><span class="estado vencida">${escHtml(p.competidor_nombre || '—')}</span></td>
+              <td>${tipoLabel(p.tipo_servicio)}</td>
+              <td class="right">${fmtMoney(p.precio_por_equipo)}</td>
+              <td class="muted" style="max-width:220px;">${escHtml(p.notas || '')}</td>
+              <td>${isAdmin ? `
+                <button class="btn btn-secondary" onclick='editarPerdida("${p.id}")' style="padding:5px 10px;font-size:12px;">Editar</button>
+                <button class="btn btn-danger" onclick='borrarPerdida("${p.id}")' style="padding:5px 10px;font-size:12px;">×</button>
+              ` : ''}</td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function editarPerdida(id) {
+  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede editar', 'error');
+  const p = _perdidas.find(x => x.id === id);
+  if (!p) return;
+  _editingPerdidaId = id;
+  document.getElementById('modalEditPerdidaTitle').textContent = p.organismo;
+  document.getElementById('mep-organismo').value = p.organismo || '';
+  document.getElementById('mep-competidor').value = p.competidor_nombre || '';
+  document.getElementById('mep-tipo').value = p.tipo_servicio || '';
+  document.getElementById('mep-precio').value = p.precio_por_equipo ?? '';
+  document.getElementById('mep-notas').value = p.notas || '';
+  refrescarDatalistCompetidores();
+  openModal('modalEditarPerdida');
+}
+
+async function guardarPerdidaEdit() {
+  const nombre = document.getElementById('mep-competidor').value.trim();
+  if (!nombre) return toast('Falta competidor', 'error');
+  const match = _competidores.find(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+  const body = {
+    organismo: document.getElementById('mep-organismo').value.trim(),
+    competidor_id: match ? match.id : null,
+    competidor_nombre: nombre,
+    tipo_servicio: document.getElementById('mep-tipo').value || null,
+    precio_por_equipo: parseFloat(document.getElementById('mep-precio').value) || null,
+    notas: document.getElementById('mep-notas').value.trim() || null,
+  };
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/perdidas/${_editingPerdidaId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-user-email': _email },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error');
+    toast('Guardado', 'success');
+    closeModal('modalEditarPerdida');
+    cargarPerdidas();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function borrarPerdida(id) {
+  if (_email !== ADMIN_EMAIL) return;
+  if (!confirm('¿Eliminar esta perdida? (no afecta a otras)')) return;
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/perdidas/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-user-email': _email },
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error');
+    toast('Eliminada', 'success');
+    cargarPerdidas();
   } catch (err) {
     toast('Error: ' + err.message, 'error');
   }
