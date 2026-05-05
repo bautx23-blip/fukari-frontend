@@ -514,7 +514,8 @@ function abrirEdicionBaja(b) {
   html += '<div><label>Orden de Referencia</label><input type="text" id="edit-orden_ref_numero" value="' + esc(b.orden_ref_numero) + '"></div>';
 
   html += '<div class="section-title">Datos de la baja</div>';
-  html += '<div><label>Fecha de Baja</label><input type="date" id="edit-fecha_baja" value="' + esc(b.fecha_baja) + '"></div>';
+  var _hoyMaxBaja = (function(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+  html += '<div><label>Fecha de Baja</label><input type="date" id="edit-fecha_baja" value="' + esc(b.fecha_baja) + '" max="' + _hoyMaxBaja + '"></div>';
   html += '<div><label>Tipo de Baja</label><select id="edit-tipo_baja"><option value="total"' + ((b.tipo_baja||'').toLowerCase()==='total'?' selected':'') + '>Total</option><option value="parcial"' + ((b.tipo_baja||'').toLowerCase()==='parcial'?' selected':'') + '>Parcial</option></select></div>';
   html += '<div class="form-full"><label>Motivo</label><select id="edit-motivo"><option value="Solicitud del cliente"' + (b.motivo==='Solicitud del cliente'?' selected':'') + '>Solicitud del cliente</option><option value="Falta de pago"' + (b.motivo==='Falta de pago'?' selected':'') + '>Falta de pago</option><option value="Mudanza"' + (b.motivo==='Mudanza'?' selected':'') + '>Mudanza</option><option value="Vencimiento de contrato"' + (b.motivo==='Vencimiento de contrato'?' selected':'') + '>Vencimiento de contrato</option><option value="Otro"' + (b.motivo==='Otro'?' selected':'') + '>Otro</option></select></div>';
   html += '<div class="form-full"><label>Observaciones</label><textarea id="edit-observaciones">' + esc(b.observaciones) + '</textarea></div>';
@@ -563,6 +564,14 @@ async function subirArchivoBajaEdit(fileInput, nombreBase) {
 
 async function guardarEdicionBaja() {
   if (!_editBajaActual) return;
+  var fbVal = document.getElementById('edit-fecha_baja').value;
+  if (fbVal) {
+    var hoyISO = (function(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+    if (fbVal > hoyISO) {
+      alert('La fecha de baja no puede ser futura. Elegí hoy o una fecha anterior.');
+      return;
+    }
+  }
   var btn = document.getElementById('btn-guardar-edit');
   btn.disabled = true;
   btn.textContent = 'Guardando...';

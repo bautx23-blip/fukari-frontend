@@ -339,6 +339,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       <div class="campo-texto">
         <label>Fecha de baja:</label>
         <input type="date" id="fecha-baja" style="max-width:160px;">
+        <small style="font-size:10px;color:#6b7280;display:block;margin-top:2px;">Podés elegir una fecha pasada o el día de hoy. No se permiten fechas futuras.</small>
       </div>
       <div class="campo-texto">
         <label>Motivo de baja:</label>
@@ -478,13 +479,26 @@ var _equiposBaja = []; // equipos seleccionados para baja parcial
 var _manualMode = false; // true when client data is entered manually
 var _equipoManualCount = 0; // counter for manual equipment row IDs
 
+// ── HELPERS DE FECHA ──
+// Devuelve YYYY-MM-DD en hora local (no UTC). Necesario para que "hoy" sea
+// coherente con la zona horaria del navegador, sobre todo cerca de medianoche ART.
+function fechaHoyLocalISO() {
+  var d = new Date();
+  return d.getFullYear() + '-' +
+         String(d.getMonth()+1).padStart(2,'0') + '-' +
+         String(d.getDate()).padStart(2,'0');
+}
+
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', function() {
   var hoy = new Date();
   document.getElementById('f-dd').value = String(hoy.getDate()).padStart(2,'0');
   document.getElementById('f-mm').value = String(hoy.getMonth()+1).padStart(2,'0');
   document.getElementById('f-aa').value = hoy.getFullYear();
-  document.getElementById('fecha-baja').value = hoy.toISOString().split('T')[0];
+  var hoyISO = fechaHoyLocalISO();
+  var fbInput = document.getElementById('fecha-baja');
+  fbInput.value = hoyISO;
+  fbInput.max = hoyISO;
 
   fetch(API_URL + '/api/bajas/next-number')
     .then(function(r){ return r.json(); })
@@ -1061,6 +1075,10 @@ function validarCamposHard() {
   var errores = [];
   if (!ordenRef && !_manualMode) errores.push('Buscá un cliente antes de guardar');
   if (!_tipoBaja) errores.push('Tipo de baja (total o parcial)');
+  var fechaBaja = document.getElementById('fecha-baja').value;
+  if (fechaBaja && fechaBaja > fechaHoyLocalISO()) {
+    errores.push('La fecha de baja no puede ser futura — elegí hoy o una fecha anterior');
+  }
   return errores;
 }
 
@@ -1361,7 +1379,10 @@ function limpiarForm() {
   document.getElementById('productos-ref-body').innerHTML = '<tr><td colspan="4" class="estado-vacio">Buscá un cliente para ver sus equipos</td></tr>';
   document.querySelectorAll('#datos-baja-section input:not([type=date]), #datos-baja-section textarea').forEach(function(el){ el.value = ''; });
   document.querySelectorAll('#datos-baja-section select').forEach(function(el){ el.selectedIndex = 0; });
-  document.getElementById('fecha-baja').value = new Date().toISOString().split('T')[0];
+  var _hoyISO = fechaHoyLocalISO();
+  var _fbInput = document.getElementById('fecha-baja');
+  _fbInput.value = _hoyISO;
+  _fbInput.max = _hoyISO;
   document.getElementById('retiro-section').style.display = 'none';
   document.getElementById('tipo-baja-panel').style.display = 'none';
   document.getElementById('equipos-selector').style.display = 'none';
