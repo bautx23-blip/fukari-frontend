@@ -220,6 +220,11 @@ tbody td.muted{color:#9ca3af;font-size:12px;}
           <option value="vencida">Vencida</option>
         </select>
       </div>
+      <div class="form-row full">
+        <label>Equipos</label>
+        <div id="ma-equipos-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <button type="button" class="btn btn-secondary" onclick="agregarEquipoLicitacion()" style="align-self:flex-start;margin-top:6px;padding:5px 10px;font-size:12px;">+ Agregar equipo</button>
+      </div>
       <div class="form-row">
         <label>Prórroga desde</label>
         <input type="date" id="ma-pdesde">
@@ -306,6 +311,7 @@ let _activas = [];
 let _presentarse = [];
 let _editingActivaId = null;
 let _editingPresId = null;
+let _stockModelos = []; // [{id, modelo, precio}, ...] modelos de alquiler activos
 
 // --- Auth gate ---
 sb.auth.getSession().then(({ data: { session } }) => {
@@ -316,7 +322,20 @@ sb.auth.getSession().then(({ data: { session } }) => {
     new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
   cargarActivas();
   cargarPresentarse();
+  cargarStockModelos();
 });
+
+async function cargarStockModelos() {
+  try {
+    const r = await fetch(`${API_URL}/api/stock?tipo=alquiler`);
+    if (!r.ok) return;
+    const data = await r.json();
+    _stockModelos = (data || [])
+      .filter(s => s.activo)
+      .map(s => ({ id: s.id, modelo: s.modelo, precio: s.precio }))
+      .sort((a, b) => a.modelo.localeCompare(b.modelo));
+  } catch {}
+}
 
 function logout() { sb.auth.signOut().then(() => location.href = '/index.html'); }
 
@@ -464,7 +483,90 @@ function editarActiva(id) {
   document.getElementById('ma-phasta').value = a.prorroga_hasta || '';
   document.getElementById('ma-pindef').checked = !!a.prorroga_indefinida;
   document.getElementById('ma-obs').value = a.observaciones || '';
+  renderEquiposLicitacion(a.equipos || []);
   openModal('modalActiva');
+}
+
+// --- Equipos en el modal de Activa ---
+// Cada equipo es { tipo: <modelo o categoría legacy>, cantidad: <int> }
+// Mantenemos el campo "tipo" en la jsonb para compatibilidad con el upload de Excel
+// (que carga "Comunes/Osmosis/Bidones") y con el render del listado actual.
+function renderEquiposLicitacion(equipos) {
+  const cont = document.getElementById('ma-equipos-list');
+  cont.innerHTML = '';
+  if (!equipos || equipos.length === 0) {
+    cont.innerHTML = '<div style="font-size:12px;color:#9ca3af;">Sin equipos cargados. Hacé click en "+ Agregar equipo" para sumar uno.</div>';
+    return;
+  }
+  equipos.forEach((eq, i) => cont.appendChild(crearFilaEquipo(eq, i)));
+}
+
+function crearFilaEquipo(eq, idx) {
+  const row = document.createElement('div');
+  row.className = 'equipo-row';
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 32px;gap:8px;align-items:center;';
+
+  // Select de modelos (con opción "otro" para preservar valores legacy)
+  const sel = document.createElement('select');
+  sel.dataset.role = 'modelo';
+  sel.style.cssText = 'font-family:inherit;font-size:13px;padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:7px;outline:none;';
+  const placeholder = document.createElement('option');
+  placeholder.value = ''; placeholder.textContent = '— elegí un modelo —';
+  sel.appendChild(placeholder);
+  _stockModelos.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m.modelo; o.textContent = m.modelo;
+    sel.appendChild(o);
+  });
+  // Si el valor existente NO está en stock (caso Excel: "Comunes", "Osmosis", "Bidones"
+  // o un modelo descontinuado), lo agregamos como opción "(legacy)" para no perderlo.
+  const existente = eq && eq.tipo ? String(eq.tipo) : '';
+  if (existente && !_stockModelos.some(m => m.modelo === existente)) {
+    const o = document.createElement('option');
+    o.value = existente; o.textContent = existente + ' (legacy)';
+    sel.appendChild(o);
+  }
+  sel.value = existente;
+
+  const cant = document.createElement('input');
+  cant.type = 'number';
+  cant.min = '1';
+  cant.step = '1';
+  cant.dataset.role = 'cantidad';
+  cant.value = (eq && eq.cantidad) || 1;
+  cant.style.cssText = 'font-family:inherit;font-size:13px;padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:7px;outline:none;text-align:center;';
+
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.textContent = '×';
+  del.title = 'Quitar equipo';
+  del.style.cssText = 'background:#fff;border:1.5px solid #fecaca;color:#dc2626;border-radius:7px;font-size:18px;line-height:1;font-weight:600;cursor:pointer;height:34px;';
+  del.onclick = () => row.remove();
+
+  row.appendChild(sel);
+  row.appendChild(cant);
+  row.appendChild(del);
+  return row;
+}
+
+function agregarEquipoLicitacion() {
+  const cont = document.getElementById('ma-equipos-list');
+  // Si está el placeholder de "Sin equipos", lo limpiamos
+  if (cont.children.length === 1 && !cont.firstChild.classList?.contains('equipo-row')) {
+    cont.innerHTML = '';
+  }
+  cont.appendChild(crearFilaEquipo({ tipo: '', cantidad: 1 }, cont.children.length));
+}
+
+function recolectarEquiposLicitacion() {
+  const filas = document.querySelectorAll('#ma-equipos-list .equipo-row');
+  const out = [];
+  filas.forEach(row => {
+    const modelo = row.querySelector('[data-role="modelo"]').value.trim();
+    const cantidad = parseInt(row.querySelector('[data-role="cantidad"]').value) || 0;
+    if (modelo && cantidad > 0) out.push({ tipo: modelo, cantidad });
+  });
+  return out;
 }
 
 async function guardarActiva() {
@@ -481,6 +583,7 @@ async function guardarActiva() {
     prorroga_hasta: document.getElementById('ma-phasta').value || null,
     prorroga_indefinida: document.getElementById('ma-pindef').checked,
     observaciones: document.getElementById('ma-obs').value.trim() || null,
+    equipos: recolectarEquiposLicitacion(),
     email: _email,
   };
   try {
