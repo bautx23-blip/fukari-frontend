@@ -59,6 +59,15 @@
     return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
+  function fmtFechaHora(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    const fecha = d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const hora = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${fecha} · ${hora} hs`;
+  }
+
   function diasRestantes(iso) {
     if (!iso) return null;
     const today = new Date(); today.setHours(0,0,0,0);
@@ -80,7 +89,7 @@
             const danger = dias != null && dias <= 7;
             const lbl = it.tipo === 'activa_por_vencerse'
               ? `Vence ${fmtFecha(it.vence)} · ${dias} día${dias === 1 ? '' : 's'}`
-              : `Cierra ${fmtFecha(it.fecha_cierre)} · ${dias} día${dias === 1 ? '' : 's'}`;
+              : `Apertura ${fmtFechaHora(it.fecha_cierre)} · ${dias} día${dias === 1 ? '' : 's'}`;
             return `
               <div class="lic-alert-item ${danger ? 'danger' : ''}">
                 <div>

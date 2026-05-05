@@ -253,13 +253,9 @@ tbody td.muted{color:#9ca3af;font-size:12px;}
         <label>Organismo</label>
         <input type="text" id="mp-organismo">
       </div>
-      <div class="form-row">
-        <label>Fecha inicio</label>
-        <input type="date" id="mp-finicio">
-      </div>
-      <div class="form-row">
-        <label>Fecha cierre</label>
-        <input type="date" id="mp-fcierre">
+      <div class="form-row full">
+        <label>Fecha y hora de apertura de sobres</label>
+        <input type="datetime-local" id="mp-fcierre">
       </div>
       <div class="form-row full">
         <label>Quiénes compiten</label>
@@ -349,6 +345,22 @@ function fmtFecha(iso) {
   const d = new Date(iso);
   if (isNaN(d)) return '—';
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+function fmtFechaHora(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  const fecha = d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const hora = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return `${fecha} · ${hora} hs`;
+}
+// Convierte un timestamptz ISO a string para input datetime-local en hora local
+function toDatetimeLocal(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 function fmtMoney(n) {
   if (n == null || n === '') return '—';
@@ -538,8 +550,7 @@ function renderPresentarse() {
       <thead>
         <tr>
           <th>Organismo</th>
-          <th>Inicio</th>
-          <th>Cierre</th>
+          <th>Apertura de sobres</th>
           <th>Compiten</th>
           <th>Ganó</th>
           <th class="right">Oferta gan./eq</th>
@@ -551,22 +562,27 @@ function renderPresentarse() {
       <tbody>
         ${_presentarse.map(p => {
           const isAdmin = _email === ADMIN_EMAIL;
-          let cierreInfo = fmtFecha(p.fecha_cierre);
+          let cierreInfo = fmtFechaHora(p.fecha_cierre);
           if (p.fecha_cierre) {
-            const dias = Math.ceil((new Date(p.fecha_cierre) - new Date()) / (1000*60*60*24));
+            const cierre = new Date(p.fecha_cierre); cierre.setHours(0,0,0,0);
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const dias = Math.ceil((cierre - hoy) / (1000*60*60*24));
             if (dias >= 0 && dias <= 30) {
               cierreInfo += `<div class="muted" style="color:#b45309;">en ${dias} d.</div>`;
             } else if (dias < 0) {
               cierreInfo += `<div class="muted" style="color:#b91c1c;">cerrada</div>`;
             }
           }
+          const ganoYaku = (p.ganador || '').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().match(/\byaku\b/);
+          const ganadorCell = ganoYaku
+            ? `<span class="estado activa">${escHtml(p.ganador)}</span>${p.promovida_a_activa_id ? '<div class="muted" style="font-size:10px;margin-top:2px;">→ pasó a Activas</div>' : ''}`
+            : escHtml(p.ganador || '—');
           return `
             <tr>
               <td class="bold">${escHtml(p.organismo)}</td>
-              <td>${fmtFecha(p.fecha_inicio)}</td>
               <td>${cierreInfo}</td>
               <td class="muted" style="max-width:200px;">${escHtml(p.competidores || '—')}</td>
-              <td>${escHtml(p.ganador || '—')}</td>
+              <td>${ganadorCell}</td>
               <td class="right">${fmtMoney(p.oferta_ganador_por_equipo)}</td>
               <td>${p.filtros_anmat ? '<span class="estado activa">Sí</span>' : '<span class="muted">No</span>'}</td>
               <td class="muted" style="max-width:200px;">${escHtml(p.notas || '')}</td>
@@ -586,7 +602,7 @@ function openModalPresentarse() {
   if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede crear', 'error');
   _editingPresId = null;
   document.getElementById('modalPresTitle').textContent = 'Nueva licitación a presentarse';
-  ['mp-organismo','mp-finicio','mp-fcierre','mp-competidores','mp-ganador','mp-oferta','mp-notas'].forEach(id=>{
+  ['mp-organismo','mp-fcierre','mp-competidores','mp-ganador','mp-oferta','mp-notas'].forEach(id=>{
     document.getElementById(id).value = '';
   });
   document.getElementById('mp-anmat').checked = false;
@@ -600,8 +616,7 @@ function editarPresentarse(id) {
   _editingPresId = id;
   document.getElementById('modalPresTitle').textContent = p.organismo;
   document.getElementById('mp-organismo').value = p.organismo || '';
-  document.getElementById('mp-finicio').value = p.fecha_inicio || '';
-  document.getElementById('mp-fcierre').value = p.fecha_cierre || '';
+  document.getElementById('mp-fcierre').value = toDatetimeLocal(p.fecha_cierre);
   document.getElementById('mp-competidores').value = p.competidores || '';
   document.getElementById('mp-ganador').value = p.ganador || '';
   document.getElementById('mp-oferta').value = p.oferta_ganador_por_equipo ?? '';
@@ -611,10 +626,11 @@ function editarPresentarse(id) {
 }
 
 async function guardarPresentarse() {
+  const fcierreLocal = document.getElementById('mp-fcierre').value;
+  const fcierreISO = fcierreLocal ? new Date(fcierreLocal).toISOString() : null;
   const body = {
     organismo: document.getElementById('mp-organismo').value.trim(),
-    fecha_inicio: document.getElementById('mp-finicio').value || null,
-    fecha_cierre: document.getElementById('mp-fcierre').value || null,
+    fecha_cierre: fcierreISO,
     competidores: document.getElementById('mp-competidores').value.trim() || null,
     ganador: document.getElementById('mp-ganador').value.trim() || null,
     oferta_ganador_por_equipo: parseFloat(document.getElementById('mp-oferta').value) || null,
@@ -635,9 +651,14 @@ async function guardarPresentarse() {
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'Error');
-    toast('Guardado', 'success');
+    if (d.promovida_a_activa_id) {
+      toast('Guardado · Yakú ganó → pasó a Activas', 'success');
+    } else {
+      toast('Guardado', 'success');
+    }
     closeModal('modalPresentarse');
     cargarPresentarse();
+    cargarActivas();
   } catch (err) {
     toast('Error: ' + err.message, 'error');
   }
