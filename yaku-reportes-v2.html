@@ -224,7 +224,7 @@ function cargarDatos() {
     fetch(API_URL + '/api/reportes/bajas' + qs).then(function(r){ if(!r.ok) throw new Error('bajas '+r.status); return r.json(); }),
     fetch(API_URL + '/api/reportes/clientes').then(function(r){ if(!r.ok) throw new Error('clientes '+r.status); return r.json(); }),
     fetch(API_URL + '/api/rechazos-crediticios' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
-    fetch(API_URL + '/api/ordenes/no-factibles').then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
+    fetch(API_URL + '/api/ordenes/no-factibles' + rechazosQs).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; }),
     fetch(API_URL + '/api/ordenes/fuentes-resumen' + qs).then(function(r){ if(!r.ok) return {}; return r.json(); }).catch(function(){ return {}; }),
     fetch(API_URL + '/api/llamadas-competencia', { headers: { 'x-user-email': window._currentUserEmail || '' } }).then(function(r){ if(!r.ok) return []; return r.json(); }).catch(function(){ return []; })
   ]).then(function(results) {
