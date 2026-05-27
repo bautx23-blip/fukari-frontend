@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planilla de Contactos — Yakú</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',Arial,sans-serif;background:#f1f5f9;min-height:100vh;color:#111827;visibility:hidden;}
+body.ready{visibility:visible;}
+.topbar{background:#1a1a2e;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.topbar-logos img.yaku{height:36px;}
+.topbar-logos .fuk-wrap{background:rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;display:flex;align-items:center;}
+.topbar-logos img.fuk{height:26px;}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:0.3px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.topbar-right span{color:#9ca3af;font-size:12px;}
+.btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.15s;}
+.btn-logout:hover{border-color:#9ca3af;color:#fff;}
+
+.contenido{padding:24px 20px;max-width:1600px;margin:0 auto;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap;}
+.page-header h1{font-size:20px;font-weight:700;color:#1a1a2e;}
+.page-header p{font-size:13px;color:#6b7280;margin-top:3px;}
+.btn-volver{padding:8px 16px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
+.btn-volver:hover{background:#f3f4f6;}
+
+.toolbar{background:#fff;border-radius:8px;padding:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.toolbar input[type="text"], .toolbar select{padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;background:#fff;}
+.toolbar input[type="text"]{min-width:240px;}
+.toolbar input[type="text"]:focus, .toolbar select:focus{border-color:#1a1a2e;}
+.toolbar .spacer{flex:1;}
+.btn-primary{padding:8px 16px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-primary:hover{background:#000;}
+.btn-secondary{padding:8px 16px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-secondary:hover{background:#f3f4f6;}
+.btn-export{padding:8px 16px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-export:hover{background:#15803d;}
+
+.stats{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.stat{background:#fff;border-radius:8px;padding:10px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);font-size:12px;color:#6b7280;}
+.stat strong{display:block;font-size:18px;color:#1a1a2e;font-weight:700;margin-top:2px;}
+
+.tabla-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.07);overflow:auto;max-height:calc(100vh - 280px);}
+table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed;}
+thead th{position:sticky;top:0;z-index:2;background:#f9fafb;padding:8px 4px;text-align:left;font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1.5px solid #e5e7eb;white-space:nowrap;}
+thead th.col-ar{text-align:center;}
+thead th.col-acc{text-align:center;}
+tbody tr{border-bottom:1px solid #f3f4f6;transition:background 0.08s;}
+tbody tr:hover{background:#fafbfc;}
+tbody td{padding:0;vertical-align:middle;overflow:hidden;}
+tbody td.col-ar{text-align:center;font-weight:600;color:#9ca3af;padding:7px 4px;font-size:11px;}
+tbody td.col-acc{text-align:center;padding:4px;}
+.cell-input{width:100%;border:none;background:transparent;padding:7px 5px;font-family:inherit;font-size:11.5px;color:#1a1a2e;outline:none;border:1px solid transparent;border-radius:0;text-overflow:ellipsis;}
+.cell-input:hover{background:#f9fafb;}
+.cell-input:focus{background:#fff8e6;border:1px solid #d97706;}
+.cell-input.dirty{background:#fef3c7;}
+.cell-input.saved{background:#dcfce7;transition:background 0.6s;}
+.cell-input.error{background:#fee2e2;}
+.cell-select{width:100%;border:none;background:transparent;padding:7px 3px;font-family:inherit;font-size:11.5px;color:#1a1a2e;outline:none;cursor:pointer;}
+.cell-select:hover{background:#f9fafb;}
+.cell-select:focus{background:#fff8e6;}
+.cell-input[type="date"]{font-size:10.5px;color:#6b7280;padding:7px 3px;}
+.cell-num{text-align:right;}
+
+.btn-del{background:transparent;border:none;color:#dc2626;cursor:pointer;font-size:14px;padding:6px 8px;border-radius:5px;transition:background 0.15s;}
+.btn-del:hover{background:#fee2e2;}
+
+.loading{text-align:center;padding:60px;color:#9ca3af;font-size:14px;}
+.empty{text-align:center;padding:60px;color:#9ca3af;font-size:14px;}
+
+#toast{position:fixed;bottom:28px;right:28px;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 20px;border-radius:8px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,0.25);max-width:340px;display:none;}
+#toast.error{background:#dc2626;}
+#toast.ok{background:#16a34a;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img class="yaku" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
+    <div class="fuk-wrap">
+      <img class="fuk" src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo-fukari.png" alt="Fukari">
+    </div>
+  </div>
+  <span class="topbar-title">Planilla de Contactos</span>
+  <div class="topbar-right">
+    <span id="fecha-hoy"></span>
+    <span id="user-email"></span>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="contenido">
+  <div class="page-header">
+    <div>
+      <h1>Planilla de Contactos</h1>
+      <p>Cargá, editá y exportá tus contactos comerciales en formato planilla.</p>
+    </div>
+    <a href="/hub.html" class="btn-volver">&larr; Volver al hub</a>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="filtro-buscar" placeholder="Buscar por nombre, DNI, teléfono, mail, dirección, localidad...">
+    <select id="filtro-ingreso">
+      <option value="">Todas las fuentes</option>
+      <option value="Personal">Personal</option>
+      <option value="Referido">Referido</option>
+      <option value="WEB">WEB</option>
+      <option value="CRM">CRM</option>
+    </select>
+    <select id="filtro-rubro">
+      <option value="">Todos los rubros</option>
+      <option value="PARTICULAR">PARTICULAR</option>
+      <option value="EMPRESA">EMPRESA</option>
+      <option value="COMERCIO">COMERCIO</option>
+      <option value="ORGANISMO PÚBLICO">ORGANISMO PÚBLICO</option>
+    </select>
+    <select id="filtro-localidad">
+      <option value="">Todas las localidades</option>
+    </select>
+    <select id="filtro-modelo">
+      <option value="">Todos los modelos</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn-primary" onclick="nuevaFila()">+ Nueva fila</button>
+    <button class="btn-export" onclick="exportar()">Exportar a Excel</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">Total<strong id="stat-total">0</strong></div>
+    <div class="stat">Con teléfono<strong id="stat-tel">0</strong></div>
+    <div class="stat">Con mail<strong id="stat-mail">0</strong></div>
+    <div class="stat">Instalados<strong id="stat-inst">0</strong></div>
+  </div>
+
+  <div class="tabla-wrap">
+    <table>
+      <colgroup>
+        <col style="width:30px;">
+        <col style="width:88px;">
+        <col style="width:138px;">
+        <col style="width:108px;">
+        <col style="width:138px;">
+        <col style="width:86px;">
+        <col style="width:90px;">
+        <col style="width:130px;">
+        <col style="width:88px;">
+        <col style="width:82px;">
+        <col style="width:108px;">
+        <col style="width:78px;">
+        <col style="width:54px;">
+        <col style="width:66px;">
+        <col style="width:92px;">
+        <col style="width:30px;">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col-ar">ar</th>
+          <th>Fecha</th>
+          <th>Nombre / Cliente</th>
+          <th>DNI/CUIT/CUIL</th>
+          <th>Dirección</th>
+          <th>Localidad</th>
+          <th>Teléfono</th>
+          <th>Mail</th>
+          <th>Contacto</th>
+          <th>Ingreso</th>
+          <th>Rubro</th>
+          <th>Modelo</th>
+          <th>MP</th>
+          <th>Cantidad</th>
+          <th>Inst. fecha</th>
+          <th class="col-acc"></th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body">
+        <tr><td colspan="16" class="loading">Cargando…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<datalist id="dl-modelo">
+  <option value="11B"></option>
+  <option value="ICE"></option>
+  <option value="ICE/11B"></option>
+  <option value="11B/ICE"></option>
+  <option value="54B"></option>
+  <option value="11B/54B"></option>
+  <option value="103CH"></option>
+  <option value="103 C/H"></option>
+  <option value="11B/103CH"></option>
+  <option value="103M"></option>
+  <option value="103S"></option>
+  <option value="102 c/osmosis"></option>
+  <option value="102S c/osmosis"></option>
+  <option value="Osmosis"></option>
+</datalist>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const API_URL = 'https://fukari-backend-production.up.railway.app';
+const SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let registros = [];
+const saveTimers = {};
+const PREVIEW = new URLSearchParams(location.search).has('preview');
+
+if (PREVIEW) {
+  document.body.classList.add('ready');
+  document.getElementById('user-email').textContent = 'preview@local';
+  const d = new Date();
+  document.getElementById('fecha-hoy').textContent = d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+  registros = [
+    { id:'p1', ar:1, fecha:'2024-04-06', nombre:'Walter', dni_cuit:'', direccion:'', localidad:'Rosario', telefono:'1133478136', mail:'', contacto:'Walter', ingreso:'Personal', rubro:'PARTICULAR', modelo:'11B', mp:'180', cantidad:1, inst_fecha:null },
+    { id:'p2', ar:2, fecha:'2024-04-06', nombre:'CLUB POLICIAL', dni_cuit:'', direccion:'Entre Rios 251', localidad:'Rosario', telefono:'3417428604', mail:'', contacto:'Lucas', ingreso:'Referido', rubro:'ORGANISMO PÚBLICO', modelo:'11B', mp:'180', cantidad:1, inst_fecha:'2024-04-15' },
+    { id:'p3', ar:3, fecha:'2024-04-06', nombre:'ELECTROLUX', dni_cuit:'', direccion:'Av. José Batlle y Ordóñez 3436', localidad:'Rosario', telefono:'3412104823', mail:'agustin.pereira@electrolux.com', contacto:'Agustin Pereira', ingreso:'Referido', rubro:'EMPRESA', modelo:'11B', mp:'120', cantidad:15, inst_fecha:'2024-04-20' },
+    { id:'p4', ar:4, fecha:'2024-05-12', nombre:'OZ', dni_cuit:'', direccion:'Alvear 1670', localidad:'Rosario', telefono:'', mail:'soledad.poblete@followoz.com', contacto:'Soledad Poblete', ingreso:'Referido', rubro:'EMPRESA', modelo:'11B', mp:'180', cantidad:1, inst_fecha:null },
+    { id:'p5', ar:5, fecha:'2024-06-03', nombre:'Estudio Pérez', dni_cuit:'20-12345678-9', direccion:'San Martín 1024', localidad:'Santa Fe', telefono:'3424556677', mail:'info@perezestudio.com.ar', contacto:'María Pérez', ingreso:'WEB', rubro:'COMERCIO', modelo:'ICE/11B', mp:'PROMO', cantidad:2, inst_fecha:null },
+    { id:'p6', ar:6, fecha:'2024-07-19', nombre:'Heladería Frigo', dni_cuit:'30-71234567-2', direccion:'Belgrano 450', localidad:'Córdoba', telefono:'3514778899', mail:'', contacto:'Diego', ingreso:'CRM', rubro:'COMERCIO', modelo:'103CH', mp:'1810', cantidad:3, inst_fecha:'2024-08-01' },
+    { id:'p7', ar:7, fecha:'2024-08-22', nombre:'Coworking Núcleo', dni_cuit:'', direccion:'Av. Pellegrini 1450', localidad:'Rosario', telefono:'3415667788', mail:'admin@nucleo.coop', contacto:'Federico', ingreso:'WEB', rubro:'EMPRESA', modelo:'Osmosis', mp:'180', cantidad:1, inst_fecha:null },
+  ];
+  poblarFiltros();
+  render();
+} else {
+  sb.auth.getSession().then(function(r){
+    if (!r.data.session) { window.location.href = '/index.html'; return; }
+    document.body.classList.add('ready');
+    document.getElementById('user-email').textContent = r.data.session.user.email;
+    const d = new Date();
+    document.getElementById('fecha-hoy').textContent = d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+    cargar();
+  });
+}
+
+function logout(){ sb.auth.signOut().then(function(){ window.location.href='/index.html'; }); }
+
+function toast(msg, tipo){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = tipo || '';
+  t.style.display = 'block';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function(){ t.style.display='none'; }, 2400);
+}
+
+function escapeHtml(s){ if (s===null || s===undefined) return ''; return String(s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+
+async function cargar(){
+  try {
+    const res = await fetch(API_URL + '/api/planilla-contactos');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    registros = await res.json();
+    poblarFiltros();
+    render();
+  } catch(err) {
+    document.getElementById('tabla-body').innerHTML = '<tr><td colspan="15" class="loading" style="color:#dc2626;">Error: ' + escapeHtml(err.message) + '</td></tr>';
+  }
+}
+
+function poblarFiltros(){
+  const localidades = new Set(), modelos = new Set();
+  registros.forEach(function(r){
+    if (r.localidad) localidades.add(r.localidad);
+    if (r.modelo) modelos.add(r.modelo);
+  });
+  const selL = document.getElementById('filtro-localidad');
+  const selM = document.getElementById('filtro-modelo');
+  const curL = selL.value, curM = selM.value;
+  selL.innerHTML = '<option value="">Todas las localidades</option>' + [...localidades].sort().map(function(x){ return '<option>'+escapeHtml(x)+'</option>'; }).join('');
+  selM.innerHTML = '<option value="">Todos los modelos</option>' + [...modelos].sort().map(function(x){ return '<option>'+escapeHtml(x)+'</option>'; }).join('');
+  selL.value = curL; selM.value = curM;
+}
+
+function filtrar(lista){
+  const q = (document.getElementById('filtro-buscar').value || '').toLowerCase().trim();
+  const ing = document.getElementById('filtro-ingreso').value;
+  const rub = document.getElementById('filtro-rubro').value;
+  const loc = document.getElementById('filtro-localidad').value;
+  const mod = document.getElementById('filtro-modelo').value;
+  return lista.filter(function(r){
+    if (ing && r.ingreso !== ing) return false;
+    if (rub && r.rubro !== rub) return false;
+    if (loc && r.localidad !== loc) return false;
+    if (mod && r.modelo !== mod) return false;
+    if (q) {
+      const hay = [r.nombre,r.dni_cuit,r.direccion,r.localidad,r.telefono,r.mail,r.contacto].map(function(x){ return (x||'').toLowerCase(); }).join(' ');
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function calcStats(lista){
+  document.getElementById('stat-total').textContent = lista.length;
+  document.getElementById('stat-tel').textContent = lista.filter(function(r){ return r.telefono; }).length;
+  document.getElementById('stat-mail').textContent = lista.filter(function(r){ return r.mail; }).length;
+  document.getElementById('stat-inst').textContent = lista.filter(function(r){ return r.inst_fecha; }).length;
+}
+
+function render(){
+  const lista = filtrar(registros);
+  calcStats(lista);
+  const body = document.getElementById('tabla-body');
+  if (lista.length === 0) {
+    body.innerHTML = '<tr><td colspan="15" class="empty">Sin contactos. Tocá "+ Nueva fila" para empezar.</td></tr>';
+    return;
+  }
+  body.innerHTML = lista.map(filaHtml).join('');
+}
+
+function filaHtml(r){
+  function inp(campo, valor, opts){
+    opts = opts || {};
+    const tipo = opts.tipo || 'text';
+    const cls = 'cell-input' + (opts.num ? ' cell-num' : '');
+    const list = opts.list ? (' list="'+opts.list+'"') : '';
+    return '<input data-id="'+r.id+'" data-campo="'+campo+'" type="'+tipo+'" class="'+cls+'" value="'+escapeHtml(valor==null?'':valor)+'"'+list+'>';
+  }
+  function sel(campo, valor, opciones){
+    const ops = ['<option value=""></option>'].concat(opciones.map(function(o){ return '<option'+(o===valor?' selected':'')+'>'+escapeHtml(o)+'</option>'; })).join('');
+    return '<select data-id="'+r.id+'" data-campo="'+campo+'" class="cell-select">'+ops+'</select>';
+  }
+  return '<tr>' +
+    '<td class="col-ar">'+(r.ar||'')+'</td>' +
+    '<td>'+inp('fecha', r.fecha, {tipo:'date'})+'</td>' +
+    '<td>'+inp('nombre', r.nombre)+'</td>' +
+    '<td>'+inp('dni_cuit', r.dni_cuit)+'</td>' +
+    '<td>'+inp('direccion', r.direccion)+'</td>' +
+    '<td>'+inp('localidad', r.localidad)+'</td>' +
+    '<td>'+inp('telefono', r.telefono)+'</td>' +
+    '<td>'+inp('mail', r.mail)+'</td>' +
+    '<td>'+inp('contacto', r.contacto)+'</td>' +
+    '<td>'+sel('ingreso', r.ingreso, ['Personal','Referido','WEB','CRM'])+'</td>' +
+    '<td>'+sel('rubro', r.rubro, ['PARTICULAR','EMPRESA','COMERCIO','ORGANISMO PÚBLICO'])+'</td>' +
+    '<td>'+inp('modelo', r.modelo, {list:'dl-modelo'})+'</td>' +
+    '<td>'+inp('mp', r.mp)+'</td>' +
+    '<td>'+inp('cantidad', r.cantidad, {tipo:'number', num:true})+'</td>' +
+    '<td>'+inp('inst_fecha', r.inst_fecha, {tipo:'date'})+'</td>' +
+    '<td class="col-acc"><button class="btn-del" title="Borrar" onclick="borrar(\''+r.id+'\')">&#128465;</button></td>' +
+  '</tr>';
+}
+
+document.addEventListener('input', function(e){
+  const el = e.target;
+  if (!el.matches('.cell-input, .cell-select')) return;
+  el.classList.add('dirty');
+  el.classList.remove('saved','error');
+  const id = el.dataset.id, campo = el.dataset.campo;
+  if (!id || !campo) return;
+  const key = id + ':' + campo;
+  clearTimeout(saveTimers[key]);
+  saveTimers[key] = setTimeout(function(){ guardar(el); }, 500);
+});
+
+document.addEventListener('change', function(e){
+  const el = e.target;
+  if (el.matches('.cell-select')) guardar(el);
+});
+
+async function guardar(el){
+  const id = el.dataset.id, campo = el.dataset.campo;
+  if (!id || !campo) return;
+  let valor = el.value;
+  if (campo === 'cantidad' && valor !== '') valor = parseInt(valor,10);
+  if (PREVIEW) {
+    const idx = registros.findIndex(function(r){ return r.id === id; });
+    if (idx >= 0) registros[idx][campo] = (valor === '' ? null : valor);
+    el.classList.remove('dirty','error'); el.classList.add('saved');
+    setTimeout(function(){ el.classList.remove('saved'); }, 800);
+    return;
+  }
+  try {
+    const res = await fetch(API_URL + '/api/planilla-contactos/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [campo]: valor === '' ? null : valor })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const idx = registros.findIndex(function(r){ return r.id === id; });
+    if (idx >= 0) registros[idx] = data;
+    el.classList.remove('dirty','error');
+    el.classList.add('saved');
+    setTimeout(function(){ el.classList.remove('saved'); }, 800);
+  } catch(err) {
+    el.classList.remove('dirty');
+    el.classList.add('error');
+    toast('Error al guardar: ' + err.message, 'error');
+  }
+}
+
+async function nuevaFila(){
+  if (PREVIEW) {
+    const maxAr = registros.reduce(function(m,r){ return Math.max(m, r.ar||0); }, 0);
+    const nueva = { id: 'p' + Date.now(), ar: maxAr + 1, fecha: new Date().toISOString().slice(0,10), nombre:null, dni_cuit:null, direccion:null, localidad:null, telefono:null, mail:null, contacto:null, ingreso:null, rubro:null, modelo:null, mp:null, cantidad:null, inst_fecha:null };
+    registros.push(nueva);
+    poblarFiltros(); render();
+    toast('Fila creada (preview)', 'ok');
+    setTimeout(function(){
+      const inp = document.querySelector('input[data-id="'+nueva.id+'"][data-campo="nombre"]');
+      if (inp) { inp.focus(); inp.scrollIntoView({behavior:'smooth', block:'center'}); }
+    }, 50);
+    return;
+  }
+  try {
+    const hoy = new Date().toISOString().slice(0,10);
+    const res = await fetch(API_URL + '/api/planilla-contactos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fecha: hoy })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const nueva = await res.json();
+    registros.push(nueva);
+    poblarFiltros();
+    render();
+    toast('Fila creada', 'ok');
+    setTimeout(function(){
+      const inp = document.querySelector('input[data-id="'+nueva.id+'"][data-campo="nombre"]');
+      if (inp) { inp.focus(); inp.scrollIntoView({behavior:'smooth', block:'center'}); }
+    }, 50);
+  } catch(err) {
+    toast('Error al crear: ' + err.message, 'error');
+  }
+}
+
+async function borrar(id){
+  const reg = registros.find(function(r){ return r.id === id; });
+  const label = reg && reg.nombre ? '"' + reg.nombre + '"' : 'esta fila';
+  if (!confirm('¿Borrar ' + label + '? No se puede deshacer.')) return;
+  if (PREVIEW) {
+    registros = registros.filter(function(r){ return r.id !== id; });
+    poblarFiltros(); render();
+    toast('Fila borrada (preview)', 'ok');
+    return;
+  }
+  try {
+    const res = await fetch(API_URL + '/api/planilla-contactos/' + id, { method: 'DELETE' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    registros = registros.filter(function(r){ return r.id !== id; });
+    poblarFiltros();
+    render();
+    toast('Fila borrada', 'ok');
+  } catch(err) {
+    toast('Error al borrar: ' + err.message, 'error');
+  }
+}
+
+function exportar(){
+  if (PREVIEW) { toast('Exportar deshabilitado en preview', 'ok'); return; }
+  window.location.href = API_URL + '/api/planilla-contactos/export';
+}
+
+document.getElementById('filtro-buscar').addEventListener('input', render);
+document.getElementById('filtro-ingreso').addEventListener('change', render);
+document.getElementById('filtro-rubro').addEventListener('change', render);
+document.getElementById('filtro-localidad').addEventListener('change', render);
+document.getElementById('filtro-modelo').addEventListener('change', render);
+</script>
+</body>
+</html>
