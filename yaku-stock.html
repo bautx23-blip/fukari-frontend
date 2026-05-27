@@ -100,6 +100,27 @@ tbody tr.fuera-stock .modelo-name{text-decoration:line-through;color:#9ca3af;}
 
   <!-- Sección stock normal -->
   <div id="seccion-stock">
+  <div class="tabla-wrap" style="margin-bottom:16px;">
+    <div class="tabla-header">
+      <h3>Agregar modelo</h3>
+      <span style="font-size:11px;color:#9ca3af;">Se crea para alquiler y venta. Sin precio queda inactivo hasta que lo carguen.</span>
+    </div>
+    <div style="padding:16px 20px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+      <div style="flex:1;min-width:220px;">
+        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Modelo</label>
+        <input type="text" id="nuevo-modelo" placeholder="ej: 103 PREMIUM" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100%;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Precio alquiler (opcional)</label>
+        <input type="number" id="nuevo-precio-alquiler" min="0" step="0.01" placeholder="0" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:140px;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Precio venta (opcional)</label>
+        <input type="number" id="nuevo-precio-venta" min="0" step="0.01" placeholder="0" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:140px;">
+      </div>
+      <button onclick="crearModelo()" id="btn-crear-modelo" style="padding:8px 16px;background:#d97706;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">+ Agregar modelo</button>
+    </div>
+  </div>
   <div class="tabla-wrap">
     <div class="tabla-header">
       <h3 id="tabla-titulo">Modelos — Alquiler</h3>
@@ -250,6 +271,51 @@ async function cargarStock(tipo) {
   } catch(err) {
     document.getElementById('stock-body').innerHTML =
       '<tr><td colspan="2" class="loading">Error al cargar stock: ' + err.message + '</td></tr>';
+  }
+}
+
+async function crearModelo() {
+  var modelo = (document.getElementById('nuevo-modelo').value || '').trim();
+  if (!modelo) { showToast('Falta el nombre del modelo'); return; }
+  var pAlq = parseFloat(document.getElementById('nuevo-precio-alquiler').value) || 0;
+  var pVta = parseFloat(document.getElementById('nuevo-precio-venta').value) || 0;
+  var btn = document.getElementById('btn-crear-modelo');
+  btn.disabled = true;
+  var orig = btn.textContent;
+  btn.textContent = 'Creando...';
+  try {
+    var tareas = [
+      { tipo: 'alquiler', precio: pAlq },
+      { tipo: 'venta', precio: pVta },
+    ];
+    var creados = [];
+    for (var i = 0; i < tareas.length; i++) {
+      var t = tareas[i];
+      var res = await fetch(API_URL + '/api/stock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modelo: modelo, precio: t.precio, tipo: t.tipo })
+      });
+      if (!res.ok) throw new Error('Error creando ' + t.tipo);
+      var data = await res.json();
+      creados.push({ id: data.id, tipo: t.tipo, precio: t.precio });
+    }
+    // Si precio es 0, desactivar (POST default es activo=true)
+    for (var j = 0; j < creados.length; j++) {
+      if (creados[j].precio === 0) {
+        await fetch(API_URL + '/api/stock/' + creados[j].id + '/toggle', { method: 'PATCH' });
+      }
+    }
+    document.getElementById('nuevo-modelo').value = '';
+    document.getElementById('nuevo-precio-alquiler').value = '';
+    document.getElementById('nuevo-precio-venta').value = '';
+    showToast('Modelo "' + modelo + '" creado en alquiler y venta');
+    cargarStock(_tabActual);
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
   }
 }
 
