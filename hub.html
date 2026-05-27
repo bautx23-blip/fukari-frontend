@@ -338,7 +338,7 @@
       </div>
     </a>
 
-    <a href="/cobranzas.html" class="task-card cobranzas">
+    <a href="/cobranzas.html" class="task-card cobranzas" id="card-cobranzas" style="display:none;">
       <div class="task-icon">&#128167;</div>
       <div class="task-body">
         <div class="task-title">Cobranzas</div>
@@ -396,6 +396,9 @@
       document.getElementById('card-papelera').style.display = '';
       document.getElementById('card-crm').style.display = '';
       document.getElementById('card-competencia').style.display = '';
+    }
+    if (email === 'info@wearebilab.com') {
+      document.getElementById('card-cobranzas').style.display = '';
     }
     // Pia: solo ve Órdenes de Instalación y Órdenes de Baja
     if (email === 'ventas@yakuagua.com.ar') {
