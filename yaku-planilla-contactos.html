@@ -27,17 +27,20 @@ body.ready{visibility:visible;}
 .btn-volver{padding:8px 16px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
 .btn-volver:hover{background:#f3f4f6;}
 
-.toolbar{background:#fff;border-radius:8px;padding:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
-.toolbar input[type="text"], .toolbar select{padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;background:#fff;}
-.toolbar input[type="text"]{min-width:240px;}
+.toolbar{background:#fff;border-radius:8px;padding:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:14px;display:flex;flex-wrap:nowrap;gap:10px;align-items:center;overflow-x:auto;}
+.toolbar input[type="text"], .toolbar select{padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;background:#fff;flex-shrink:0;}
+.toolbar input[type="text"]{min-width:200px;flex:0 1 220px;}
+.toolbar select{max-width:170px;}
 .toolbar input[type="text"]:focus, .toolbar select:focus{border-color:#1a1a2e;}
-.toolbar .spacer{flex:1;}
-.btn-primary{padding:8px 16px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.toolbar .spacer{flex:1;min-width:0;}
+.btn-primary{padding:8px 14px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
 .btn-primary:hover{background:#000;}
-.btn-secondary{padding:8px 16px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-secondary{padding:8px 14px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
 .btn-secondary:hover{background:#f3f4f6;}
-.btn-export{padding:8px 16px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-export{padding:8px 14px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
 .btn-export:hover{background:#15803d;}
+.btn-import{padding:8px 14px;background:#d97706;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+.btn-import:hover{background:#b45309;}
 
 .stats{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
 .stat{background:#fff;border-radius:8px;padding:10px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);font-size:12px;color:#6b7280;}
@@ -126,7 +129,7 @@ tbody td.col-acc{text-align:center;padding:4px;}
     </select>
     <div class="spacer"></div>
     <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none;">
-    <button class="btn-secondary" onclick="document.getElementById('import-file').click()">Importar XLSX</button>
+    <button class="btn-import" onclick="document.getElementById('import-file').click()">Importar XLSX</button>
     <button class="btn-primary" onclick="nuevaFila()">+ Nueva fila</button>
     <button class="btn-export" onclick="exportar()">Exportar a Excel</button>
   </div>
