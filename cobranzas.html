@@ -463,6 +463,26 @@
     .loading-dot:nth-child(3) { animation-delay: .4s; }
     @keyframes pulse { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
   </style>
+  <style id="cobranzas-gate-style">html{visibility:hidden}</style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  (async function gateCobranzas(){
+    try {
+      const SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+      const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+      const sb = window.supabase.createClient(SUPABASE_URL, ANON);
+      window._sb = sb;
+      const { data } = await sb.auth.getSession();
+      const email = data && data.session && data.session.user && data.session.user.email;
+      if (!email) { window.location.replace('/index.html'); return; }
+      if (email !== 'info@wearebilab.com') { window.location.replace('/hub.html'); return; }
+      const gateStyle = document.getElementById('cobranzas-gate-style');
+      if (gateStyle) gateStyle.remove();
+    } catch (e) {
+      window.location.replace('/hub.html');
+    }
+  })();
+  </script>
 </head>
 <body>
 
