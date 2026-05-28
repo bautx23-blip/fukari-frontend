@@ -312,6 +312,7 @@ sb.auth.getSession().then(function(result) {
   if (_currentUserEmail !== ADMIN_EMAIL) { window.location.href = '/hub.html'; return; }
   document.body.classList.add('ready');
   document.getElementById('topbar-fecha').textContent = new Date().toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'});
+  setFiltroMesActual();
   cargarProveedores();
   cargar();
 });
@@ -335,6 +336,19 @@ function fmtFecha(s) {
 function esc(s) {
   if (s === null || s === undefined) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function ymd(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// Por defecto el monitoreo muestra solo el mes en curso (no todo el historial).
+function setFiltroMesActual() {
+  var now = new Date();
+  var primero = new Date(now.getFullYear(), now.getMonth(), 1);
+  var ultimo  = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  document.getElementById('filtro-desde').value = ymd(primero);
+  document.getElementById('filtro-hasta').value = ymd(ultimo);
 }
 
 function cargar() {
@@ -375,8 +389,7 @@ function aplicarFiltros() {
 function limpiarFiltros() {
   document.getElementById('filtro-localidad').value = '';
   document.getElementById('filtro-competidor').value = '';
-  document.getElementById('filtro-desde').value = '';
-  document.getElementById('filtro-hasta').value = '';
+  setFiltroMesActual();
   render();
 }
 
