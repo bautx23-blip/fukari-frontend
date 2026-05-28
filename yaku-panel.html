@@ -807,7 +807,7 @@ async function abrirEdicion(o) {
 
 function agregarProductoEdit() {
   var wrap = document.getElementById('edit-productos-wrap');
-  var btn = wrap.querySelector('button:last-child');
+  var btn = wrap.querySelector(':scope > button');
   var row = document.createElement('div');
   row.className = 'edit-prod-row';
   row.style = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;';
