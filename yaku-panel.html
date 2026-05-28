@@ -267,7 +267,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
   </div>
 </div>
 
-<div id="modal-editar-overlay" onclick="if(event.target===this)cerrarModalEditar()">
+<div id="modal-editar-overlay" onmousedown="window._editOverlayDown=(event.target===this)" onclick="if(event.target===this && window._editOverlayDown)cerrarModalEditar()">
   <div class="modal-editar">
     <div class="modal-header">
       <h3 id="modal-editar-titulo">Editar Orden</h3>
