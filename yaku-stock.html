@@ -106,9 +106,13 @@ tbody tr.fuera-stock .modelo-name{text-decoration:line-through;color:#9ca3af;}
       <span style="font-size:11px;color:#9ca3af;">Se crea para alquiler y venta. Sin precio queda inactivo hasta que lo carguen.</span>
     </div>
     <div style="padding:16px 20px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
-      <div style="flex:1;min-width:220px;">
-        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Modelo</label>
-        <input type="text" id="nuevo-modelo" placeholder="ej: 103 PREMIUM" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100%;">
+      <div style="min-width:170px;">
+        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Equipo</label>
+        <select id="nuevo-equipo" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100%;background:#fff;"></select>
+      </div>
+      <div style="min-width:200px;">
+        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Combinación (opcional)</label>
+        <select id="nuevo-combinacion" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100%;background:#fff;"></select>
       </div>
       <div>
         <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Precio alquiler (opcional)</label>
@@ -121,6 +125,29 @@ tbody tr.fuera-stock .modelo-name{text-decoration:line-through;color:#9ca3af;}
       <button onclick="crearModelo()" id="btn-crear-modelo" style="padding:8px 16px;background:#d97706;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">+ Agregar modelo</button>
     </div>
   </div>
+  <details style="margin-bottom:16px;">
+    <summary style="cursor:pointer;font-size:12px;color:#6b7280;padding:4px 2px;user-select:none;">&#9881; Administrar equipos y combinaciones</summary>
+    <div class="tabla-wrap" style="margin-top:8px;">
+      <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px;">Equipos</div>
+          <div id="lista-equipos" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="nueva-opcion-equipo" placeholder="Nuevo equipo..." onkeydown="if(event.key==='Enter')agregarOpcion('equipo')" style="flex:1;padding:6px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;">
+            <button onclick="agregarOpcion('equipo')" style="padding:6px 12px;background:#d97706;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">+</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px;">Combinaciones</div>
+          <div id="lista-combinaciones" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="nueva-opcion-combinacion" placeholder="Nueva combinación..." onkeydown="if(event.key==='Enter')agregarOpcion('combinacion')" style="flex:1;padding:6px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;">
+            <button onclick="agregarOpcion('combinacion')" style="padding:6px 12px;background:#d97706;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
   <div class="tabla-wrap">
     <div class="tabla-header">
       <h3 id="tabla-titulo">Modelos — Alquiler</h3>
@@ -207,6 +234,7 @@ sb.auth.getSession().then(({ data: { session } }) => {
   document.getElementById('fecha-hoy').textContent =
     d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
   cargarStock('alquiler');
+  cargarOpciones();
 });
 
 async function logout() {
@@ -274,9 +302,91 @@ async function cargarStock(tipo) {
   }
 }
 
+// ── OPCIONES (equipos / combinaciones para el alta) ──
+var _opciones = { equipos: [], combinaciones: [] };
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+async function cargarOpciones() {
+  try {
+    var res = await fetch(API_URL + '/api/stock/opciones');
+    if (!res.ok) throw new Error('No se pudieron cargar las opciones');
+    _opciones = await res.json();
+  } catch (e) {
+    _opciones = { equipos: [], combinaciones: [] };
+  }
+  poblarSelectsOpciones();
+  renderPanelOpciones();
+}
+
+function poblarSelectsOpciones() {
+  var selEq = document.getElementById('nuevo-equipo');
+  var selCo = document.getElementById('nuevo-combinacion');
+  if (selEq) {
+    selEq.innerHTML = '<option value="">— Seleccionar equipo —</option>' +
+      (_opciones.equipos || []).map(function(o){ return '<option value="' + escHtml(o.valor) + '">' + escHtml(o.valor) + '</option>'; }).join('');
+  }
+  if (selCo) {
+    selCo.innerHTML = '<option value="">— Sin combinación —</option>' +
+      (_opciones.combinaciones || []).map(function(o){ return '<option value="' + escHtml(o.valor) + '">' + escHtml(o.valor) + '</option>'; }).join('');
+  }
+}
+
+function renderPanelOpciones() {
+  var chip = function(o) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 10px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;">' +
+      '<span>' + escHtml(o.valor) + '</span>' +
+      '<button onclick="borrarOpcion(' + o.id + ')" title="Borrar" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:13px;line-height:1;padding:0 2px;">&#10005;</button>' +
+      '</div>';
+  };
+  var le = document.getElementById('lista-equipos');
+  var lc = document.getElementById('lista-combinaciones');
+  if (le) le.innerHTML = (_opciones.equipos || []).map(chip).join('') || '<span style="font-size:11px;color:#9ca3af;">Sin equipos cargados</span>';
+  if (lc) lc.innerHTML = (_opciones.combinaciones || []).map(chip).join('') || '<span style="font-size:11px;color:#9ca3af;">Sin combinaciones cargadas</span>';
+}
+
+async function agregarOpcion(categoria) {
+  var inputId = categoria === 'equipo' ? 'nueva-opcion-equipo' : 'nueva-opcion-combinacion';
+  var input = document.getElementById(inputId);
+  var valor = (input.value || '').trim();
+  if (!valor) return;
+  try {
+    var res = await fetch(API_URL + '/api/stock/opciones', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ categoria: categoria, valor: valor })
+    });
+    if (!res.ok) {
+      var err = await res.json().catch(function(){ return {}; });
+      throw new Error(err.error || 'Error al agregar');
+    }
+    input.value = '';
+    await cargarOpciones();
+    showToast((categoria === 'equipo' ? 'Equipo' : 'Combinación') + ' "' + valor + '" agregada');
+  } catch (e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
+async function borrarOpcion(id) {
+  try {
+    var res = await fetch(API_URL + '/api/stock/opciones/' + id, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Error al borrar');
+    await cargarOpciones();
+  } catch (e) {
+    showToast('Error: ' + e.message);
+  }
+}
+
 async function crearModelo() {
-  var modelo = (document.getElementById('nuevo-modelo').value || '').trim();
-  if (!modelo) { showToast('Falta el nombre del modelo'); return; }
+  var equipo = (document.getElementById('nuevo-equipo').value || '').trim();
+  var comb = (document.getElementById('nuevo-combinacion').value || '').trim();
+  if (!equipo) { showToast('Elegí un equipo'); return; }
+  var modelo = comb ? (equipo + ' ' + comb) : equipo;
   var pAlq = parseFloat(document.getElementById('nuevo-precio-alquiler').value) || 0;
   var pVta = parseFloat(document.getElementById('nuevo-precio-venta').value) || 0;
   var btn = document.getElementById('btn-crear-modelo');
@@ -306,7 +416,8 @@ async function crearModelo() {
         await fetch(API_URL + '/api/stock/' + creados[j].id + '/toggle', { method: 'PATCH' });
       }
     }
-    document.getElementById('nuevo-modelo').value = '';
+    document.getElementById('nuevo-equipo').selectedIndex = 0;
+    document.getElementById('nuevo-combinacion').selectedIndex = 0;
     document.getElementById('nuevo-precio-alquiler').value = '';
     document.getElementById('nuevo-precio-venta').value = '';
     showToast('Modelo "' + modelo + '" creado en alquiler y venta');
