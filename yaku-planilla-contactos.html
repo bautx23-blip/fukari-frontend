@@ -28,9 +28,9 @@ body.ready{visibility:visible;}
 .btn-volver:hover{background:#f3f4f6;}
 
 .toolbar{background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:14px;display:flex;flex-wrap:nowrap;gap:5px;align-items:center;overflow-x:auto;}
-.toolbar input[type="text"], .toolbar select{padding:6px 7px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;outline:none;background:#fff;flex-shrink:0;}
-.toolbar input[type="text"]{min-width:90px;flex:0 1 130px;}
-.toolbar select{max-width:125px;}
+.toolbar input[type="text"], .toolbar select{padding:6px 7px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;outline:none;background:#fff;}
+.toolbar input[type="text"]{min-width:130px;flex:1 1 150px;}
+.toolbar select{flex:0 0 auto;max-width:200px;}
 .toolbar input[type="text"]:focus, .toolbar select:focus{border-color:#1a1a2e;}
 .toolbar .spacer{flex:1;min-width:0;}
 .btn-primary{padding:6px 8px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
@@ -131,7 +131,6 @@ tbody td.col-acc{text-align:center;padding:4px;}
     <select id="filtro-modelo">
       <option value="">Todos los modelos</option>
     </select>
-    <div class="spacer"></div>
     <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none;">
     <button class="btn-import" onclick="document.getElementById('import-file').click()">Importar Excel</button>
     <button class="btn-primary" onclick="nuevaFila()">+ Nueva fila</button>
