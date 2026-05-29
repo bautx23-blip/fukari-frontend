@@ -127,6 +127,10 @@ tbody td.col-acc{text-align:center;padding:4px;}
     <select id="filtro-modelo">
       <option value="">Todos los modelos</option>
     </select>
+    <select id="filtro-orden">
+      <option value="desc" selected>Más recientes primero</option>
+      <option value="asc">Más antiguos primero</option>
+    </select>
     <div class="spacer"></div>
     <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none;">
     <button class="btn-import" onclick="document.getElementById('import-file').click()">Importar Excel</button>
@@ -311,8 +315,20 @@ function calcStats(lista){
   document.getElementById('stat-inst').textContent = lista.filter(function(r){ return r.inst_fecha; }).length;
 }
 
+function ordenarPorFecha(lista){
+  const dir = (document.getElementById('filtro-orden') && document.getElementById('filtro-orden').value) || 'desc';
+  return lista.sort(function(a, b){
+    const fa = a.fecha || '', fb = b.fecha || '';
+    if (!fa && !fb) return 0;
+    if (!fa) return 1;   // filas sin fecha al final
+    if (!fb) return -1;
+    if (fa === fb) return 0;
+    return (dir === 'asc') ? (fa < fb ? -1 : 1) : (fa > fb ? -1 : 1);
+  });
+}
+
 function render(){
-  const lista = filtrar(registros);
+  const lista = ordenarPorFecha(filtrar(registros));
   calcStats(lista);
   const body = document.getElementById('tabla-body');
   if (lista.length === 0) {
@@ -491,6 +507,7 @@ document.getElementById('filtro-ingreso').addEventListener('change', render);
 document.getElementById('filtro-rubro').addEventListener('change', render);
 document.getElementById('filtro-localidad').addEventListener('change', render);
 document.getElementById('filtro-modelo').addEventListener('change', render);
+document.getElementById('filtro-orden').addEventListener('change', render);
 </script>
 </body>
 </html>
