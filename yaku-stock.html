@@ -102,32 +102,35 @@ tbody tr.fuera-stock .modelo-name{text-decoration:line-through;color:#9ca3af;}
   <div id="seccion-stock">
   <div class="tabla-wrap" style="margin-bottom:16px;">
     <div class="tabla-header">
-      <h3>Agregar modelo</h3>
-      <span style="font-size:11px;color:#9ca3af;">Se crea para alquiler y venta. Sin precio queda inactivo hasta que lo carguen.</span>
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        <h3>Agregar modelo</h3>
+        <span style="font-size:11px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Se crea para alquiler y venta. Sin precio queda inactivo.</span>
+      </div>
+      <button id="btn-toggle-opciones" onclick="togglePanelOpciones()" title="Administrar equipos y combinaciones" style="background:none;border:1.5px solid #e5e7eb;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:15px;color:#6b7280;line-height:1;flex-shrink:0;">&#9998;</button>
     </div>
-    <div style="padding:16px 20px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
-      <div style="min-width:170px;">
+    <div style="padding:16px 20px;display:flex;gap:10px;align-items:flex-end;flex-wrap:nowrap;">
+      <div style="flex:1 1 130px;min-width:110px;">
         <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Equipo</label>
-        <select id="nuevo-equipo" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100%;background:#fff;"></select>
+        <select id="nuevo-equipo" style="padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100%;background:#fff;"></select>
       </div>
-      <div style="min-width:200px;">
-        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Combinación (opcional)</label>
-        <select id="nuevo-combinacion" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100%;background:#fff;"></select>
+      <div style="flex:1 1 150px;min-width:120px;">
+        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Combinación (opc.)</label>
+        <select id="nuevo-combinacion" style="padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100%;background:#fff;"></select>
       </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Precio alquiler (opcional)</label>
-        <input type="number" id="nuevo-precio-alquiler" min="0" step="0.01" placeholder="0" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:140px;">
+      <div style="flex:0 0 auto;">
+        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">P. alquiler</label>
+        <input type="number" id="nuevo-precio-alquiler" min="0" step="0.01" placeholder="0" style="padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100px;">
       </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">Precio venta (opcional)</label>
-        <input type="number" id="nuevo-precio-venta" min="0" step="0.01" placeholder="0" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:140px;">
+      <div style="flex:0 0 auto;">
+        <label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">P. venta</label>
+        <input type="number" id="nuevo-precio-venta" min="0" step="0.01" placeholder="0" style="padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;width:100px;">
       </div>
-      <button onclick="crearModelo()" id="btn-crear-modelo" style="padding:8px 16px;background:#d97706;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">+ Agregar modelo</button>
+      <button onclick="crearModelo()" id="btn-crear-modelo" style="padding:8px 14px;background:#d97706;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">+ Agregar modelo</button>
     </div>
   </div>
-  <details style="margin-bottom:16px;">
-    <summary style="cursor:pointer;font-size:12px;color:#6b7280;padding:4px 2px;user-select:none;">&#9881; Administrar equipos y combinaciones</summary>
-    <div class="tabla-wrap" style="margin-top:8px;">
+  <div id="panel-opciones" style="display:none;margin-bottom:16px;">
+    <div class="tabla-wrap">
+      <div class="tabla-header"><h3>Administrar equipos y combinaciones</h3></div>
       <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:24px;">
         <div>
           <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px;">Equipos</div>
@@ -147,7 +150,7 @@ tbody tr.fuera-stock .modelo-name{text-decoration:line-through;color:#9ca3af;}
         </div>
       </div>
     </div>
-  </details>
+  </div>
   <div class="tabla-wrap">
     <div class="tabla-header">
       <h3 id="tabla-titulo">Modelos — Alquiler</h3>
@@ -305,6 +308,18 @@ async function cargarStock(tipo) {
 // ── OPCIONES (equipos / combinaciones para el alta) ──
 var _opciones = { equipos: [], combinaciones: [] };
 
+function togglePanelOpciones() {
+  var p = document.getElementById('panel-opciones');
+  var abierto = p.style.display !== 'none' && p.style.display !== '';
+  p.style.display = abierto ? 'none' : 'block';
+  var btn = document.getElementById('btn-toggle-opciones');
+  if (btn) {
+    btn.style.background = abierto ? 'none' : '#fef3c7';
+    btn.style.borderColor = abierto ? '#e5e7eb' : '#d97706';
+    btn.style.color = abierto ? '#6b7280' : '#d97706';
+  }
+}
+
 function escHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
@@ -327,7 +342,7 @@ function poblarSelectsOpciones() {
   var selEq = document.getElementById('nuevo-equipo');
   var selCo = document.getElementById('nuevo-combinacion');
   if (selEq) {
-    selEq.innerHTML = '<option value="">— Seleccionar equipo —</option>' +
+    selEq.innerHTML = '<option value="">— Seleccionar —</option>' +
       (_opciones.equipos || []).map(function(o){ return '<option value="' + escHtml(o.valor) + '">' + escHtml(o.valor) + '</option>'; }).join('');
   }
   if (selCo) {
