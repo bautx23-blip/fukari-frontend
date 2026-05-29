@@ -27,19 +27,19 @@ body.ready{visibility:visible;}
 .btn-volver{padding:8px 16px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
 .btn-volver:hover{background:#f3f4f6;}
 
-.toolbar{background:#fff;border-radius:8px;padding:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:14px;display:flex;flex-wrap:nowrap;gap:10px;align-items:center;overflow-x:auto;}
-.toolbar input[type="text"], .toolbar select{padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;outline:none;background:#fff;flex-shrink:0;}
-.toolbar input[type="text"]{min-width:200px;flex:0 1 220px;}
-.toolbar select{max-width:170px;}
+.toolbar{background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 1px 4px rgba(0,0,0,0.07);margin-bottom:14px;display:flex;flex-wrap:nowrap;gap:5px;align-items:center;overflow-x:auto;}
+.toolbar input[type="text"], .toolbar select{padding:6px 7px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;outline:none;background:#fff;flex-shrink:0;}
+.toolbar input[type="text"]{min-width:90px;flex:0 1 130px;}
+.toolbar select{max-width:125px;}
 .toolbar input[type="text"]:focus, .toolbar select:focus{border-color:#1a1a2e;}
 .toolbar .spacer{flex:1;min-width:0;}
-.btn-primary{padding:8px 14px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+.btn-primary{padding:6px 8px;background:#1a1a2e;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
 .btn-primary:hover{background:#000;}
-.btn-secondary{padding:8px 14px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+.btn-secondary{padding:6px 8px;background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
 .btn-secondary:hover{background:#f3f4f6;}
-.btn-export{padding:8px 14px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+.btn-export{padding:6px 8px;background:#16a34a;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
 .btn-export:hover{background:#15803d;}
-.btn-import{padding:8px 14px;background:#d97706;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+.btn-import{padding:6px 8px;background:#d97706;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
 .btn-import:hover{background:#b45309;}
 
 .stats{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
@@ -106,7 +106,11 @@ tbody td.col-acc{text-align:center;padding:4px;}
   </div>
 
   <div class="toolbar">
-    <input type="text" id="filtro-buscar" placeholder="Buscar por nombre, DNI, teléfono, mail, dirección, localidad...">
+    <select id="filtro-orden">
+      <option value="desc" selected>Más recientes</option>
+      <option value="asc">Más antiguos</option>
+    </select>
+    <input type="text" id="filtro-buscar" placeholder="Buscar...">
     <select id="filtro-ingreso">
       <option value="">Todas las fuentes</option>
       <option value="Personal">Personal</option>
@@ -126,10 +130,6 @@ tbody td.col-acc{text-align:center;padding:4px;}
     </select>
     <select id="filtro-modelo">
       <option value="">Todos los modelos</option>
-    </select>
-    <select id="filtro-orden">
-      <option value="desc" selected>Más recientes primero</option>
-      <option value="asc">Más antiguos primero</option>
     </select>
     <div class="spacer"></div>
     <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none;">
