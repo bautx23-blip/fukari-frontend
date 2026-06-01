@@ -1558,8 +1558,8 @@ function mostrarResultadoBCRA(data, cuitRaw) {
     btn.onclick = function() { alert('No se puede crear la orden. El cliente tiene situación ' + peorSit + ' en el BCRA. Yakú solo acepta situaciones 1 y 2.'); };
     aviso.innerHTML = '🚫 <strong>Situación ' + peorSit + ':</strong> No se otorga instalación. Supera el límite de riesgo aceptado por Yakú.';
     aviso.style.display = 'block';
-    // Mostrar botón de agregar al informe para situación >= 4
-    if (peorSit >= 4) {
+    // Mostrar botón de agregar al informe para situación >= 3
+    if (peorSit >= 3) {
       document.getElementById('bcra-btn-informe').style.display = '';
     }
   }
