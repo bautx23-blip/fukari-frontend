@@ -437,6 +437,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       window._currentUserEmail = session.user.email;
       var _map = {
         'renebiagioni@yakuagua.com.ar': 'René Biagioni',
+        'agustincalabres@yakuagua.com.ar': 'Agustín Calabrés',
         'ventas@yakuagua.com.ar': 'María Pía Bologñese'
       };
       window._currentUserName = _map[session.user.email] || session.user.email;
@@ -521,8 +522,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sel.options[i].value === window._currentUserName) { sel.selectedIndex = i; break; }
       }
     }
-    // Solo René puede cambiar vendedor
-    if (window._currentUserEmail && window._currentUserEmail !== 'renebiagioni@yakuagua.com.ar') {
+    // Solo René / Agustín pueden cambiar vendedor
+    if (window._currentUserEmail && window._currentUserEmail !== 'renebiagioni@yakuagua.com.ar' && window._currentUserEmail !== 'agustincalabres@yakuagua.com.ar') {
       sel.disabled = true;
       sel.style.opacity = '0.7';
     }
@@ -904,6 +905,7 @@ async function guardarOrden() {
     if (!window._currentUserName) {
       var _map = {
         'renebiagioni@yakuagua.com.ar': 'René Biagioni',
+        'agustincalabres@yakuagua.com.ar': 'Agustín Calabrés',
         'ventas@yakuagua.com.ar': 'María Pía Bologñese'
       };
       var { data: { session } } = await window._sb.auth.getSession();

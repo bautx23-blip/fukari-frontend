@@ -449,6 +449,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       window._currentUserEmail = session.user.email;
       var _map = {
         'renebiagioni@yakuagua.com.ar': 'René Biagioni',
+        'agustincalabres@yakuagua.com.ar': 'Agustín Calabrés',
         'ventas@yakuagua.com.ar': 'María Pía Bologñese'
       };
       window._currentUserName = _map[session.user.email] || session.user.email;
@@ -1168,7 +1169,7 @@ async function guardarBaja() {
   try {
     // Asegurar vendedor cargado
     if (!window._currentUserName) {
-      var _map = { 'renebiagioni@yakuagua.com.ar': 'René Biagioni', 'ventas@yakuagua.com.ar': 'María Pía Bologñese' };
+      var _map = { 'renebiagioni@yakuagua.com.ar': 'René Biagioni', 'agustincalabres@yakuagua.com.ar': 'Agustín Calabrés', 'ventas@yakuagua.com.ar': 'María Pía Bologñese' };
       var { data: { session } } = await window._sb.auth.getSession();
       if (session) window._currentUserName = _map[session.user.email] || session.user.email;
     }

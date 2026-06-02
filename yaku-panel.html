@@ -295,6 +295,7 @@ let ordenesFiltradas = [];
 let paginaActual = 1;
 let _currentUserEmail = null;
 const ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+const ADMIN_EMAILS = [ADMIN_EMAIL, 'agustincalabres@yakuagua.com.ar'];
 const PIA_EMAIL = 'ventas@yakuagua.com.ar';
 const PIA_VENDEDOR = 'María Pía Bologñese';
 
@@ -460,7 +461,7 @@ function renderTabla() {
   const inicio = (paginaActual-1) * POR_PAGINA;
   const pagina = ordenesFiltradas.slice(inicio, inicio + POR_PAGINA);
   const totalPags = Math.ceil(total / POR_PAGINA);
-  const esAdmin = _currentUserEmail === ADMIN_EMAIL;
+  const esAdmin = ADMIN_EMAILS.includes(_currentUserEmail);
   var html = '<table><thead><tr><th>N° Orden</th><th>Tipo</th><th>Razón Social</th><th>Localidad</th><th>Fecha</th><th>Vendedor</th><th>Total</th>' + (esAdmin ? '<th style="text-align:center">Completada</th>' : '') + '<th>PDF</th><th>Acciones</th></tr></thead><tbody>';
   pagina.forEach(function(o) {
     var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
@@ -760,7 +761,7 @@ async function abrirEdicion(o) {
   html += '<div class="form-full"><label>Aclaraciones</label><textarea id="edit-aclaraciones">' + esc(o.aclaraciones) + '</textarea></div>';
 
   // Flag "Cerrado por promoción" — solo admin
-  if (_currentUserEmail === ADMIN_EMAIL) {
+  if (ADMIN_EMAILS.includes(_currentUserEmail)) {
     var checkedPromo = o.es_promocion ? ' checked' : '';
     html += '<div class="form-full" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fdf4ff;border:1.5px solid #f3e8ff;border-radius:8px;">'
       + '<input type="checkbox" id="edit-es_promocion" ' + checkedPromo + ' style="width:18px;height:18px;accent-color:#7c3aed;cursor:pointer;">'
@@ -923,7 +924,7 @@ async function guardarEdicion() {
     }
 
     // Toggle es_promocion (solo admin — endpoint valida email)
-    if (_currentUserEmail === ADMIN_EMAIL) {
+    if (ADMIN_EMAILS.includes(_currentUserEmail)) {
       var chkPromo = document.getElementById('edit-es_promocion');
       if (chkPromo) {
         var nuevoPromo = !!chkPromo.checked;

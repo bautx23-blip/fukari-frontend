@@ -427,6 +427,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+const ADMIN_EMAILS = [ADMIN_EMAIL, 'agustincalabres@yakuagua.com.ar'];
 
 let _email = '';
 let _activas = [];
@@ -582,7 +583,7 @@ function renderActivas() {
           const fin = a.prorroga_indefinida ? 'indefinido' : fmtFecha(a.prorroga_hasta || a.vigencia_hasta);
           const inicio = fmtFecha(a.prorroga_desde || a.vigencia_desde);
           const equipos = (a.equipos || []).map(e => `<span class="equipo-chip">${e.tipo}: ${e.cantidad}</span>`).join(' ');
-          const isAdmin = _email === ADMIN_EMAIL;
+          const isAdmin = ADMIN_EMAILS.includes(_email);
           return `
             <tr>
               <td><span class="estado ${a.estado}">${estadoLabel(a.estado)}</span>${dias != null && dias >= 0 && a.estado !== 'vencida' ? `<div class="muted" style="margin-top:3px;">en ${dias} d.</div>` : ''}</td>
@@ -611,7 +612,7 @@ function renderActivas() {
 }
 
 function editarActiva(id) {
-  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede editar', 'error');
+  if (!ADMIN_EMAILS.includes(_email)) return toast('Solo el administrador puede editar', 'error');
   const a = _activas.find(x => x.id === id);
   if (!a) return;
   _editingActivaId = id;
@@ -808,7 +809,7 @@ function renderPresentarse() {
       </thead>
       <tbody>
         ${_presentarse.map(p => {
-          const isAdmin = _email === ADMIN_EMAIL;
+          const isAdmin = ADMIN_EMAILS.includes(_email);
           let cierreInfo = fmtFechaHora(p.fecha_cierre);
           if (p.fecha_cierre) {
             const cierre = new Date(p.fecha_cierre); cierre.setHours(0,0,0,0);
@@ -846,7 +847,7 @@ function renderPresentarse() {
 }
 
 function openModalPresentarse() {
-  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede crear', 'error');
+  if (!ADMIN_EMAILS.includes(_email)) return toast('Solo el administrador puede crear', 'error');
   _editingPresId = null;
   document.getElementById('modalPresTitle').textContent = 'Nueva licitación a presentarse';
   ['mp-organismo','mp-fcierre','mp-competidores','mp-notas'].forEach(id=>{
@@ -857,7 +858,7 @@ function openModalPresentarse() {
 }
 
 function editarPresentarse(id) {
-  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede editar', 'error');
+  if (!ADMIN_EMAILS.includes(_email)) return toast('Solo el administrador puede editar', 'error');
   const p = _presentarse.find(x => x.id === id);
   if (!p) return;
   _editingPresId = id;
@@ -906,7 +907,7 @@ async function guardarPresentarse() {
 // VEREDICTOS — Ganada x Yakú / Perdida
 // ==================================================================
 function openModalGanar(presId) {
-  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede confirmar', 'error');
+  if (!ADMIN_EMAILS.includes(_email)) return toast('Solo el administrador puede confirmar', 'error');
   const p = _presentarse.find(x => x.id === presId);
   if (!p) return;
   _ganarPresId = presId;
@@ -1010,7 +1011,7 @@ async function confirmarGanar() {
 }
 
 function openModalPerder(presId) {
-  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede confirmar', 'error');
+  if (!ADMIN_EMAILS.includes(_email)) return toast('Solo el administrador puede confirmar', 'error');
   const p = _presentarse.find(x => x.id === presId);
   if (!p) return;
   _perderPresId = presId;
@@ -1096,7 +1097,7 @@ function renderPerdidas() {
       </thead>
       <tbody>
         ${_perdidas.map(p => {
-          const isAdmin = _email === ADMIN_EMAIL;
+          const isAdmin = ADMIN_EMAILS.includes(_email);
           return `
             <tr>
               <td class="bold">${escHtml(p.organismo)}</td>
@@ -1118,7 +1119,7 @@ function renderPerdidas() {
 }
 
 function editarPerdida(id) {
-  if (_email !== ADMIN_EMAIL) return toast('Solo el administrador puede editar', 'error');
+  if (!ADMIN_EMAILS.includes(_email)) return toast('Solo el administrador puede editar', 'error');
   const p = _perdidas.find(x => x.id === id);
   if (!p) return;
   _editingPerdidaId = id;
@@ -1161,7 +1162,7 @@ async function guardarPerdidaEdit() {
 }
 
 async function borrarPerdida(id) {
-  if (_email !== ADMIN_EMAIL) return;
+  if (!ADMIN_EMAILS.includes(_email)) return;
   if (!confirm('¿Eliminar esta perdida? (no afecta a otras)')) return;
   try {
     const r = await fetch(`${API_URL}/api/licitaciones/perdidas/${id}`, {
@@ -1178,7 +1179,7 @@ async function borrarPerdida(id) {
 }
 
 async function borrarPresentarse(id) {
-  if (_email !== ADMIN_EMAIL) return;
+  if (!ADMIN_EMAILS.includes(_email)) return;
   if (!confirm('¿Eliminar esta licitación?')) return;
   try {
     const r = await fetch(`${API_URL}/api/licitaciones/presentarse/${id}`, {

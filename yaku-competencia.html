@@ -299,6 +299,7 @@ var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+var ADMIN_EMAILS = [ADMIN_EMAIL, 'agustincalabres@yakuagua.com.ar'];
 var _currentUserEmail = '';
 var _todas = [];
 var _editId = null;
@@ -309,7 +310,7 @@ sb.auth.getSession().then(function(result) {
   var session = result.data.session;
   if (!session) { window.location.href = '/index.html'; return; }
   _currentUserEmail = session.user.email;
-  if (_currentUserEmail !== ADMIN_EMAIL) { window.location.href = '/hub.html'; return; }
+  if (!ADMIN_EMAILS.includes(_currentUserEmail)) { window.location.href = '/hub.html'; return; }
   document.body.classList.add('ready');
   document.getElementById('topbar-fecha').textContent = new Date().toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'});
   setFiltroMesActual();

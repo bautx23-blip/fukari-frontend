@@ -748,8 +748,9 @@ tbody tr:hover{background:#f8fafc;}
 <script>
 var API_URL = 'https://fukari-backend-production.up.railway.app';
 var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+var ADMIN_EMAILS = [ADMIN_EMAIL, 'agustincalabres@yakuagua.com.ar'];
 var INTEGRATOR_EMAIL = 'bautx23@gmail.com';
-var BOT_ALLOWED_EMAILS = [ADMIN_EMAIL, INTEGRATOR_EMAIL];
+var BOT_ALLOWED_EMAILS = [...ADMIN_EMAILS, INTEGRATOR_EMAIL];
 var _currentUserEmail = '';
 var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
@@ -772,7 +773,7 @@ sb.auth.getSession().then(function(result) {
   if (!session) { window.location.href = '/index.html'; return; }
   var email = session.user.email;
   _currentUserEmail = email;
-  if (email !== ADMIN_EMAIL && email !== INTEGRATOR_EMAIL) { window.location.href = '/hub.html'; return; }
+  if (!ADMIN_EMAILS.includes(email) && email !== INTEGRATOR_EMAIL) { window.location.href = '/hub.html'; return; }
   document.body.classList.add('ready');
   var d = new Date();
   document.getElementById('topbar-fecha').textContent = d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });

@@ -234,6 +234,7 @@ var bajasFiltradas = [];
 var paginaActual = 1;
 var _currentUserEmail = null;
 var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
+var ADMIN_EMAILS = [ADMIN_EMAIL, 'agustincalabres@yakuagua.com.ar'];
 var PIA_EMAIL = 'ventas@yakuagua.com.ar';
 var PIA_VENDEDOR = 'María Pía Bologñese';
 
@@ -373,7 +374,7 @@ function renderTabla() {
 
     var anuladaBadge = b.anulada ? '<span class="badge-anulada">ANULADA</span>' : '';
     var filaClass = b.anulada ? ' class="fila-anulada"' : '';
-    var esAdmin = _currentUserEmail === ADMIN_EMAIL;
+    var esAdmin = ADMIN_EMAILS.includes(_currentUserEmail);
     html += '<tr' + filaClass + '>';
     html += '<td><span class="badge-num">' + (b.numero_completo||'—') + '</span>' + anuladaBadge + '</td>';
     html += '<td>' + (b.razon_social||'—') + '</td>';
