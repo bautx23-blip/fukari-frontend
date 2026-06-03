@@ -460,14 +460,6 @@ function renderInstalaciones(data, promoStats) {
     html += '</tbody></table></div>';
   }
 
-  // Tabla top clientes
-  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Top 10 clientes por facturado</h3></div>';
-  html += '<table><thead><tr><th>Razon Social</th><th>CUIT</th><th class="right">Ordenes</th><th class="right">Total facturado</th></tr></thead><tbody>';
-  data.top_clientes.forEach(function(c) {
-    html += '<tr><td class="bold">' + c.razon_social + '</td><td>' + c.cuit + '</td><td class="right">' + c.ordenes + '</td><td class="right money">' + fmt(c.total_facturado) + '</td></tr>';
-  });
-  html += '</tbody></table></div>';
-
   html += '</div>';
   return html;
 }
@@ -524,15 +516,6 @@ function renderClientes(data) {
   html += '<div class="stat-card green"><div class="label">% activos</div><div class="value">' + pct(t.porcentaje_activos) + '</div></div>';
   html += '<div class="stat-card green"><div class="label">Con equipos</div><div class="value">' + t.con_equipos + '</div></div>';
   html += '</div>';
-
-  // Top 10 clientes
-  html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Top 10 clientes por cantidad de equipos activos</h3></div>';
-  html += '<p style="font-size:0.85rem;color:#888;margin:0 20px 12px;line-height:1.5">Clientes con mayor cantidad de equipos activos en servicio. "Equipos" indica la cantidad de modelos distintos y "Cantidad total" la suma de unidades instaladas.</p>';
-  html += '<table><thead><tr><th>Razon Social</th><th>CUIT</th><th class="right">Equipos</th><th class="right">Cantidad total</th></tr></thead><tbody>';
-  data.top_clientes.forEach(function(c) {
-    html += '<tr><td class="bold">' + c.razon_social + '</td><td>' + c.cuit + '</td><td class="right">' + c.equipos + '</td><td class="right">' + c.cantidad_total + '</td></tr>';
-  });
-  html += '</tbody></table></div>';
 
   html += '</div>';
   return html;
