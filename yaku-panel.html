@@ -179,6 +179,8 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <div class="stat-card" style="border-left:3px solid #16a34a"><div class="label">Completadas</div><div class="value" style="color:#16a34a" id="stat-completadas">—</div><div class="sub" id="stat-completadas-sub">en el rango</div></div>
     <div class="stat-card"><div class="label">Última orden</div><div class="value" id="stat-ultima">—</div><div class="sub">número</div></div>
     <div class="stat-card"><div class="label">Total facturado (sin IVA)</div><div class="value" id="stat-monto">—</div><div class="sub" id="stat-monto-sub">en el rango</div></div>
+    <div class="stat-card" style="border-left:3px solid #2563eb"><div class="label">Órdenes de Alquiler</div><div class="value" style="color:#2563eb" id="stat-alquiler">—</div><div class="sub" id="stat-alquiler-sub">equipos instalados</div></div>
+    <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Órdenes de Venta</div><div class="value" style="color:#d97706" id="stat-venta">—</div><div class="sub" id="stat-venta-sub">unidades vendidas</div></div>
   </div>
 
   <div class="filtros">
@@ -456,6 +458,22 @@ function calcularStats() {
   document.getElementById('stat-ultima').textContent = ordenesFiltradas.length > 0 ? ordenesFiltradas[0].numero_completo : '—';
   document.getElementById('stat-monto-sub').textContent = rangoLabel;
   document.getElementById('stat-monto').textContent = totalSinIVA > 0 ? '$' + totalSinIVA.toLocaleString('es-AR', {minimumFractionDigits:0}) : '$0';
+
+  // Split alquiler vs venta (por tipo_orden) sobre las completadas del rango
+  function sumEquipos(arr) {
+    return arr.reduce(function(acc, o) {
+      return acc + (Array.isArray(o.productos) ? o.productos.reduce(function(s, p){ return s + (parseInt(p.cantidad) || 0); }, 0) : 0);
+    }, 0);
+  }
+  var alquilerComp = completadas.filter(function(o){ return (o.tipo_orden || '') !== 'venta'; });
+  var ventaComp = completadas.filter(function(o){ return (o.tipo_orden || '') === 'venta'; });
+  var equiposAlquiler = sumEquipos(alquilerComp);
+  var unidadesVenta = sumEquipos(ventaComp);
+  var factVenta = ventaComp.reduce(function(acc, o){ return acc + (parseFloat(o.total_general) || 0); }, 0);
+  document.getElementById('stat-alquiler').textContent = alquilerComp.length;
+  document.getElementById('stat-alquiler-sub').textContent = equiposAlquiler + (equiposAlquiler === 1 ? ' equipo instalado' : ' equipos instalados');
+  document.getElementById('stat-venta').textContent = ventaComp.length;
+  document.getElementById('stat-venta-sub').textContent = unidadesVenta + (unidadesVenta === 1 ? ' unidad' : ' unidades') + (factVenta > 0 ? ' · $' + factVenta.toLocaleString('es-AR', {maximumFractionDigits:0}) : '');
 }
 
 function filtrar() {

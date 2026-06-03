@@ -253,7 +253,17 @@ function bindPlanillaVendedor(detalle) {
   var opts = '<option value="">Todos los vendedores</option>';
   vendedores.forEach(function(v){ opts += '<option value="' + escHtmlReporte(v) + '">' + escHtmlReporte(v) + '</option>'; });
   sel.innerHTML = opts;
+  // Default: arrancar filtrando por René si tiene órdenes en el período
+  if (vendedores.indexOf('René Biagioni') !== -1) sel.value = 'René Biagioni';
   renderPlanillaVendedor();
+}
+function togglePlanilla() {
+  var body = document.getElementById('planilla-body');
+  var chev = document.getElementById('planilla-chev');
+  if (!body) return;
+  var abrir = body.style.display === 'none';
+  body.style.display = abrir ? 'block' : 'none';
+  if (chev) chev.style.transform = abrir ? 'rotate(180deg)' : '';
 }
 function renderPlanillaVendedor() {
   var sel = document.getElementById('planilla-sel-vendedor');
@@ -319,7 +329,8 @@ function renderResumen(resumen, instalaciones) {
   html += '</div>';
   // Segunda fila: equipos y bajas
   html += '<div class="stats-row">';
-  html += '<div class="stat-card blue"><div class="label">Equipos instalados</div><div class="value">' + (resumen.equipos_instalados || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Unidades en ' + (resumen.total_completadas != null ? resumen.total_completadas : resumen.total_instalaciones) + ' ordenes completadas</div></div>';
+  html += '<div class="stat-card blue"><div class="label">Equipos en alquiler</div><div class="value">' + (resumen.equipos_instalados || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Unidades instaladas (alquiler)</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#d97706"><div class="label" style="color:#d97706">Ventas</div><div class="value" style="color:#d97706">' + (resumen.equipos_venta || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Productos vendidos (no alquiler)</div></div>';
   html += '<div class="stat-card red"><div class="label">Equipos dados de baja</div><div class="value">' + (resumen.equipos_baja || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Unidades retiradas</div></div>';
   html += '<div class="stat-card red"><div class="label">Solicitudes de baja</div><div class="value">' + (resumen.total_bajas || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Ordenes de baja activas</div></div>';
   html += '<div class="stat-card blue"><div class="label">Ordenes de instalacion</div><div class="value">' + (resumen.total_instalaciones || 0) + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">Solicitadas en el periodo</div></div>';
@@ -341,7 +352,8 @@ function renderInstalaciones(data, promoStats) {
   html += '<div class="stats-row">';
   html += '<div class="stat-card blue"><div class="label">Solicitadas</div><div class="value">' + t.activas + '</div></div>';
   html += '<div class="stat-card green"><div class="label">Órdenes completadas</div><div class="value">' + (t.completadas || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">' + (t.completadas || 0) + ' de ' + t.activas + ' solicitadas</div></div>';
-  html += '<div class="stat-card green"><div class="label">Equipos instalados</div><div class="value">' + (t.equipos_instalados || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">Unidades en órdenes completadas</div></div>';
+  html += '<div class="stat-card green"><div class="label">Equipos instalados (alquiler)</div><div class="value">' + (t.equipos_instalados || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">Unidades en ' + (t.ordenes_alquiler || 0) + ' órdenes de alquiler</div></div>';
+  html += '<div class="stat-card" style="border-top-color:#d97706"><div class="label" style="color:#d97706">Ventas</div><div class="value" style="color:#d97706">' + (t.equipos_venta || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">' + (t.ordenes_venta || 0) + ' órdenes · ' + fmt(t.facturado_venta_sin_iva) + ' sin IVA</div></div>';
   html += '<div class="stat-card blue"><div class="label">Facturado sin IVA</div><div class="value">' + fmt(t.facturado_sin_iva) + '</div></div>';
   html += '<div class="stat-card blue"><div class="label">Ticket promedio</div><div class="value">' + fmt(t.ticket_promedio) + '</div></div>';
   html += '<div class="stat-card" style="border-top-color:#7c3aed"><div class="label" style="color:#7c3aed">Cerrados por promo (período)</div><div class="value" style="color:#7c3aed">' + (promoStats.total || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">Completadas con promoción</div></div>';
@@ -378,14 +390,28 @@ function renderInstalaciones(data, promoStats) {
     html += '</div></div>';
   }
 
-  // Planilla de órdenes por vendedor (selector) — debajo de "Equipos vendidos por vendedor"
+  // Detalle de Ventas (productos vendidos — no cuentan como equipos de alquiler)
+  var ventasDet = data.ventas_detalle || [];
+  if (ventasDet.length > 0) {
+    html += '<div class="tabla-wrap" style="margin-top:16px;"><div class="tabla-header"><h3>Detalle de Ventas</h3></div>';
+    html += '<table><thead><tr><th>N° Orden</th><th>Cliente</th><th>Producto</th><th class="right">Cant.</th><th class="right">Importe</th></tr></thead><tbody>';
+    ventasDet.forEach(function(v) {
+      html += '<tr><td class="bold">' + escHtmlReporte(v.numero) + '</td><td>' + escHtmlReporte(v.razon_social) + '</td><td>' + escHtmlReporte(v.modelo) + '</td><td class="right">' + v.cantidad + '</td><td class="right money">' + fmt(v.importe) + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  // Planilla de órdenes por vendedor (desplegable, cerrada por default) — debajo de "Equipos vendidos por vendedor"
   html += '<div class="tabla-wrap" style="margin-top:16px;">';
-  html += '<div class="tabla-header" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">';
-  html += '<h3>Planilla de órdenes por vendedor</h3>';
-  html += '<div style="display:flex;align-items:center;gap:8px;"><label style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Vendedor</label><select id="planilla-sel-vendedor" onchange="renderPlanillaVendedor()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;color:#1f2937;background:#fff;cursor:pointer;min-width:200px;"></select></div>';
+  html += '<div class="tabla-header" onclick="togglePlanilla()" style="display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;user-select:none;">';
+  html += '<h3>📋 Planilla de órdenes por vendedor</h3>';
+  html += '<span id="planilla-chev" style="color:#9ca3af;font-size:13px;transition:transform .2s;">▼</span>';
   html += '</div>';
+  html += '<div id="planilla-body" style="display:none;padding-bottom:4px;">';
+  html += '<div style="display:flex;align-items:center;gap:8px;padding:12px 18px 0;"><label style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Vendedor</label><select id="planilla-sel-vendedor" onchange="renderPlanillaVendedor()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;color:#1f2937;background:#fff;cursor:pointer;min-width:200px;"></select></div>';
   html += '<div id="planilla-conteo" style="font-size:11.5px;color:#6b7280;font-weight:500;padding:10px 18px 0;"></div>';
   html += '<table><thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de orden</th><th>Vendedor</th></tr></thead><tbody id="planilla-tbody"></tbody></table>';
+  html += '</div>';
   html += '</div>';
 
   // Tabla productos
