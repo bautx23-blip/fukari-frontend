@@ -95,12 +95,16 @@ tbody td.money{font-weight:600;color:#16a34a;}
 }
 
 /* ── PRINT ── */
+.planilla-print{display:none;}
 @media print{
   .topbar,.filtros-bar{display:none!important;}
   .contenido{padding:0!important;max-width:100%!important;}
   body{visibility:visible!important;background:#fff!important;}
   .chart-body{height:280px!important;}
   .report-section{page-break-inside:avoid;}
+  /* Planilla por vendedor: en PDF mostrar todo expandido (todos los vendedores), sin flecha ni selector */
+  .planilla-screen{display:none!important;}
+  .planilla-print{display:block!important;}
 }
 </style>
 </head>
@@ -245,6 +249,7 @@ function cargarDatos() {
 var _planillaOrdenes = [];
 function bindPlanillaVendedor(detalle) {
   _planillaOrdenes = detalle || [];
+  renderPlanillaPrint();
   var sel = document.getElementById('planilla-sel-vendedor');
   if (!sel) return;
   var vendedores = _planillaOrdenes.map(function(o){ return o.vendedor || 'Sin vendedor'; })
@@ -264,6 +269,26 @@ function togglePlanilla() {
   var abrir = body.style.display === 'none';
   body.style.display = abrir ? 'block' : 'none';
   if (chev) chev.style.transform = abrir ? 'rotate(180deg)' : '';
+}
+// Versión para PDF: una sola lista corrida con todas las órdenes (con columna
+// Vendedor), sin separadores ni agrupar, numeración continua.
+function renderPlanillaPrint() {
+  var cont = document.getElementById('planilla-print-content');
+  if (!cont) return;
+  var arr = _planillaOrdenes.slice().sort(function(a, b){
+    var va = a.vendedor || 'Sin vendedor', vb = b.vendedor || 'Sin vendedor';
+    if (va !== vb) return va.localeCompare(vb, 'es');
+    return a.fecha_orden < b.fecha_orden ? -1 : a.fecha_orden > b.fecha_orden ? 1 : 0;
+  });
+  if (!arr.length) { cont.innerHTML = '<div style="color:#9ca3af;font-size:12px;padding:10px;">Sin órdenes en el período.</div>'; return; }
+  var html = '<table><thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de orden</th><th>Vendedor</th></tr></thead><tbody>';
+  arr.forEach(function(o, i){
+    var p = String(o.fecha_orden || '').substring(0, 10).split('-');
+    var fStr = p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : (o.fecha_orden || '—');
+    html += '<tr><td style="text-align:center;color:#9ca3af;">' + (i + 1) + '</td><td style="font-weight:600;">' + escHtmlReporte(o.razon_social || '—') + '</td><td>' + fStr + '</td><td>' + escHtmlReporte(o.vendedor || '—') + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  cont.innerHTML = html;
 }
 function renderPlanillaVendedor() {
   var sel = document.getElementById('planilla-sel-vendedor');
@@ -402,7 +427,7 @@ function renderInstalaciones(data, promoStats) {
   }
 
   // Planilla de órdenes por vendedor (desplegable, cerrada por default) — debajo de "Equipos vendidos por vendedor"
-  html += '<div class="tabla-wrap" style="margin-top:16px;">';
+  html += '<div class="tabla-wrap planilla-screen" style="margin-top:16px;">';
   html += '<div class="tabla-header" onclick="togglePlanilla()" style="display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;user-select:none;">';
   html += '<h3>📋 Planilla de órdenes por vendedor</h3>';
   html += '<span id="planilla-chev" style="color:#9ca3af;font-size:13px;transition:transform .2s;">▼</span>';
@@ -413,6 +438,8 @@ function renderInstalaciones(data, promoStats) {
   html += '<table><thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de orden</th><th>Vendedor</th></tr></thead><tbody id="planilla-tbody"></tbody></table>';
   html += '</div>';
   html += '</div>';
+  // Versión para PDF: todos los vendedores con sus órdenes, expandido, sin flecha ni selector
+  html += '<div class="tabla-wrap planilla-print" style="margin-top:16px;"><div class="tabla-header"><h3>📋 Planilla de órdenes por vendedor</h3></div><div id="planilla-print-content" style="padding:0 18px 12px;"></div></div>';
 
   // Tabla productos
   html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Productos mas vendidos</h3></div>';
