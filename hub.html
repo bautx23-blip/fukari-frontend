@@ -394,7 +394,7 @@
     /* María Pía suspendida — borrar este bloque para reactivar su acceso */
     if (email === 'ventas@yakuagua.com.ar') { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
     document.getElementById('user-email').textContent = email;
-    if (email === 'renebiagioni@yakuagua.com.ar' || email === 'agustincalabres@yakuagua.com.ar' || email === 'info@wearebilab.com') {
+    if (email === 'renebiagioni@yakuagua.com.ar' || email === 'info@wearebilab.com') {
       document.getElementById('card-papelera').style.display = '';
       document.getElementById('card-crm').style.display = '';
       document.getElementById('card-competencia').style.display = '';
@@ -409,6 +409,14 @@
         if (href !== '/yaku-panel.html' && href !== '/yaku-panel-bajas.html' && href !== '/yaku-orden-instalacion.html') {
           card.style.display = 'none';
         }
+      });
+    }
+    // Agustín: acceso restringido a Órdenes de Instalación, Planilla de Contactos, Monitoreo y Stock
+    if (email === 'agustincalabres@yakuagua.com.ar') {
+      var permitidasAgustin = ['/yaku-panel.html', '/yaku-planilla-contactos.html', '/yaku-competencia.html', '/yaku-stock.html'];
+      document.querySelectorAll('.task-card').forEach(function(card) {
+        var href = card.getAttribute('href') || '';
+        card.style.display = permitidasAgustin.indexOf(href) !== -1 ? '' : 'none';
       });
     }
     const d = new Date();

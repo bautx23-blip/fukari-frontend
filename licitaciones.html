@@ -427,7 +427,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
-const ADMIN_EMAILS = [ADMIN_EMAIL, 'agustincalabres@yakuagua.com.ar'];
+const ADMIN_EMAILS = [ADMIN_EMAIL];
 
 let _email = '';
 let _activas = [];
@@ -445,6 +445,8 @@ let _stockModelos = []; // [{id, modelo, precio}, ...] modelos de alquiler activ
 sb.auth.getSession().then(({ data: { session } }) => {
   if (!session) { location.href = '/index.html'; return; }
   _email = session.user.email.toLowerCase();
+  /* Agustín: acceso restringido — fuera de scope, lo mandamos al hub */
+  if (_email === 'agustincalabres@yakuagua.com.ar') { location.href = '/hub.html'; return; }
   document.body.classList.add('ready');
   document.getElementById('topbar-fecha').textContent =
     new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });

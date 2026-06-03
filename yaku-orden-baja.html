@@ -449,6 +449,8 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       window._currentUserEmail = session.user.email;
       /* María Pía suspendida — borrar esta línea para reactivar su acceso */
       if (window._currentUserEmail === 'ventas@yakuagua.com.ar') { window._sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
+      /* Agustín: acceso restringido — fuera de scope, lo mandamos al hub */
+      if (window._currentUserEmail === 'agustincalabres@yakuagua.com.ar') { window.location.href = '/hub.html'; return; }
       var _map = {
         'renebiagioni@yakuagua.com.ar': 'René Biagioni',
         'agustincalabres@yakuagua.com.ar': 'Agustín Calabrés',

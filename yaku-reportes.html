@@ -158,6 +158,8 @@ sb.auth.getSession().then(function(result) {
   if (!session) { window.location.href = '/index.html'; return; }
   /* María Pía suspendida — borrar esta línea para reactivar su acceso */
   if (session.user.email === 'ventas@yakuagua.com.ar') { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
+  /* Agustín: acceso restringido — fuera de scope, lo mandamos al hub */
+  if (session.user.email === 'agustincalabres@yakuagua.com.ar') { window.location.href = '/hub.html'; return; }
   document.body.classList.add('ready');
   iniciar();
 });
