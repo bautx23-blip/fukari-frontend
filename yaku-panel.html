@@ -364,6 +364,34 @@ async function toggleCompletada(id, completada) {
   }
 }
 
+// Ajustar la fecha de instalación efectiva (fecha_completada) de una orden ya completada.
+// Permite imputar el mes correcto en el reporte (ej. cargar una instalación olvidada de un mes anterior).
+async function setFechaCompletada(id, fecha) {
+  if (!fecha) return;
+  try {
+    var res = await fetch(API_URL + '/api/ordenes/' + id + '/completada', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completada: true, fecha_completada: fecha })
+    });
+    if (!res.ok) {
+      var err = await res.json();
+      throw new Error(err.error || 'Error al actualizar');
+    }
+    var data = await res.json();
+    var orden = todasLasOrdenes.find(function(o){ return o.id == id; });
+    if (orden) {
+      orden.completada = data.completada;
+      orden.fecha_completada = data.fecha_completada;
+    }
+    filtrar();
+    calcularStats();
+  } catch(err) {
+    alert('Error: ' + err.message);
+    cargarOrdenes();
+  }
+}
+
 async function cargarOrdenes() {
   document.getElementById('tabla-body').innerHTML = '<div class="loading">Cargando...</div>';
   try {
@@ -502,7 +530,7 @@ function renderTabla() {
       var chkDisabled = o.no_factible ? ' disabled' : '';
       completadaCell = '<td style="text-align:center">' +
         '<input type="checkbox" id="chk-' + o.id + '" ' + checked + chkDisabled + ' onclick="toggleCompletada(' + o.id + ', document.getElementById(\'chk-' + o.id + '\').checked)" style="cursor:pointer;width:16px;height:16px;" title="' + (o.no_factible ? 'No factible — no se puede completar' : fechaComp ? 'Completada: ' + fechaComp : 'No completada') + '">' +
-        (fechaComp ? '<div style="font-size:10px;color:#16a34a;margin-top:2px">' + new Date(fechaComp + 'T12:00:00').toLocaleDateString('es-AR') + '</div>' : '') +
+        (o.completada ? '<input type="date" value="' + fechaComp + '" onchange="setFechaCompletada(' + o.id + ', this.value)" title="Fecha de instalación efectiva — editala para imputar el mes correcto en el reporte" style="margin-top:3px;font-size:10px;padding:1px 3px;border:1px solid #d1d5db;border-radius:4px;color:#16a34a;cursor:pointer;max-width:120px;">' : '') +
       '</td>';
     }
     var filaStyleNF = o.no_factible ? ' style="opacity:0.55;"' : '';
