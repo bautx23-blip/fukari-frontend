@@ -391,6 +391,8 @@
     }
     document.body.classList.add('ready');
     const email = session.user.email;
+    /* María Pía suspendida — borrar este bloque para reactivar su acceso */
+    if (email === 'ventas@yakuagua.com.ar') { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
     document.getElementById('user-email').textContent = email;
     if (email === 'renebiagioni@yakuagua.com.ar' || email === 'agustincalabres@yakuagua.com.ar' || email === 'info@wearebilab.com') {
       document.getElementById('card-papelera').style.display = '';

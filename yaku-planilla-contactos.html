@@ -241,6 +241,8 @@ if (PREVIEW) {
 } else {
   sb.auth.getSession().then(function(r){
     if (!r.data.session) { window.location.href = '/index.html'; return; }
+    /* María Pía suspendida — borrar esta línea para reactivar su acceso */
+    if (r.data.session.user.email === 'ventas@yakuagua.com.ar') { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
     document.body.classList.add('ready');
     document.getElementById('user-email').textContent = r.data.session.user.email;
     const d = new Date();

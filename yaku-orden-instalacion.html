@@ -411,7 +411,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
       <label>Vendedor:</label>
       <select id="vendedor-select" style="border:none;border-bottom:1px dotted #bbb;font-size:10.5px;font-family:inherit;outline:none;background:transparent;padding:1px 2px;max-width:220px;">
         <option value="René Biagioni">René Biagioni</option>
-        <option value="María Pía Bologñese">María Pía Bologñese</option>
+        <option value="Agustín Calabrés">Agustín Calabrés</option>
       </select>
     </div>
   </div>
@@ -435,6 +435,8 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
     if (!session) window.location.href = '/index.html';
     else {
       window._currentUserEmail = session.user.email;
+      /* María Pía suspendida — borrar esta línea para reactivar su acceso */
+      if (window._currentUserEmail === 'ventas@yakuagua.com.ar') { window._sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
       var _map = {
         'renebiagioni@yakuagua.com.ar': 'René Biagioni',
         'agustincalabres@yakuagua.com.ar': 'Agustín Calabrés',

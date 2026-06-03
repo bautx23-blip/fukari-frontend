@@ -183,7 +183,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 
   <div class="filtros">
     <input type="text" id="filtro-buscar" placeholder="Buscar por razón social, CUIT o localidad..." oninput="filtrar();calcularStats()">
-    <select id="filtro-vendedor" onchange="filtrar();calcularStats()" style="max-width:200px;"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="María Pía Bologñese">María Pía Bologñese</option></select>
+    <select id="filtro-vendedor" onchange="filtrar();calcularStats()" style="max-width:200px;"><option value="">Todos los vendedores</option><option value="René Biagioni">René Biagioni</option><option value="Agustín Calabrés">Agustín Calabrés</option></select>
     <label style="font-size:11px;color:#6b7280;font-weight:600;">Desde</label>
     <input type="date" id="filtro-desde" onchange="cargarOrdenes()" style="max-width:150px;">
     <label style="font-size:11px;color:#6b7280;font-weight:600;">Hasta</label>
@@ -302,6 +302,8 @@ const PIA_VENDEDOR = 'María Pía Bologñese';
 sb.auth.getSession().then(({ data: { session } }) => {
   if (!session) { window.location.href = '/index.html'; return; }
   _currentUserEmail = session.user.email;
+  /* María Pía suspendida — borrar esta línea para reactivar su acceso */
+  if (_currentUserEmail === 'ventas@yakuagua.com.ar') { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
   document.body.classList.add('ready');
   iniciarPanel();
 });
@@ -755,7 +757,7 @@ async function abrirEdicion(o) {
 
   html += '<div class="section-title">Orden</div>';
   html += '<div><label>Fecha de Orden</label><input type="date" id="edit-fecha_orden" value="' + esc(fechaVal) + '"></div>';
-  html += '<div><label>Vendedor</label><select id="edit-vendedor"><option value="René Biagioni"' + (o.vendedor==='René Biagioni'?' selected':'') + '>René Biagioni</option><option value="María Pía Bologñese"' + (o.vendedor==='María Pía Bologñese'?' selected':'') + '>María Pía Bologñese</option></select></div>';
+  html += '<div><label>Vendedor</label><select id="edit-vendedor"><option value="René Biagioni"' + (o.vendedor==='René Biagioni'?' selected':'') + '>René Biagioni</option><option value="Agustín Calabrés"' + (o.vendedor==='Agustín Calabrés'?' selected':'') + '>Agustín Calabrés</option>' + (o.vendedor==='María Pía Bologñese' ? '<option value="María Pía Bologñese" selected>María Pía Bologñese</option>' : '') + '</select></div>';
   html += '<div><label>Cobrar</label><select id="edit-cobrar"><option value="Sí"' + (o.cobrar==='Sí'?' selected':'') + '>Sí</option><option value="No"' + (o.cobrar==='No'?' selected':'') + '>No</option></select></div>';
   html += '<div><label>Plazo Mantenimiento</label><input type="text" id="edit-plazo_mantenimiento" value="' + esc(o.plazo_mantenimiento) + '"></div>';
   html += '<div class="form-full"><label>Aclaraciones</label><textarea id="edit-aclaraciones">' + esc(o.aclaraciones) + '</textarea></div>';

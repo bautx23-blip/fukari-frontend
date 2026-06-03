@@ -231,6 +231,8 @@ var _tabActual = 'alquiler';
 
 sb.auth.getSession().then(({ data: { session } }) => {
   if (!session) { window.location.href = '/index.html'; return; }
+  /* María Pía suspendida — borrar esta línea para reactivar su acceso */
+  if (session.user.email === 'ventas@yakuagua.com.ar') { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
   document.body.classList.add('ready');
   document.getElementById('user-email').textContent = session.user.email;
   var d = new Date();
