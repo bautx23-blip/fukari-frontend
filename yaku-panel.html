@@ -297,7 +297,7 @@ let ordenesFiltradas = [];
 let paginaActual = 1;
 let _currentUserEmail = null;
 const ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
-const ADMIN_EMAILS = [ADMIN_EMAIL];
+const ADMIN_EMAILS = [ADMIN_EMAIL, 'agustincalabres@yakuagua.com.ar'];
 const PIA_EMAIL = 'ventas@yakuagua.com.ar';
 const PIA_VENDEDOR = 'María Pía Bologñese';
 
@@ -528,7 +528,7 @@ function renderTabla() {
       var loc = (o.localidad||'').trim();
       var subj = encodeURIComponent('Nueva ' + tipoOrdenLabel + ' — ' + loc + ' — ' + (o.razon_social||''));
       var body = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva ' + tipoOrdenLabel + ', para la localidad de ' + loc + '; el equipo será para ' + (o.responsable||'') + ' y su celular es ' + (o.responsable_celular||'') + '.\n\nLink de ' + tipoOrdenLabel + ': ' + o.pdf_url);
-      mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subj + '&body=' + body + '" title="Enviar por mail">&#9993;</a>';
+      mailBtn = '<a class="btn-mail" href="https://mail.google.com/mail/?view=cm&fs=1&su=' + subj + '&body=' + body + '" target="_blank" rel="noopener" title="Enviar por mail (Gmail)">&#9993;</a>';
     }
     var deleteBtn = (esAdmin && !o.anulada && !o.no_factible) ? '<button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + (o.numero_completo||'').replace(/'/g,'') + '\')" title="Anular orden">&#9888;</button>' : '';
     var editBtn = (esAdmin && !o.anulada && !o.no_factible) ? '<button class="btn-edit-orden" onclick=\'abrirEdicion(' + JSON.stringify(o).replace(/'/g,"&#39;") + ')\' title="Editar orden">&#9998;</button>' : '';
