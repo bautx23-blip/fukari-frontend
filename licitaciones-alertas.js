@@ -13,6 +13,20 @@
   const STORAGE_PREFIX = 'lic_alert_seen_';
   const STORAGE_DATE_FMT = () => new Date().toISOString().slice(0, 10);
 
+  // Usuarios que NO deben ver el aviso de licitaciones (sin acceso a esa sección)
+  const ALERTA_BLOQUEADOS = ['agustincalabres@yakuagua.com.ar'];
+  function getUserEmail() {
+    try {
+      if (window._currentUserEmail) return window._currentUserEmail;
+      const raw = localStorage.getItem('sb-bqjbblgbwgwqkziqzdyy-auth-token');
+      if (!raw) return null;
+      const o = JSON.parse(raw);
+      return (o && o.user && o.user.email)
+        || (o && o.currentSession && o.currentSession.user && o.currentSession.user.email)
+        || null;
+    } catch (e) { return null; }
+  }
+
   function ensureStyles() {
     if (document.getElementById('lic-alert-styles')) return;
     const css = `
@@ -126,6 +140,8 @@
 
   async function chequearAlertas() {
     try {
+      // No mostrar a usuarios sin acceso a licitaciones (ej. Agustín)
+      if (ALERTA_BLOQUEADOS.indexOf(getUserEmail()) !== -1) return;
       const r = await fetch(API_URL + '/api/licitaciones/alertas');
       if (!r.ok) return;
       const d = await r.json();
