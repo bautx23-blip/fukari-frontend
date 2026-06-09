@@ -1047,20 +1047,43 @@ function renderRechazos(data) {
     document.getElementById('rechazos-tabla-body').innerHTML = '<div class="empty-msg">No hay rechazos en el rango seleccionado</div>';
     return;
   }
-  var html = '<table><thead><tr><th>Fecha</th><th>Cliente</th><th>Sit. BCRA</th><th>Deuda total (miles $)</th><th>Fact. perdida est.</th><th>Vendedor</th></tr></thead><tbody>';
+  var html = '<table><thead><tr><th>Fecha</th><th>Cliente</th><th>Sit. BCRA</th><th>Deuda total (miles $)</th><th>Fact. perdida est.</th><th>Vendedor</th><th></th></tr></thead><tbody>';
   data.forEach(function(r) {
     var fecha = r.fecha ? r.fecha.split('-').reverse().join('/') : '-';
+    var monto = parseFloat(r.monto_perdido_estimado) || 0;
     html += '<tr>' +
       '<td>' + fecha + '</td>' +
       '<td>' + esc(r.nombre_cliente) + '</td>' +
       '<td style="text-align:center;"><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-weight:700;font-size:11px;">Sit. ' + r.situacion_bcra + '</span></td>' +
       '<td style="text-align:right;">$' + (parseFloat(r.deuda_total) || 0).toLocaleString('es-AR') + '</td>' +
-      '<td style="text-align:right;font-weight:600;color:#dc2626;">$' + (parseFloat(r.monto_perdido_estimado) || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 }) + '</td>' +
+      '<td style="text-align:right;font-weight:600;color:#dc2626;">$' + monto.toLocaleString('es-AR', { minimumFractionDigits: 2 }) + '</td>' +
       '<td>' + esc(r.vendedor || '-') + '</td>' +
+      '<td style="text-align:center;"><button onclick="editarRechazoMonto(\'' + r.id + '\', ' + monto + ')" title="Editar facturación perdida" style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;">&#9999;&#65039;</button></td>' +
       '</tr>';
   });
   html += '</tbody></table>';
   document.getElementById('rechazos-tabla-body').innerHTML = html;
+}
+
+function editarRechazoMonto(id, actual) {
+  var ingresado = prompt('Facturación perdida estimada (en pesos):', actual);
+  if (ingresado === null) return;
+  // Aceptar formato argentino: "30.000" o "30000,50" → número
+  var limpio = String(ingresado).replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
+  var val = parseFloat(limpio);
+  if (isNaN(val) || val < 0) { alert('Valor inválido. Ingresá un número, ej: 30000'); return; }
+  fetch(API_URL + '/api/rechazos-crediticios/' + id, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ monto_perdido_estimado: val })
+  }).then(function(res) {
+    if (!res.ok) return res.json().then(function(e){ throw new Error(e.error || 'Error'); });
+    return res.json();
+  }).then(function() {
+    cargarRechazos();
+  }).catch(function(err) {
+    alert('Error: ' + err.message);
+  });
 }
 
 // ── Fuente de Adquisición ──
