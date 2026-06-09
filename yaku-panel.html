@@ -1056,9 +1056,9 @@ function renderRechazos(data) {
       '<td>' + esc(r.nombre_cliente) + '</td>' +
       '<td style="text-align:center;"><span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-weight:700;font-size:11px;">Sit. ' + r.situacion_bcra + '</span></td>' +
       '<td style="text-align:right;">$' + (parseFloat(r.deuda_total) || 0).toLocaleString('es-AR') + '</td>' +
-      '<td style="text-align:right;font-weight:600;color:#dc2626;">$' + monto.toLocaleString('es-AR', { minimumFractionDigits: 2 }) + '</td>' +
+      '<td id="rmonto-' + r.id + '" style="text-align:right;font-weight:600;color:#dc2626;">$' + monto.toLocaleString('es-AR', { minimumFractionDigits: 2 }) + '</td>' +
       '<td>' + esc(r.vendedor || '-') + '</td>' +
-      '<td style="text-align:center;"><button onclick="editarRechazoMonto(\'' + r.id + '\', ' + monto + ')" title="Editar facturación perdida" style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;">&#9999;&#65039;</button></td>' +
+      '<td id="racc-' + r.id + '" style="text-align:center;"><button onclick="editarRechazoMonto(\'' + r.id + '\', ' + monto + ')" title="Editar facturación perdida" style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;line-height:1;">&#9999;&#65039;</button></td>' +
       '</tr>';
   });
   html += '</tbody></table>';
@@ -1066,10 +1066,30 @@ function renderRechazos(data) {
 }
 
 function editarRechazoMonto(id, actual) {
-  var ingresado = prompt('Facturación perdida estimada (en pesos):', actual);
-  if (ingresado === null) return;
+  var montoCell = document.getElementById('rmonto-' + id);
+  var accCell = document.getElementById('racc-' + id);
+  if (!montoCell || !accCell) return;
+  montoCell.innerHTML = '<input id="rinput-' + id + '" type="text" value="' + actual + '" ' +
+    'style="width:110px;text-align:right;padding:5px 7px;border:1.5px solid #1a1a2e;border-radius:5px;font-family:inherit;font-size:13px;outline:none;">';
+  accCell.innerHTML =
+    '<button onclick="guardarRechazoMonto(\'' + id + '\')" title="Guardar" style="background:none;border:none;cursor:pointer;color:#16a34a;font-size:18px;font-weight:700;padding:2px 5px;line-height:1;">&#10003;</button>' +
+    '<button onclick="cancelarRechazoMonto()" title="Cancelar" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:16px;font-weight:700;padding:2px 5px;line-height:1;">&#10007;</button>';
+  var inp = document.getElementById('rinput-' + id);
+  if (inp) {
+    inp.focus();
+    inp.select();
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') guardarRechazoMonto(id);
+      else if (e.key === 'Escape') cancelarRechazoMonto();
+    });
+  }
+}
+
+function guardarRechazoMonto(id) {
+  var inp = document.getElementById('rinput-' + id);
+  if (!inp) return;
   // Aceptar formato argentino: "30.000" o "30000,50" → número
-  var limpio = String(ingresado).replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
+  var limpio = String(inp.value).replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
   var val = parseFloat(limpio);
   if (isNaN(val) || val < 0) { alert('Valor inválido. Ingresá un número, ej: 30000'); return; }
   fetch(API_URL + '/api/rechazos-crediticios/' + id, {
@@ -1084,6 +1104,10 @@ function editarRechazoMonto(id, actual) {
   }).catch(function(err) {
     alert('Error: ' + err.message);
   });
+}
+
+function cancelarRechazoMonto() {
+  cargarRechazos();
 }
 
 // ── Fuente de Adquisición ──
