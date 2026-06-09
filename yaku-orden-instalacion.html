@@ -78,6 +78,19 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 .campo-texto input,.campo-texto textarea{flex:1;border:none;border-bottom:1px dotted #bbb;font-family:inherit;font-size:10.5px;outline:none;background:transparent;resize:none;padding:1px 2px;}
 .campo-texto textarea{min-height:30px;}
 .campo-texto input:focus,.campo-texto textarea:focus{background:#eff6ff;}
+.inst-box{border:1.4px solid #555;border-radius:2px;margin-bottom:12px;padding:9px 14px 12px;}
+.inst-titulo{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 auto 9px;display:table;border-bottom:1.4px solid #444;padding-bottom:1px;}
+.inst-row{display:flex;gap:55px;align-items:center;}
+.inst-cal-wrap{width:30%;}
+.inst-mes-top{margin-bottom:4px;}
+.inst-cal{border-collapse:collapse;width:100%;table-layout:fixed;}
+.inst-cal th{border:1px solid #555;font-size:7px;font-weight:700;padding:1px 0;text-align:center;color:#222;}
+.inst-cal td{border:1px solid #888;height:12px;font-size:7px;color:#333;text-align:center;vertical-align:middle;}
+.inst-cal td.vacio{border:none;}
+.inst-hora{flex:1;display:flex;flex-direction:column;gap:11px;}
+.inst-lbl{font-size:10px;font-weight:700;color:#333;white-space:nowrap;text-transform:uppercase;letter-spacing:0.3px;}
+.inst-val{font-size:10px;font-weight:600;color:#222;}
+.inst-linea{border-bottom:1px solid #888;height:16px;width:75%;}
 .dias-label{font-size:9px;color:#555;font-style:italic;padding-top:3px;flex-shrink:0;}
 .footer-area{display:flex;justify-content:flex-end;margin-top:18px;}
 .firma-box{border:1.2px solid #666;border-radius:2px;width:180px;height:80px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;}
@@ -90,6 +103,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
   input,textarea,select{border-bottom-color:transparent !important;}
   .logo-fukari{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .tabla-productos th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .inst-cal th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .localidad-dropdown{display:none !important;}
 }
 /* ── CLIENTE OVERLAY ── */
@@ -416,6 +430,26 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
     </div>
   </div>
 
+  <!-- ── INSTALACIONES (solo alquiler) ── -->
+  <div class="inst-box" id="inst-box">
+    <div class="inst-titulo">Instalación</div>
+    <div class="inst-row">
+      <div class="inst-cal-wrap">
+        <div class="inst-mes-top"><span class="inst-lbl">Mes:</span> <span class="inst-val" id="inst-mes"></span></div>
+        <table class="inst-cal">
+          <thead><tr><th>L</th><th>M</th><th>M</th><th>J</th><th>V</th><th>S</th><th>D</th></tr></thead>
+          <tbody id="inst-cal-body"></tbody>
+        </table>
+      </div>
+      <div class="inst-hora">
+        <div><span class="inst-lbl">Hora aproximada:</span></div>
+        <span class="inst-linea"></span>
+        <div><span class="inst-lbl">Observaciones:</span></div>
+        <span class="inst-linea"></span>
+      </div>
+    </div>
+  </div>
+
   <div class="footer-area">
     <div class="firma-box"><span>Firma y Aclaracion Cliente</span></div>
   </div>
@@ -499,12 +533,35 @@ document.addEventListener('DOMContentLoaded', function() {
     if (h2) h2.textContent = 'Nueva Orden de Venta';
     var ordenTitulo = document.querySelector('.orden-titulo');
     if (ordenTitulo) ordenTitulo.textContent = 'Orden de Venta';
+    var instBox = document.getElementById('inst-box');
+    if (instBox) instBox.style.display = 'none';
   }
 
   var hoy = new Date();
   document.getElementById('f-dd').value = String(hoy.getDate()).padStart(2,'0');
   document.getElementById('f-mm').value = String(hoy.getMonth()+1).padStart(2,'0');
   document.getElementById('f-aa').value = hoy.getFullYear();
+
+  var instMes = document.getElementById('inst-mes');
+  if (instMes) {
+    var MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    instMes.textContent = MESES[hoy.getMonth()] + ' ' + hoy.getFullYear();
+  }
+  var instBody = document.getElementById('inst-cal-body');
+  if (instBody) {
+    var diasMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
+    var semanas = Math.ceil(diasMes / 7);
+    var calHtml = '';
+    for (var s = 0; s < semanas; s++) {
+      calHtml += '<tr>';
+      for (var d = 1; d <= 7; d++) {
+        var n = s * 7 + d;
+        calHtml += n <= diasMes ? '<td>' + n + '</td>' : '<td class="vacio"></td>';
+      }
+      calHtml += '</tr>';
+    }
+    instBody.innerHTML = calHtml;
+  }
 
   fetch(API_URL + '/api/ordenes/next-number')
     .then(function(r){ return r.json(); })
