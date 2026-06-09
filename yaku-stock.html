@@ -278,10 +278,13 @@ async function cargarStock(tipo) {
     var res = await fetch(API_URL + '/api/stock?tipo=' + tipo);
     if (!res.ok) throw new Error('Error al cargar');
     var items = await res.json();
-    // Ordenar: en stock (activos) arriba, fuera de stock (tachados) abajo; cada grupo alfabético
+    // Ordenar: en stock (activos) arriba, fuera de stock (tachados) abajo;
+    // dentro de cada grupo, por precio de menor a mayor
     items.sort(function(a, b) {
       var actA = a.activo !== false, actB = b.activo !== false;
       if (actA !== actB) return actA ? -1 : 1;
+      var pA = parseFloat(a.precio) || 0, pB = parseFloat(b.precio) || 0;
+      if (pA !== pB) return pA - pB;
       return String(a.modelo).localeCompare(String(b.modelo), 'es');
     });
     var tbody = document.getElementById('stock-body');
