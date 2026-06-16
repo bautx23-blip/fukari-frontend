@@ -326,6 +326,30 @@
       </div>
     </a>
 
+    <a href="/yaku-pipeline.html" class="task-card clientes" id="card-crm-pipeline" style="display:none;">
+      <div class="task-icon">&#128202;</div>
+      <div class="task-body">
+        <div class="task-title">CRM</div>
+        <div class="task-desc">Pipeline de ventas con las etapas del bot. Cargá leads y seguilos por estado (en conversación, aguardando instalación, etc.).</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge">Activo</span>
+        <span class="task-arrow">&rarr;</span>
+      </div>
+    </a>
+
+    <a href="/yaku-bot.html" class="task-card clientes" id="card-bot" style="display:none;">
+      <div class="task-icon">&#129302;</div>
+      <div class="task-body">
+        <div class="task-title">Probar bot de ventas</div>
+        <div class="task-desc">Sandbox del bot de ventas: chateá como cliente y mirá cómo responde. No toca WhatsApp ni conversaciones reales.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge">Prueba</span>
+        <span class="task-arrow">&rarr;</span>
+      </div>
+    </a>
+
     <a href="/yaku-competencia.html" class="task-card competencia" id="card-competencia" style="display:none;">
       <div class="task-icon">&#127919;</div>
       <div class="task-body">
@@ -398,6 +422,8 @@
       document.getElementById('card-papelera').style.display = '';
       document.getElementById('card-crm').style.display = '';
       document.getElementById('card-competencia').style.display = '';
+      document.getElementById('card-bot').style.display = '';
+      document.getElementById('card-crm-pipeline').style.display = '';
     }
     if (email === 'info@wearebilab.com') {
       document.getElementById('card-cobranzas').style.display = '';

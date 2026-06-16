@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yakú — CRM / Pipeline</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f5f7;color:#1a1a2e;}
+  .topbar{background:#1a1a2e;color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar-logos img{height:26px;}
+  .topbar-title{font-size:14px;font-weight:600;letter-spacing:0.3px;}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+  .btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;}
+  .btn-logout:hover{border-color:#9ca3af;color:#fff;}
+
+  .wrap{max-width:1400px;margin:20px auto;padding:0 18px;}
+  .head-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+  .h-title{font-size:18px;font-weight:800;}
+  .h-sub{font-size:12px;color:#6b7280;margin-bottom:16px;}
+  .btn-add{background:#0ea5e9;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+  .board{display:grid;grid-template-columns:repeat(6,minmax(210px,1fr));gap:10px;overflow-x:auto;padding-bottom:10px;}
+  .col-head{padding:6px 10px;border-radius:8px;font-size:11px;font-weight:800;letter-spacing:0.3px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .col-head .count{background:#ffffffaa;font-size:10px;font-weight:800;padding:1px 7px;border-radius:10px;}
+  .col-cards{display:flex;flex-direction:column;gap:6px;}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;position:relative;}
+  .card .name{font-size:13px;font-weight:700;color:#1a1a2e;padding-right:18px;}
+  .card .sub{font-size:11px;color:#6b7280;margin-top:1px;word-break:break-word;}
+  .card select{margin-top:8px;width:100%;padding:5px 8px;border-radius:6px;border:1px solid #e5e7eb;background:#f9fafb;font-size:11px;color:#4b5563;font-family:inherit;cursor:pointer;}
+  .card .del{position:absolute;top:6px;right:6px;border:none;background:transparent;color:#cbd5e1;cursor:pointer;font-size:14px;line-height:1;}
+  .card .del:hover{color:#dc2626;}
+  .col-empty{padding:16px 10px;text-align:center;font-size:11px;color:#cbd5e1;border:1px dashed #e5e7eb;border-radius:8px;}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:none;align-items:center;justify-content:center;}
+  .modal-bg.open{display:flex;}
+  .modal{background:#fff;border-radius:12px;padding:24px;width:420px;max-width:92vw;}
+  .modal h3{font-size:16px;font-weight:800;margin-bottom:14px;}
+  .modal label{font-size:11px;font-weight:600;color:#6b7280;display:block;margin:8px 0 3px;text-transform:uppercase;letter-spacing:0.3px;}
+  .modal input,.modal select{width:100%;padding:9px 11px;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;font-family:inherit;}
+  .modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+  .btn{padding:9px 16px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .btn-primary{background:#0ea5e9;color:#fff;}
+  .btn-ghost{background:#fff;border:1px solid #e5e7eb;color:#6b7280;}
+  .loading,.err{padding:24px;text-align:center;color:#9ca3af;font-size:13px;}
+  .err{color:#991B1B;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
+  </div>
+  <span class="topbar-title">CRM / Pipeline</span>
+  <div class="topbar-right">
+    <a href="/hub.html" class="btn-logout">&#8592; Inicio</a>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="head-row">
+    <div>
+      <div class="h-title">CRM Yakú</div>
+    </div>
+    <button class="btn-add" onclick="openModal()">+ Agregar lead</button>
+  </div>
+  <div class="h-sub">Las etapas son los estados del bot de ventas. Cuando se active el bot en WhatsApp, los leads van a entrar y moverse solos; por ahora se cargan a mano.</div>
+  <div id="board-slot"><div class="loading">Cargando…</div></div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3>Nuevo lead</h3>
+    <label>Nombre</label><input id="m-nombre" type="text">
+    <label>Teléfono</label><input id="m-telefono" type="text">
+    <label>Email</label><input id="m-email" type="email">
+    <label>Localidad</label><input id="m-localidad" type="text">
+    <label>Etapa</label><select id="m-etapa"></select>
+    <div class="actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="m-save" onclick="saveLead()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var API_URL = 'https://fukari-backend-production.up.railway.app';
+var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var userEmail = '';
+
+var STAGES = [
+  { key:'en conversación', label:'En conversación', color:'#0369A1', bg:'#E0F2FE' },
+  { key:'venta de equipo', label:'Pidió comprar equipo', color:'#7C3AED', bg:'#EDE9FE' },
+  { key:'contactar manualmente', label:'Contactar manualmente', color:'#D97706', bg:'#FEF3C7' },
+  { key:'aguardando instalacion', label:'Aguardando instalación', color:'#16A34A', bg:'#DCFCE7' },
+  { key:'no calificado', label:'No calificado', color:'#6B7280', bg:'#F3F4F6' },
+  { key:'sin cobertura', label:'Sin cobertura', color:'#6B7280', bg:'#F3F4F6' },
+];
+
+sb.auth.getSession().then(function(result){
+  var session = result.data.session;
+  if (!session) { window.location.href = '/index.html'; return; }
+  userEmail = session.user.email;
+  // poblar select de etapas del modal
+  document.getElementById('m-etapa').innerHTML = STAGES.map(function(s){ return '<option value="'+s.key+'">'+s.label+'</option>'; }).join('');
+  load();
+});
+function logout(){ sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); }
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function headers(){ return { 'Content-Type':'application/json', 'x-user-email': userEmail }; }
+
+var leads = [];
+
+async function load(){
+  try {
+    var r = await fetch(API_URL + '/api/sales-bot/pipeline', { headers: { 'x-user-email': userEmail } });
+    if (!r.ok) throw new Error('status ' + r.status);
+    leads = await r.json();
+    render();
+  } catch(e){
+    document.getElementById('board-slot').innerHTML = '<div class="err">Error al cargar: ' + esc(e.message) + '</div>';
+  }
+}
+
+function render(){
+  var html = '<div class="board">';
+  STAGES.forEach(function(st){
+    var rows = leads.filter(function(l){ return l.etapa === st.key; });
+    html += '<div><div class="col-head" style="background:'+st.bg+';color:'+st.color+'">'
+      + '<span style="flex:1">'+st.label+'</span><span class="count">'+rows.length+'</span></div><div class="col-cards">';
+    if (rows.length === 0){
+      html += '<div class="col-empty">Vacío</div>';
+    } else {
+      rows.forEach(function(l){
+        html += '<div class="card">'
+          + '<button class="del" title="Eliminar" onclick="delLead(\''+l.id+'\')">&times;</button>'
+          + '<div class="name">'+esc(l.nombre || '(sin nombre)')+'</div>'
+          + (l.telefono ? '<div class="sub">'+esc(l.telefono)+'</div>' : '')
+          + (l.email ? '<div class="sub">'+esc(l.email)+'</div>' : '')
+          + (l.localidad ? '<div class="sub">📍 '+esc(l.localidad)+'</div>' : '')
+          + '<select onchange="moveLead(\''+l.id+'\', this.value)">'
+          + STAGES.map(function(s){ return '<option value="'+s.key+'"'+(s.key===l.etapa?' selected':'')+'>'+s.label+'</option>'; }).join('')
+          + '</select></div>';
+      });
+    }
+    html += '</div></div>';
+  });
+  html += '</div>';
+  document.getElementById('board-slot').innerHTML = html;
+}
+
+async function moveLead(id, etapa){
+  try {
+    var r = await fetch(API_URL + '/api/sales-bot/pipeline/' + id, { method:'PATCH', headers: headers(), body: JSON.stringify({ etapa: etapa }) });
+    if (!r.ok) throw new Error('status ' + r.status);
+    var lead = leads.find(function(l){ return l.id === id; });
+    if (lead) lead.etapa = etapa;
+    render();
+  } catch(e){ alert('No se pudo mover: ' + e.message); }
+}
+
+async function delLead(id){
+  if (!confirm('¿Sacar este lead del CRM?')) return;
+  try {
+    var r = await fetch(API_URL + '/api/sales-bot/pipeline/' + id, { method:'DELETE', headers: { 'x-user-email': userEmail } });
+    if (!r.ok) throw new Error('status ' + r.status);
+    leads = leads.filter(function(l){ return l.id !== id; });
+    render();
+  } catch(e){ alert('No se pudo eliminar: ' + e.message); }
+}
+
+function openModal(){ document.getElementById('modal').classList.add('open'); }
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  ['m-nombre','m-telefono','m-email','m-localidad'].forEach(function(id){ document.getElementById(id).value=''; });
+}
+async function saveLead(){
+  var btn = document.getElementById('m-save');
+  var body = {
+    nombre: document.getElementById('m-nombre').value.trim(),
+    telefono: document.getElementById('m-telefono').value.trim(),
+    email: document.getElementById('m-email').value.trim(),
+    localidad: document.getElementById('m-localidad').value.trim(),
+    etapa: document.getElementById('m-etapa').value,
+  };
+  if (!body.nombre && !body.telefono){ alert('Poné al menos nombre o teléfono'); return; }
+  btn.disabled = true;
+  try {
+    var r = await fetch(API_URL + '/api/sales-bot/pipeline', { method:'POST', headers: headers(), body: JSON.stringify(body) });
+    var j = await r.json();
+    if (!r.ok) throw new Error(j.error || ('status ' + r.status));
+    leads.unshift(j);
+    closeModal();
+    render();
+  } catch(e){ alert('No se pudo agregar: ' + e.message); }
+  finally { btn.disabled = false; }
+}
+</script>
+</body>
+</html>
