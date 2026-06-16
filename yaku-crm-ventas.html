@@ -454,11 +454,11 @@ tbody tr:hover{background:#f8fafc;}
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-section">
     <div class="sidebar-section-label">Módulos</div>
-    <button class="sidebar-link active" id="nav-empresas" onclick="switchView('empresas')">
-      <span class="icon">&#127970;</span> Empresas
-    </button>
-    <button class="sidebar-link" id="nav-pipeline" onclick="switchView('pipeline')">
+    <button class="sidebar-link active" id="nav-pipeline" onclick="switchView('pipeline')">
       <span class="icon">&#128202;</span> Pipeline
+    </button>
+    <button class="sidebar-link" id="nav-probarbot" onclick="switchView('probarbot')">
+      <span class="icon">&#129302;</span> Probar bot
     </button>
     <button class="sidebar-link" id="nav-whatsapp" onclick="switchView('whatsapp')">
       <span class="icon"><svg viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></span> WhatsApp
@@ -485,25 +485,8 @@ tbody tr:hover{background:#f8fafc;}
 <!-- MAIN -->
 <div class="main">
 
-  <!-- VIEW: EMPRESAS -->
-  <div class="view active" id="view-empresas">
-    <div class="stats-row">
-      <div class="stat-card"><div class="label">Total leads</div><div class="value" id="s-total">—</div></div>
-      <div class="stat-card" style="border-left:3px solid #2563eb"><div class="label">Nuevos</div><div class="value" style="color:#2563eb" id="s-nuevo">—</div></div>
-      <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Contactados</div><div class="value" style="color:#d97706" id="s-contactado">—</div></div>
-      <div class="stat-card" style="border-left:3px solid #7c3aed"><div class="label">En negociación</div><div class="value" style="color:#7c3aed" id="s-negociacion">—</div></div>
-      <div class="stat-card" style="border-left:3px solid #16a34a"><div class="label">Ganados</div><div class="value" style="color:#16a34a" id="s-ganado">—</div></div>
-    </div>
-    <div class="filters-bar">
-      <select id="filtro-estado"><option value="">Todos los estados</option><option value="nuevo">Nuevo</option><option value="contactado">Contactado</option><option value="en negociacion">En negociación</option><option value="ganado">Ganado</option><option value="perdido">Perdido</option></select>
-      <input type="text" id="filtro-buscar" placeholder="Buscar empresa, contacto o email...">
-      <button class="btn-clear" onclick="limpiarFiltros()">Limpiar filtros</button>
-    </div>
-    <div class="table-wrap"><div id="tabla-contenido"></div></div>
-  </div>
-
-  <!-- VIEW: PIPELINE -->
-  <div class="view" id="view-pipeline">
+  <!-- VIEW: PIPELINE (por defecto) -->
+  <div class="view active" id="view-pipeline">
     <div class="pl-head-row">
       <div>
         <div class="pl-h-title">Pipeline de Ventas</div>
@@ -512,6 +495,36 @@ tbody tr:hover{background:#f8fafc;}
       <button class="pl-btn-add" onclick="plOpenModal()">+ Agregar lead</button>
     </div>
     <div id="pl-stages-slot"><div class="pl-loading">Cargando…</div></div>
+  </div>
+
+  <!-- VIEW: PROBAR BOT -->
+  <div class="view" id="view-probarbot">
+    <div class="pb-intro">Chateá como un cliente para ver cómo responde el bot de ventas. <span class="pb-badge">SANDBOX</span><br>No envía WhatsApp, no guarda nada ni se mete en conversaciones reales.</div>
+    <details class="pb-config">
+      <summary>Datos del negocio y FAQ (lo que sabe el bot)</summary>
+      <div class="pb-config-inner">
+        <textarea id="pb-ctx" placeholder="Dejalo vacío para usar el contexto por defecto (precios + cobertura + FAQ de Yakú). Escribí acá para sobreescribirlo en esta prueba."></textarea>
+      </div>
+    </details>
+    <div class="pb-row">
+      <div class="pb-chat-col">
+        <div class="pb-chat" id="pb-chat"><div class="pb-empty">Escribí un mensaje como cliente (ej: "Hola, quería info de los dispensers para mi casa en Santa Fe").</div></div>
+        <div id="pb-banner"></div>
+        <div id="pb-err"></div>
+        <div class="pb-inputbar">
+          <textarea id="pb-input" rows="1" placeholder="Escribí como cliente…"></textarea>
+          <button class="pb-btn pb-send" id="pb-send" onclick="pbSend()">Enviar</button>
+          <button class="pb-btn pb-reset" onclick="pbReset()">Reiniciar</button>
+        </div>
+      </div>
+      <div class="pb-data-col">
+        <div class="pb-data-card">
+          <h4>Datos capturados</h4>
+          <div class="pb-tag-line">Tag de pipeline: <b id="pb-tag">en conversación</b></div>
+          <div id="pb-datos"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- VIEW: WHATSAPP -->
@@ -800,7 +813,7 @@ sb.auth.getSession().then(function(result) {
   if (email === INTEGRATOR_EMAIL) {
     document.getElementById('bot-actions-admin').style.display = '';
   }
-  cargarLeads();
+  plLoad();
   cargarConversacionesWA();
   _waPollingInterval = setInterval(pollWhatsApp, 10000);
 });
@@ -816,6 +829,7 @@ function switchView(view) {
   if (window.innerWidth <= 900) toggleSidebar();
   if (view === 'whatsapp') cargarConversacionesWA();
   if (view === 'pipeline') plLoad();
+  if (view === 'probarbot') pbInit();
 }
 
 function toggleSidebar() {
@@ -2242,6 +2256,80 @@ switchView = function(view) {
     catch(e){ alert('No se pudo agregar: ' + e.message); }
     finally { btn.disabled = false; }
   };
+})();
+</script>
+
+<!-- ══ PROBAR BOT (playground sandbox) — namespaceado pb- ══ -->
+<style>
+.pb-intro{font-size:13px;color:#4b5563;line-height:1.5;margin-bottom:14px;}
+.pb-badge{display:inline-block;background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;}
+.pb-config{border:1px solid #e5e7eb;border-radius:10px;background:#fff;margin-bottom:14px;}
+.pb-config summary{padding:10px 14px;font-size:12.5px;font-weight:600;cursor:pointer;}
+.pb-config-inner{padding:0 14px 14px;}
+.pb-config textarea{width:100%;box-sizing:border-box;border:1px solid #e5e7eb;border-radius:8px;padding:10px;font-size:12px;font-family:inherit;line-height:1.5;resize:vertical;min-height:90px;}
+.pb-row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;}
+.pb-chat-col{flex:1 1 380px;min-width:300px;}
+.pb-chat{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;min-height:260px;max-height:calc(100vh - 380px);overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.pb-empty{color:#9ca3af;font-size:12.5px;font-style:italic;text-align:center;padding:24px;}
+.pb-bubble{max-width:74%;padding:7px 11px;border-radius:10px;font-size:13px;line-height:1.4;white-space:pre-wrap;word-break:break-word;}
+.pb-in{align-self:flex-start;background:#f1f5f9;color:#111827;}
+.pb-out{align-self:flex-end;background:#0ea5e9;color:#fff;}
+.pb-data-col{flex:0 0 250px;min-width:220px;}
+.pb-data-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;}
+.pb-data-card h4{font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;}
+.pb-tag-line{font-size:10.5px;color:#6b7280;margin-bottom:10px;}
+.pb-tag-line b{color:#1a1a2e;}
+.pb-field{margin-bottom:9px;}
+.pb-field .l{font-size:10.5px;color:#9ca3af;}
+.pb-field .v{font-size:12.5px;color:#1a1a2e;word-break:break-word;}
+.pb-field .v.empty{color:#cbd5e1;font-style:italic;}
+.pb-banner{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:12.5px;line-height:1.5;}
+.pb-inputbar{display:flex;gap:8px;align-items:flex-end;margin-top:12px;}
+.pb-inputbar textarea{flex:1;box-sizing:border-box;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;resize:none;max-height:120px;}
+.pb-btn{padding:10px 18px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.pb-send{background:#0ea5e9;color:#fff;}
+.pb-send:disabled{background:#cbd5e1;cursor:default;}
+.pb-reset{background:#fff;color:#6b7280;border:1px solid #e5e7eb;font-weight:600;}
+.pb-err{margin-top:10px;padding:8px 12px;border-radius:8px;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;font-size:12px;}
+</style>
+<script>
+(function(){
+  var PB_LABELS = [['nombre','Nombre'],['telefono','Teléfono'],['email','Email'],['localidad','Localidad'],['tipo_interes','Tipo (empresa/casa)'],['tipo_empresa','Tipo de empresa'],['cantidad_personas','Personas'],['direccion','Dirección instalación'],['modelo_interes','Modelo de interés']];
+  var PB_TERMINAL = {
+    'aguardando instalacion':{bg:'#ECFDF5',brd:'#A7F3D0',fg:'#065F46',text:'✅ Cierre completo. En producción este lead se movería a "Aguardando instalación".'},
+    'sin cobertura':{bg:'#F9FAFB',brd:'#E5E7EB',fg:'#6B7280',text:'Fuera de cobertura — lead descartado (tag: sin cobertura).'},
+    'no calificado':{bg:'#F9FAFB',brd:'#E5E7EB',fg:'#6B7280',text:'Off-topic / sin intención (tag: no calificado).'},
+    'contactar manualmente':{bg:'#FFFBEB',brd:'#FDE68A',fg:'#92400E',text:'Derivado a un asesor humano (tag: contactar manualmente).'}
+  };
+  var pbMsgs = [];
+  var pbSending = false;
+  function pbEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function pbRenderChat(){
+    var c = document.getElementById('pb-chat');
+    if (pbMsgs.length===0){ c.innerHTML = '<div class="pb-empty">Escribí un mensaje como cliente (ej: "Hola, quería info de los dispensers para mi casa en Santa Fe").</div>'; return; }
+    c.innerHTML = pbMsgs.map(function(m){ return '<div class="pb-bubble '+(m.role==='user'?'pb-in':'pb-out')+'">'+pbEsc(m.content)+'</div>'; }).join('');
+    c.scrollTop = c.scrollHeight;
+  }
+  function pbRenderDatos(d){ d=d||{}; document.getElementById('pb-datos').innerHTML = PB_LABELS.map(function(p){ var v=d[p[0]]; return '<div class="pb-field"><div class="l">'+p[1]+'</div><div class="v'+(v?'':' empty')+'">'+(v?pbEsc(v):'—')+'</div></div>'; }).join(''); }
+  function pbRenderTag(tag){ document.getElementById('pb-tag').textContent = tag; var t=PB_TERMINAL[tag]; document.getElementById('pb-banner').innerHTML = t ? '<div class="pb-banner" style="background:'+t.bg+';border:1px solid '+t.brd+';color:'+t.fg+'">'+t.text+'</div>' : ''; }
+  window.pbInit = function(){ pbRenderDatos({}); };
+  window.pbSend = async function(){
+    var inp = document.getElementById('pb-input'); var text = inp.value.trim();
+    if (!text || pbSending) return;
+    document.getElementById('pb-err').innerHTML='';
+    pbMsgs.push({role:'user',content:text}); inp.value=''; pbRenderChat();
+    pbSending=true; var btn=document.getElementById('pb-send'); btn.disabled=true; btn.textContent='…';
+    try {
+      var r = await fetch(API_URL + '/api/sales-bot/test', { method:'POST', headers:{'Content-Type':'application/json','x-user-email':_currentUserEmail}, body: JSON.stringify({ company_name:'Yakú Agua Saludable', business_context: document.getElementById('pb-ctx').value, messages: pbMsgs }) });
+      var j = await r.json(); if (!r.ok) throw new Error(j.error||('status '+r.status));
+      pbMsgs.push({role:'assistant',content:j.reply}); pbRenderChat(); pbRenderDatos(j.datos); pbRenderTag(j.tag||'en conversación');
+    } catch(e){ pbMsgs.pop(); pbRenderChat(); document.getElementById('pb-err').innerHTML='<div class="pb-err">'+pbEsc(e.message)+'</div>'; }
+    finally { pbSending=false; btn.disabled=false; btn.textContent='Enviar'; }
+  };
+  window.pbReset = function(){ pbMsgs=[]; pbRenderChat(); pbRenderDatos({}); pbRenderTag('en conversación'); document.getElementById('pb-err').innerHTML=''; };
+  var pbInputEl = document.getElementById('pb-input');
+  if (pbInputEl) pbInputEl.addEventListener('keydown', function(e){ if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); pbSend(); } });
+  pbRenderDatos({});
 })();
 </script>
 </body>
