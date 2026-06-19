@@ -383,7 +383,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
   <table class="tabla-productos" id="tabla-productos">
     <thead>
       <tr>
-        <th style="width:16%;">Modelo</th>
+        <th id="th-modelo" style="width:16%;">Modelo</th>
         <th style="width:7%;">Cantidad</th>
         <th style="width:11%;">P. Unitario</th>
         <th style="width:11%;">Total</th>
@@ -489,10 +489,11 @@ if (!window._sb) {
   const { createClient } = window.supabase;
   window._sb = createClient('https://bqjbblgbwgwqkziqzdyy.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE');
 }
-// Detectar tipo de orden desde URL (?tipo=venta)
+// Detectar tipo de orden desde URL (?tipo=venta | ?tipo=cambio)
 const URL_PARAMS = new URLSearchParams(window.location.search);
 const TIPO_ORDEN = URL_PARAMS.get('tipo') || 'alquiler';
 const ES_VENTA = TIPO_ORDEN === 'venta';
+const ES_CAMBIO = TIPO_ORDEN === 'cambio';
 
 // Modelos se cargan dinámicamente desde stock
 var MODELOS = [];
@@ -505,7 +506,8 @@ var _stockPromos = {}; // modelo → { precio_promocion, precio_post_promocion }
 var _stockCargado = false;
 
 function cargarStockModelos() {
-  return fetch(API_URL + '/api/stock?tipo=' + TIPO_ORDEN)
+  // El cambio usa el mismo catálogo de equipos que el alquiler (no hay stock tipo 'cambio')
+  return fetch(API_URL + '/api/stock?tipo=' + (ES_CAMBIO ? 'alquiler' : TIPO_ORDEN))
     .then(function(r){ return r.json(); })
     .then(function(items){
       MODELOS_STOCK = items;
@@ -535,6 +537,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (ordenTitulo) ordenTitulo.textContent = 'Orden de Venta';
     var instBox = document.getElementById('inst-box');
     if (instBox) instBox.style.display = 'none';
+  }
+  // Actualizar títulos si es orden de cambio (mismos campos que instalación)
+  if (ES_CAMBIO) {
+    document.title = 'Orden de Cambio — Yakú / Fukari';
+    var h2c = document.querySelector('h2');
+    if (h2c) h2c.textContent = 'Nueva Orden de Cambio';
+    var ordenTituloC = document.querySelector('.orden-titulo');
+    if (ordenTituloC) ordenTituloC.textContent = 'Orden de Cambio';
+    // Columna extra "Equipo que sale" en la tabla de productos
+    var thModelo = document.getElementById('th-modelo');
+    if (thModelo) {
+      thModelo.textContent = 'Equipo nuevo';
+      thModelo.style.width = '15%';
+      var thSale = document.createElement('th');
+      thSale.style.width = '15%';
+      thSale.textContent = 'Equipo que sale';
+      thModelo.insertAdjacentElement('afterend', thSale);
+    }
   }
 
   var hoy = new Date();
@@ -743,8 +763,18 @@ function agregarFila() {
     }
   });
   opts = opts.join('');
+  // Celda "Equipo que sale" solo en órdenes de cambio. Opciones planas (todos los
+  // modelos, incluso fuera de stock, porque el equipo saliente puede ser viejo).
+  var salienteCell = '';
+  if (ES_CAMBIO) {
+    var optsSal = MODELOS_STOCK.map(function(item){
+      return '<option value="' + item.modelo + '">' + item.modelo + '</option>';
+    }).join('');
+    salienteCell = '<td><select class="prod-saliente"><option value="">-- Equipo que sale --</option>' + optsSal + '</select></td>';
+  }
   tr.innerHTML =
     '<td><select onchange="aplicarPrecioStock(' + id + '); recalcularFila(' + id + ')"><option value="">-- Modelo --</option>' + opts + '</select></td>' +
+    salienteCell +
     '<td><input type="number" min="0" step="1" placeholder="0" oninput="recalcularFila(' + id + ')"></td>' +
     '<td><input type="number" min="0" step="0.01" placeholder="0.00" oninput="recalcularFila(' + id + ')"></td>' +
     '<td><input type="text" readonly tabindex="-1" style="color:#374151;font-weight:600;"></td>' +
@@ -857,19 +887,23 @@ function recolectarDatos() {
   var tienePromo = false;
   document.querySelectorAll('#productos-body tr').forEach(function(tr) {
     var sel = tr.querySelector('select');
+    var salSel = tr.querySelector('.prod-saliente');
     var nums = tr.querySelectorAll('input[type="number"]');
     var txts = tr.querySelectorAll('input[type="text"]');
     // txts[0]=total(readonly), txts[1]=domicilio, txts[2]=localidad
     if (sel && sel.value) {
       if (sel.value.endsWith('__PROMO')) tienePromo = true;
       var modeloLimpio = sel.value.replace('__PROMO', '');
-      productos.push({
+      var prod = {
         modelo: modeloLimpio,
         cantidad: nums[0].value || '0',
         precio_unitario: nums[1].value || '0',
         domicilio: txts[1] ? txts[1].value.trim() : '',
         localidad: txts[2] ? txts[2].value.trim() : ''
-      });
+      };
+      // En órdenes de cambio: equipo que sale (reemplazado por el modelo nuevo)
+      if (ES_CAMBIO && salSel) prod.modelo_anterior = salSel.value || '';
+      productos.push(prod);
     }
   });
   var dd = document.getElementById('f-dd').value;

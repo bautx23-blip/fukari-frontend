@@ -181,6 +181,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <div class="stat-card"><div class="label">Total facturado (sin IVA)</div><div class="value" id="stat-monto">—</div><div class="sub" id="stat-monto-sub">en el rango</div></div>
     <div class="stat-card" style="border-left:3px solid #2563eb"><div class="label">Órdenes de Alquiler</div><div class="value" style="color:#2563eb" id="stat-alquiler">—</div><div class="sub" id="stat-alquiler-sub">equipos instalados</div></div>
     <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Órdenes de Venta</div><div class="value" style="color:#d97706" id="stat-venta">—</div><div class="sub" id="stat-venta-sub">unidades vendidas</div></div>
+    <div class="stat-card" style="border-left:3px solid #7c3aed"><div class="label">Órdenes de Cambio</div><div class="value" style="color:#7c3aed" id="stat-cambio">—</div><div class="sub" id="stat-cambio-sub">equipos cambiados (no instalados)</div></div>
   </div>
 
   <div class="filtros">
@@ -195,6 +196,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <button class="btn-refresh" onclick="cargarOrdenes()">&#8635; Actualizar</button>
     <a href="/yaku-orden-instalacion.html" class="btn-refresh" style="background:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Orden Alquiler</a>
     <a href="/yaku-orden-instalacion.html?tipo=venta" class="btn-refresh" style="background:#d97706;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Orden Venta</a>
+    <a href="/yaku-orden-instalacion.html?tipo=cambio" class="btn-refresh" style="background:#7c3aed;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">&#43; Orden Cambio</a>
   </div>
 
   <div class="tabla-wrap">
@@ -465,15 +467,22 @@ function calcularStats() {
       return acc + (Array.isArray(o.productos) ? o.productos.reduce(function(s, p){ return s + (parseInt(p.cantidad) || 0); }, 0) : 0);
     }, 0);
   }
-  var alquilerComp = completadas.filter(function(o){ return (o.tipo_orden || '') !== 'venta'; });
+  var alquilerComp = completadas.filter(function(o){ var t = (o.tipo_orden || ''); return t !== 'venta' && t !== 'cambio'; });
   var ventaComp = completadas.filter(function(o){ return (o.tipo_orden || '') === 'venta'; });
+  var cambioComp = completadas.filter(function(o){ return (o.tipo_orden || '') === 'cambio'; });
   var equiposAlquiler = sumEquipos(alquilerComp);
   var unidadesVenta = sumEquipos(ventaComp);
+  var equiposCambio = sumEquipos(cambioComp);
   var factVenta = ventaComp.reduce(function(acc, o){ return acc + (parseFloat(o.total_general) || 0); }, 0);
   document.getElementById('stat-alquiler').textContent = alquilerComp.length;
   document.getElementById('stat-alquiler-sub').textContent = equiposAlquiler + (equiposAlquiler === 1 ? ' equipo instalado' : ' equipos instalados');
   document.getElementById('stat-venta').textContent = ventaComp.length;
   document.getElementById('stat-venta-sub').textContent = unidadesVenta + (unidadesVenta === 1 ? ' unidad' : ' unidades') + (factVenta > 0 ? ' · $' + factVenta.toLocaleString('es-AR', {maximumFractionDigits:0}) : '');
+  var statCambio = document.getElementById('stat-cambio');
+  if (statCambio) {
+    statCambio.textContent = cambioComp.length;
+    document.getElementById('stat-cambio-sub').textContent = equiposCambio + (equiposCambio === 1 ? ' equipo cambiado' : ' equipos cambiados');
+  }
 }
 
 function filtrar() {
@@ -519,11 +528,14 @@ function renderTabla() {
     var anuladaBadge = o.anulada ? '<span class="badge-anulada">ANULADA</span>' : '';
     var filaClass = o.anulada ? ' class="fila-anulada"' : '';
     var esVenta = o.tipo_orden === 'venta';
+    var esCambio = o.tipo_orden === 'cambio';
     var tipoBadge = esVenta
       ? '<span style="display:inline-block;background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">VENTA</span>'
+      : esCambio
+      ? '<span style="display:inline-block;background:#ede9fe;color:#7c3aed;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">CAMBIO</span>'
       : '<span style="display:inline-block;background:#dbeafe;color:#2563eb;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">ALQUILER</span>';
     var mailBtn = '';
-    var tipoOrdenLabel = esVenta ? 'orden de venta' : 'orden de instalación';
+    var tipoOrdenLabel = esVenta ? 'orden de venta' : esCambio ? 'orden de cambio' : 'orden de instalación';
     if (o.pdf_url) {
       var loc = (o.localidad||'').trim();
       var subj = encodeURIComponent('Nueva ' + tipoOrdenLabel + ' — ' + loc + ' — ' + (o.razon_social||''));
@@ -685,12 +697,14 @@ function renderBCRASection(o) {
 function verDetalle(o) {
   document.getElementById('modal-titulo').textContent = 'Orden ' + (o.numero_completo||'');
   var productos = (o.productos||[]).filter(function(p){ return p.modelo; });
+  var esCambioDet = o.tipo_orden === 'cambio';
   var prodHtml = '';
   if (productos.length > 0) {
-    prodHtml = '<table class="modal-prods"><thead><tr><th>Modelo</th><th>Cant.</th><th>P. Unitario</th><th>Total</th></tr></thead><tbody>';
+    prodHtml = '<table class="modal-prods"><thead><tr><th>' + (esCambioDet ? 'Equipo (sale &rarr; entra)' : 'Modelo') + '</th><th>Cant.</th><th>P. Unitario</th><th>Total</th></tr></thead><tbody>';
     productos.forEach(function(p) {
       var t = (parseFloat(p.cantidad)||0) * (parseFloat(p.precio_unitario)||0);
-      prodHtml += '<tr><td>' + p.modelo + '</td><td>' + p.cantidad + '</td><td>$' + parseFloat(p.precio_unitario).toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td><td>$' + t.toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td></tr>';
+      var equipoCell = (esCambioDet && p.modelo_anterior) ? (p.modelo_anterior + ' &rarr; ' + p.modelo) : p.modelo;
+      prodHtml += '<tr><td>' + equipoCell + '</td><td>' + p.cantidad + '</td><td>$' + parseFloat(p.precio_unitario).toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td><td>$' + t.toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td></tr>';
     });
     prodHtml += '</tbody></table>';
   } else { prodHtml = '<p style="color:#9ca3af;font-size:13px;font-style:italic;">Sin productos</p>'; }
@@ -763,7 +777,8 @@ async function cargarModelosPorTipo(tipo) {
   return _modelosCache[tipo];
 }
 
-function _modeloSelectHtml(modelos, valor) {
+function _modeloSelectHtml(modelos, valor, className) {
+  className = className || 'edit-prod-modelo';
   var opts = '<option value="">— Seleccionar —</option>';
   var incluida = false;
   modelos.forEach(function(m) {
@@ -776,7 +791,7 @@ function _modeloSelectHtml(modelos, valor) {
   if (valor && !incluida) {
     opts += '<option value="' + esc(valor) + '" selected>' + esc(valor) + ' (fuera de stock)</option>';
   }
-  return '<select class="edit-prod-modelo">' + opts + '</select>';
+  return '<select class="' + className + '">' + opts + '</select>';
 }
 
 async function abrirEdicion(o) {
@@ -826,10 +841,13 @@ async function abrirEdicion(o) {
   // Productos
   html += '<div class="section-title">Productos</div>';
   var prods = o.productos || [];
+  var esCambioEdit = o.tipo_orden === 'cambio';
+  var gridColsEdit = esCambioEdit ? '2fr 2fr 1fr 1fr 1fr 1fr auto' : '2fr 1fr 1fr 1fr 1fr auto';
   html += '<div class="form-full" id="edit-productos-wrap">';
   prods.forEach(function(p, i) {
-    html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;" class="edit-prod-row">';
-    html += '<div><label>Modelo</label>' + _modeloSelectHtml(MODELOS, p.modelo || '') + '</div>';
+    html += '<div style="display:grid;grid-template-columns:' + gridColsEdit + ';gap:8px;margin-bottom:8px;align-items:end;" class="edit-prod-row">';
+    html += '<div><label>' + (esCambioEdit ? 'Equipo nuevo' : 'Modelo') + '</label>' + _modeloSelectHtml(MODELOS, p.modelo || '') + '</div>';
+    if (esCambioEdit) html += '<div><label>Equipo que sale</label>' + _modeloSelectHtml(MODELOS, p.modelo_anterior || '', 'edit-prod-saliente') + '</div>';
     html += '<div><label>Cantidad</label><input type="number" class="edit-prod-cantidad" value="' + (p.cantidad||1) + '" min="1"></div>';
     html += '<div><label>P. Unitario</label><input type="number" class="edit-prod-precio" value="' + (p.precio_unitario||0) + '" step="0.01"></div>';
     html += '<div><label>Domicilio</label><input type="text" class="edit-prod-domicilio" value="' + esc(p.domicilio) + '"></div>';
@@ -860,9 +878,11 @@ function agregarProductoEdit() {
   var btn = wrap.querySelector(':scope > button');
   var row = document.createElement('div');
   row.className = 'edit-prod-row';
-  row.style = 'display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end;';
+  var esCambioEdit = _editOrdenActual && _editOrdenActual.tipo_orden === 'cambio';
+  row.style = 'display:grid;grid-template-columns:' + (esCambioEdit ? '2fr 2fr 1fr 1fr 1fr 1fr auto' : '2fr 1fr 1fr 1fr 1fr auto') + ';gap:8px;margin-bottom:8px;align-items:end;';
   var modelos = (_editOrdenActual && _editOrdenActual._modelos) || [];
-  row.innerHTML = '<div><label>Modelo</label>' + _modeloSelectHtml(modelos, '') + '</div>' +
+  row.innerHTML = '<div><label>' + (esCambioEdit ? 'Equipo nuevo' : 'Modelo') + '</label>' + _modeloSelectHtml(modelos, '') + '</div>' +
+    (esCambioEdit ? '<div><label>Equipo que sale</label>' + _modeloSelectHtml(modelos, '', 'edit-prod-saliente') + '</div>' : '') +
     '<div><label>Cantidad</label><input type="number" class="edit-prod-cantidad" value="1" min="1"></div>' +
     '<div><label>P. Unitario</label><input type="number" class="edit-prod-precio" value="0" step="0.01"></div>' +
     '<div><label>Domicilio</label><input type="text" class="edit-prod-domicilio" value=""></div>' +
@@ -916,13 +936,16 @@ async function guardarEdicion() {
       if (nuevaLocOrden !== viejaLocOrden && (loc === viejaLocOrden || loc === '')) {
         loc = nuevaLocOrden;
       }
-      productos.push({
+      var salEl = row.querySelector('.edit-prod-saliente');
+      var prod = {
         modelo: modelo,
         cantidad: parseInt(row.querySelector('.edit-prod-cantidad').value) || 1,
         precio_unitario: parseFloat(row.querySelector('.edit-prod-precio').value) || 0,
         domicilio: dom,
         localidad: loc
-      });
+      };
+      if (salEl) prod.modelo_anterior = salEl.value.trim();
+      productos.push(prod);
     });
 
     var payload = {
