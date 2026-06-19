@@ -462,6 +462,19 @@ function renderInstalaciones(data, promoStats) {
     html += '</tbody></table></div>';
   }
 
+  // Planilla de equipos cambiados (debajo de Top localidades)
+  var cambios = data.cambios || [];
+  if (cambios.length > 0) {
+    var totalCambiados = cambios.reduce(function(a, c){ return a + (parseInt(c.cantidad) || 0); }, 0);
+    html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Equipos cambiados</h3></div>';
+    html += '<table><thead><tr><th>N° Orden</th><th>Cliente</th><th>Vendedor</th><th>Instalado</th><th>Solicitado</th><th class="right">Cant.</th></tr></thead><tbody>';
+    cambios.forEach(function(c) {
+      html += '<tr><td class="bold">' + escHtmlReporte(c.numero) + '</td><td>' + escHtmlReporte(c.razon_social) + '</td><td>' + escHtmlReporte(c.vendedor) + '</td><td>' + escHtmlReporte(c.equipo_actual) + '</td><td>' + escHtmlReporte(c.equipo_cambio) + '</td><td class="right">' + c.cantidad + '</td></tr>';
+    });
+    html += '<tr><td class="bold" colspan="5" style="text-align:right;">Total equipos cambiados</td><td class="right bold">' + totalCambiados + '</td></tr>';
+    html += '</tbody></table></div>';
+  }
+
   html += '</div>';
   return html;
 }

@@ -545,14 +545,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (h2c) h2c.textContent = 'Nueva Orden de Cambio';
     var ordenTituloC = document.querySelector('.orden-titulo');
     if (ordenTituloC) ordenTituloC.textContent = 'Orden de Cambio';
-    // Columna extra "Equipo que sale" en la tabla de productos
+    // Columna extra "Equipo de cambio" en la tabla de productos
     var thModelo = document.getElementById('th-modelo');
     if (thModelo) {
-      thModelo.textContent = 'Equipo nuevo';
+      thModelo.textContent = 'Equipo actual';
       thModelo.style.width = '15%';
       var thSale = document.createElement('th');
       thSale.style.width = '15%';
-      thSale.textContent = 'Equipo que sale';
+      thSale.textContent = 'Equipo de cambio';
       thModelo.insertAdjacentElement('afterend', thSale);
     }
   }
@@ -763,14 +763,14 @@ function agregarFila() {
     }
   });
   opts = opts.join('');
-  // Celda "Equipo que sale" solo en órdenes de cambio. Opciones planas (todos los
-  // modelos, incluso fuera de stock, porque el equipo saliente puede ser viejo).
+  // Celda "Equipo de cambio" solo en órdenes de cambio. Opciones planas (todos los
+  // modelos, incluso fuera de stock, porque el equipo de cambio puede ser viejo).
   var salienteCell = '';
   if (ES_CAMBIO) {
     var optsSal = MODELOS_STOCK.map(function(item){
       return '<option value="' + item.modelo + '">' + item.modelo + '</option>';
     }).join('');
-    salienteCell = '<td><select class="prod-saliente"><option value="">-- Equipo que sale --</option>' + optsSal + '</select></td>';
+    salienteCell = '<td><select class="prod-saliente"><option value="">-- Equipo de cambio --</option>' + optsSal + '</select></td>';
   }
   tr.innerHTML =
     '<td><select onchange="aplicarPrecioStock(' + id + '); recalcularFila(' + id + ')"><option value="">-- Modelo --</option>' + opts + '</select></td>' +

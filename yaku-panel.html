@@ -700,11 +700,11 @@ function verDetalle(o) {
   var esCambioDet = o.tipo_orden === 'cambio';
   var prodHtml = '';
   if (productos.length > 0) {
-    prodHtml = '<table class="modal-prods"><thead><tr><th>' + (esCambioDet ? 'Equipo (sale &rarr; entra)' : 'Modelo') + '</th><th>Cant.</th><th>P. Unitario</th><th>Total</th></tr></thead><tbody>';
+    prodHtml = '<table class="modal-prods"><thead><tr>' + (esCambioDet ? '<th>Equipo actual</th><th>Equipo de cambio</th>' : '<th>Modelo</th>') + '<th>Cant.</th><th>P. Unitario</th><th>Total</th></tr></thead><tbody>';
     productos.forEach(function(p) {
       var t = (parseFloat(p.cantidad)||0) * (parseFloat(p.precio_unitario)||0);
-      var equipoCell = (esCambioDet && p.modelo_anterior) ? (p.modelo_anterior + ' &rarr; ' + p.modelo) : p.modelo;
-      prodHtml += '<tr><td>' + equipoCell + '</td><td>' + p.cantidad + '</td><td>$' + parseFloat(p.precio_unitario).toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td><td>$' + t.toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td></tr>';
+      var equipoCells = esCambioDet ? ('<td>' + p.modelo + '</td><td>' + (p.modelo_anterior||'') + '</td>') : ('<td>' + p.modelo + '</td>');
+      prodHtml += '<tr>' + equipoCells + '<td>' + p.cantidad + '</td><td>$' + parseFloat(p.precio_unitario).toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td><td>$' + t.toLocaleString('es-AR',{minimumFractionDigits:2}) + '</td></tr>';
     });
     prodHtml += '</tbody></table>';
   } else { prodHtml = '<p style="color:#9ca3af;font-size:13px;font-style:italic;">Sin productos</p>'; }
@@ -846,8 +846,8 @@ async function abrirEdicion(o) {
   html += '<div class="form-full" id="edit-productos-wrap">';
   prods.forEach(function(p, i) {
     html += '<div style="display:grid;grid-template-columns:' + gridColsEdit + ';gap:8px;margin-bottom:8px;align-items:end;" class="edit-prod-row">';
-    html += '<div><label>' + (esCambioEdit ? 'Equipo nuevo' : 'Modelo') + '</label>' + _modeloSelectHtml(MODELOS, p.modelo || '') + '</div>';
-    if (esCambioEdit) html += '<div><label>Equipo que sale</label>' + _modeloSelectHtml(MODELOS, p.modelo_anterior || '', 'edit-prod-saliente') + '</div>';
+    html += '<div><label>' + (esCambioEdit ? 'Equipo actual' : 'Modelo') + '</label>' + _modeloSelectHtml(MODELOS, p.modelo || '') + '</div>';
+    if (esCambioEdit) html += '<div><label>Equipo de cambio</label>' + _modeloSelectHtml(MODELOS, p.modelo_anterior || '', 'edit-prod-saliente') + '</div>';
     html += '<div><label>Cantidad</label><input type="number" class="edit-prod-cantidad" value="' + (p.cantidad||1) + '" min="1"></div>';
     html += '<div><label>P. Unitario</label><input type="number" class="edit-prod-precio" value="' + (p.precio_unitario||0) + '" step="0.01"></div>';
     html += '<div><label>Domicilio</label><input type="text" class="edit-prod-domicilio" value="' + esc(p.domicilio) + '"></div>';
@@ -881,8 +881,8 @@ function agregarProductoEdit() {
   var esCambioEdit = _editOrdenActual && _editOrdenActual.tipo_orden === 'cambio';
   row.style = 'display:grid;grid-template-columns:' + (esCambioEdit ? '2fr 2fr 1fr 1fr 1fr 1fr auto' : '2fr 1fr 1fr 1fr 1fr auto') + ';gap:8px;margin-bottom:8px;align-items:end;';
   var modelos = (_editOrdenActual && _editOrdenActual._modelos) || [];
-  row.innerHTML = '<div><label>' + (esCambioEdit ? 'Equipo nuevo' : 'Modelo') + '</label>' + _modeloSelectHtml(modelos, '') + '</div>' +
-    (esCambioEdit ? '<div><label>Equipo que sale</label>' + _modeloSelectHtml(modelos, '', 'edit-prod-saliente') + '</div>' : '') +
+  row.innerHTML = '<div><label>' + (esCambioEdit ? 'Equipo actual' : 'Modelo') + '</label>' + _modeloSelectHtml(modelos, '') + '</div>' +
+    (esCambioEdit ? '<div><label>Equipo de cambio</label>' + _modeloSelectHtml(modelos, '', 'edit-prod-saliente') + '</div>' : '') +
     '<div><label>Cantidad</label><input type="number" class="edit-prod-cantidad" value="1" min="1"></div>' +
     '<div><label>P. Unitario</label><input type="number" class="edit-prod-precio" value="0" step="0.01"></div>' +
     '<div><label>Domicilio</label><input type="text" class="edit-prod-domicilio" value=""></div>' +
