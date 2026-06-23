@@ -84,13 +84,16 @@ body{font-family:'Inter',Arial,sans-serif;background:#d1d5db;min-height:100vh;di
 .campo-texto input:focus,.campo-texto textarea:focus{background:#eff6ff;}
 .inst-box{border:1.4px solid #555;border-radius:2px;margin-bottom:12px;padding:9px 14px 12px;}
 .inst-titulo{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 auto 9px;display:table;border-bottom:1.4px solid #444;padding-bottom:1px;}
-.inst-row{display:flex;gap:55px;align-items:center;}
-.inst-cal-wrap{width:30%;}
-.inst-mes-top{margin-bottom:4px;}
-.inst-cal{border-collapse:collapse;width:100%;table-layout:fixed;}
-.inst-cal th{border:1px solid #555;font-size:7px;font-weight:700;padding:1px 0;text-align:center;color:#222;}
-.inst-cal td{border:1px solid #888;height:12px;font-size:7px;color:#333;text-align:center;vertical-align:middle;}
-.inst-cal td.vacio{border:none;}
+.inst-row{display:flex;gap:34px;align-items:center;}
+.inst-cal-wrap{width:37%;}
+.inst-mes-top{margin-bottom:5px;}
+.inst-cal{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;border:1px solid #dadce0;border-radius:7px;overflow:hidden;}
+.inst-cal th{background:#f1f3f4;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:6.5px;font-weight:700;padding:3px 0;text-align:center;color:#70757a;letter-spacing:0.4px;border-bottom:1px solid #dadce0;}
+.inst-cal td{height:20px;font-size:7px;color:#3c4043;text-align:left;vertical-align:top;padding:2px 0 0 3px;border-right:1px solid #e8eaed;border-bottom:1px solid #e8eaed;}
+.inst-cal td:last-child{border-right:none;}
+.inst-cal tbody tr:last-child td{border-bottom:none;}
+.inst-cal td.vacio{background:#f8f9fa;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.cal-dia{font-size:7px;color:#5f6368;}
 .inst-hora{flex:1;display:flex;flex-direction:column;gap:11px;}
 .inst-lbl{font-size:10px;font-weight:700;color:#333;white-space:nowrap;text-transform:uppercase;letter-spacing:0.3px;}
 .inst-val{font-size:10px;font-weight:600;color:#222;}
@@ -575,16 +578,14 @@ document.addEventListener('DOMContentLoaded', function() {
   var instBody = document.getElementById('inst-cal-body');
   if (instBody) {
     var diasMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
-    var semanas = Math.ceil(diasMes / 7);
+    // Alinear el día 1 a su columna (Lunes primero) — estilo Google Calendar
+    var offsetDia = (new Date(hoy.getFullYear(), hoy.getMonth(), 1).getDay() + 6) % 7;
+    var celdas = [];
+    for (var i = 0; i < offsetDia; i++) celdas.push('<td class="vacio"></td>');
+    for (var d = 1; d <= diasMes; d++) celdas.push('<td><span class="cal-dia">' + d + '</span></td>');
+    while (celdas.length % 7 !== 0) celdas.push('<td class="vacio"></td>');
     var calHtml = '';
-    for (var s = 0; s < semanas; s++) {
-      calHtml += '<tr>';
-      for (var d = 1; d <= 7; d++) {
-        var n = s * 7 + d;
-        calHtml += n <= diasMes ? '<td>' + n + '</td>' : '<td class="vacio"></td>';
-      }
-      calHtml += '</tr>';
-    }
+    for (var k = 0; k < celdas.length; k += 7) calHtml += '<tr>' + celdas.slice(k, k + 7).join('') + '</tr>';
     instBody.innerHTML = calHtml;
   }
 
