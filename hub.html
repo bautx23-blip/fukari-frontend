@@ -362,6 +362,18 @@
       </div>
     </a>
 
+    <a href="/yaku-cobertura.html" class="task-card competencia" id="card-cobertura" style="display:none;">
+      <div class="task-icon">&#128205;</div>
+      <div class="task-body">
+        <div class="task-title">Cobertura</div>
+        <div class="task-desc">Pintá en el mapa las zonas a las que llega Yakú. El bot valida direcciones contra estas zonas.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge" style="background:#ede9fe;color:#7c3aed;">Admin</span>
+        <span class="task-arrow">&rarr;</span>
+      </div>
+    </a>
+
     <a href="/licitaciones.html" class="task-card licitaciones">
       <div class="task-icon">&#128203;</div>
       <div class="task-body">
@@ -414,6 +426,7 @@
     if (email === 'info@wearebilab.com') {
       document.getElementById('card-cobranzas').style.display = '';
       document.getElementById('card-crm-pipeline').style.display = '';
+      document.getElementById('card-cobertura').style.display = '';
     }
     // Pia: solo ve Órdenes de Instalación y Órdenes de Baja
     if (email === 'ventas@yakuagua.com.ar') {

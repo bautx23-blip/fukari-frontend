@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cobertura — Yakú / Fukari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',Arial,sans-serif;background:#f3f4f6;color:#111827;}
+  .topbar{background:#1a1a2e;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .topbar h1{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .topbar .sub{font-size:12px;color:#9ca3af;font-weight:400;margin-left:6px;}
+  .btn{padding:9px 16px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+  .btn-light{background:#fff;color:#1a1a2e;border:1.5px solid transparent;}
+  .btn-light:hover{background:#e5e7eb;}
+  .btn-primary{background:#2563eb;color:#fff;}.btn-primary:hover{background:#1d4ed8;}
+  .wrap{display:flex;gap:16px;padding:16px 22px;align-items:flex-start;flex-wrap:wrap;}
+  #map{flex:1;min-width:360px;height:74vh;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);z-index:1;}
+  .panel{width:330px;flex-shrink:0;display:flex;flex-direction:column;gap:16px;}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .card h3{font-size:14px;font-weight:700;margin-bottom:10px;color:#374151;display:flex;align-items:center;gap:7px;}
+  .hint{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:10px;}
+  label{font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;}
+  input{width:100%;padding:9px 11px;border:1.5px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:10px;}
+  input:focus{outline:none;border-color:#2563eb;}
+  .zona-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:13px;}
+  .zona-row:last-child{border-bottom:none;}
+  .zona-row .del{color:#dc2626;cursor:pointer;font-size:12px;font-weight:600;background:none;border:none;}
+  .res{margin-top:10px;padding:12px;border-radius:8px;font-size:13px;line-height:1.5;display:none;}
+  .res.ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;}
+  .res.no{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;}
+  .res.warn{background:#fef9c3;color:#854d0e;border:1px solid #fde68a;}
+  .empty{font-size:12px;color:#9ca3af;font-style:italic;padding:6px 0;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📍 Cobertura geográfica <span class="sub">Yakú — zonas a las que llega</span></h1>
+  <a href="hub.html" class="btn btn-light">&#8592; Volver al Panel</a>
+</div>
+
+<div class="wrap">
+  <div id="map"></div>
+  <div class="panel">
+
+    <div class="card">
+      <h3>🖍️ Pintar zonas</h3>
+      <div class="hint">Usá la herramienta de polígono (arriba a la izquierda del mapa) para dibujar una zona de cobertura. Al cerrar el polígono te pide un nombre y se guarda. Para borrar una zona, usá el modo borrar (ícono de tacho) o el botón de la lista.</div>
+      <div id="zonas-lista"><div class="empty">Cargando zonas…</div></div>
+    </div>
+
+    <div class="card">
+      <h3>🔎 Probar una dirección</h3>
+      <div class="hint">Escribí una dirección y fijate si cae dentro de la cobertura (lo mismo que evaluará el bot).</div>
+      <label>Dirección</label>
+      <input id="t-dir" placeholder="Ej: Córdoba 1234" autocomplete="off">
+      <label>Localidad</label>
+      <input id="t-loc" placeholder="Ej: Rosario" value="Rosario" autocomplete="off">
+      <label>Provincia</label>
+      <input id="t-prov" placeholder="Ej: Santa Fe" value="Santa Fe" autocomplete="off">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="probar()">Verificar</button>
+      <div id="t-res" class="res"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.18.3/dist/leaflet-geoman.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const API_URL = 'https://fukari-backend-production.up.railway.app';
+const SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let map, testMarker = null;
+const zonaLayers = {}; // id -> layer
+
+// ── Auth gate (igual que el resto de las páginas) ──
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (!session) { window.location.href = '/index.html'; return; }
+  if (session.user.email === 'ventas@yakuagua.com.ar') { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
+  initMapa();
+});
+
+function initMapa() {
+  map = L.map('map').setView([-32.9468, -60.6393], 12); // Rosario
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+
+  // Solo herramienta de polígono + edición + borrado
+  map.pm.addControls({
+    position: 'topleft',
+    drawPolygon: true, editMode: true, removalMode: true,
+    drawMarker: false, drawCircleMarker: false, drawPolyline: false,
+    drawRectangle: false, drawCircle: false, drawText: false,
+    dragMode: false, cutPolygon: false, rotateMode: false,
+  });
+  map.pm.setLang('es');
+
+  // Nueva zona dibujada
+  map.on('pm:create', async (e) => {
+    if (e.shape !== 'Polygon') { e.layer.remove(); return; }
+    const nombre = prompt('Nombre de la zona (ej: Rosario centro):');
+    if (!nombre || !nombre.trim()) { e.layer.remove(); return; }
+    const gj = e.layer.toGeoJSON();
+    try {
+      const r = await fetch(API_URL + '/api/cobertura', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: nombre.trim(), geojson: gj.geometry }),
+      });
+      if (!r.ok) throw new Error((await r.json()).error || 'Error al guardar');
+      const saved = await r.json();
+      e.layer.remove(); // la reemplazamos por la versión "oficial" con id
+      addZonaLayer(saved);
+      refrescarLista();
+    } catch (err) {
+      alert('No se pudo guardar la zona: ' + err.message);
+      e.layer.remove();
+    }
+  });
+
+  cargarZonas();
+}
+
+function styleZona() { return { color: '#2563eb', weight: 2, fillColor: '#3b82f6', fillOpacity: 0.18 }; }
+
+function addZonaLayer(zona) {
+  const layer = L.geoJSON(zona.geojson, { style: styleZona }).addTo(map);
+  layer.zonaId = zona.id;
+  layer.zonaNombre = zona.nombre;
+  layer.bindTooltip(zona.nombre, { sticky: true });
+  // Borrado desde el mapa (modo tacho de geoman)
+  layer.on('pm:remove', () => { borrarZona(zona.id, false); });
+  // Edición de forma → guardar
+  layer.on('pm:edit', async () => {
+    try {
+      const gj = layer.toGeoJSON();
+      const geom = gj.type === 'FeatureCollection' ? gj.features[0].geometry : (gj.geometry || gj);
+      await fetch(API_URL + '/api/cobertura/' + zona.id, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ geojson: geom }),
+      });
+    } catch (_) {}
+  });
+  zonaLayers[zona.id] = layer;
+}
+
+async function cargarZonas() {
+  try {
+    const r = await fetch(API_URL + '/api/cobertura');
+    const zonas = await r.json();
+    Object.values(zonaLayers).forEach(l => map.removeLayer(l));
+    Object.keys(zonaLayers).forEach(k => delete zonaLayers[k]);
+    (zonas || []).forEach(addZonaLayer);
+    refrescarLista();
+  } catch (err) {
+    document.getElementById('zonas-lista').innerHTML = '<div class="empty">Error al cargar zonas</div>';
+  }
+}
+
+function refrescarLista() {
+  const cont = document.getElementById('zonas-lista');
+  const ids = Object.keys(zonaLayers);
+  if (!ids.length) { cont.innerHTML = '<div class="empty">Todavía no hay zonas. Dibujá una en el mapa.</div>'; return; }
+  cont.innerHTML = ids.map(id => {
+    const l = zonaLayers[id];
+    return '<div class="zona-row"><span>🟦 ' + escapeHtml(l.zonaNombre) + '</span>' +
+      '<button class="del" onclick="borrarZona(\'' + id + '\', true)">Borrar</button></div>';
+  }).join('');
+}
+
+async function borrarZona(id, removeLayer) {
+  if (removeLayer && !confirm('¿Borrar esta zona de cobertura?')) return;
+  try {
+    await fetch(API_URL + '/api/cobertura/' + id, { method: 'DELETE' });
+  } catch (_) {}
+  if (removeLayer && zonaLayers[id]) map.removeLayer(zonaLayers[id]);
+  delete zonaLayers[id];
+  refrescarLista();
+}
+
+async function probar() {
+  const direccion = document.getElementById('t-dir').value.trim();
+  const localidad = document.getElementById('t-loc').value.trim();
+  const provincia = document.getElementById('t-prov').value.trim();
+  const box = document.getElementById('t-res');
+  if (!direccion) { box.style.display = 'block'; box.className = 'res warn'; box.textContent = 'Escribí una dirección.'; return; }
+  box.style.display = 'block'; box.className = 'res warn'; box.textContent = 'Consultando…';
+  try {
+    const r = await fetch(API_URL + '/api/cobertura/check', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ direccion, localidad, provincia }),
+    });
+    const j = await r.json();
+    if (testMarker) { map.removeLayer(testMarker); testMarker = null; }
+
+    if (j.motivo === 'geocoder_no_disponible') {
+      box.className = 'res warn'; box.textContent = '⚠️ El geocoder no respondió. Probá de nuevo en unos segundos.'; return;
+    }
+    if (j.dentro === null && j.motivo === 'direccion_no_encontrada') {
+      box.className = 'res warn'; box.innerHTML = '🤔 No se encontró esa dirección. Revisá el nombre de la calle y la localidad.'; return;
+    }
+    // Tenemos coordenadas → marcar en el mapa
+    if (j.coords) {
+      testMarker = L.marker([j.coords.lat, j.coords.lon]).addTo(map);
+      map.setView([j.coords.lat, j.coords.lon], 14);
+    }
+    if (j.dentro) {
+      box.className = 'res ok';
+      box.innerHTML = '✅ <b>Dentro de cobertura</b> — zona "' + escapeHtml(j.zona ? j.zona.nombre : '') + '".<br><span style="font-size:11px;color:#15803d">' + escapeHtml(j.nomenclatura || '') + '</span>';
+    } else if (j.motivo === 'sin_zonas_definidas') {
+      box.className = 'res warn'; box.innerHTML = 'ℹ️ La dirección se ubicó pero todavía no pintaste ninguna zona. Dibujá zonas para validar.<br><span style="font-size:11px">' + escapeHtml(j.nomenclatura || '') + '</span>';
+    } else {
+      box.className = 'res no';
+      box.innerHTML = '❌ <b>Fuera de cobertura</b> — el bot diría que no llegan hasta ahí.<br><span style="font-size:11px;color:#b91c1c">' + escapeHtml(j.nomenclatura || '') + '</span>';
+    }
+  } catch (err) {
+    box.className = 'res warn'; box.textContent = 'Error: ' + err.message;
+  }
+}
+
+function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
