@@ -498,25 +498,7 @@ function renderBajas(data, resumen) {
   html += '<div class="stat-card red"><div class="label">Churn rate</div><div class="value">' + resumen.churn_rate + '%</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px;line-height:1.4">Equipos dados de baja / equipos instalados</div></div>';
   html += '</div>';
 
-  // Chart bajas por mes 2026
-  html += '<div class="chart-wrap"><div class="chart-header"><h3>Bajas por mes — 2026</h3></div>';
-  html += '<div class="chart-body"><canvas id="chart-bajas-mes-2026"></canvas></div></div>';
-
-  // Chart motivos placeholder
-  html += '<div class="chart-wrap"><div class="chart-header"><h3>Motivos de baja</h3></div>';
-  html += '<div class="chart-body"><canvas id="chart-motivos"></canvas></div></div>';
-
-  // Tabla por mes (solo si hay mas de 1 mes)
-  if (data.por_mes.length > 1) {
-    html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Bajas por mes</h3></div>';
-    html += '<table><thead><tr><th>Mes</th><th class="right">Total</th><th class="right">Totales</th><th class="right">Parciales</th></tr></thead><tbody>';
-    data.por_mes.forEach(function(m) {
-      html += '<tr><td class="bold">' + mesLabelLargo(m.mes) + '</td><td class="right">' + m.total + '</td><td class="right">' + m.totales + '</td><td class="right">' + m.parciales + '</td></tr>';
-    });
-    html += '</tbody></table></div>';
-  }
-
-  // Planilla total de bajas — todos los nombres + cantidad de equipos, sin filtrar por vendedor
+  // Planilla total de bajas — JUSTO DEBAJO de las cards (todos los nombres + cantidad de equipos)
   var bajasDet = (data.bajas_detalle || []).slice();
   var filasBajas = '';
   if (bajasDet.length) {
@@ -544,6 +526,24 @@ function renderBajas(data, resumen) {
   // Versión para PDF (expandida, sin flecha)
   html += '<div class="tabla-wrap planilla-print" style="margin-top:16px;"><div class="tabla-header"><h3>📋 Planilla total de bajas</h3></div><div style="padding:0 18px 12px;"><table>' + theadBajas + '<tbody>' + filasBajas + '</tbody></table></div></div>';
 
+  // Chart bajas por mes 2026
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Bajas por mes — 2026</h3></div>';
+  html += '<div class="chart-body"><canvas id="chart-bajas-mes-2026"></canvas></div></div>';
+
+  // Chart motivos
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Motivos de baja</h3></div>';
+  html += '<div class="chart-body"><canvas id="chart-motivos"></canvas></div></div>';
+
+  // Tabla por mes (solo si hay mas de 1 mes)
+  if (data.por_mes.length > 1) {
+    html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Bajas por mes</h3></div>';
+    html += '<table><thead><tr><th>Mes</th><th class="right">Total</th><th class="right">Totales</th><th class="right">Parciales</th></tr></thead><tbody>';
+    data.por_mes.forEach(function(m) {
+      html += '<tr><td class="bold">' + mesLabelLargo(m.mes) + '</td><td class="right">' + m.total + '</td><td class="right">' + m.totales + '</td><td class="right">' + m.parciales + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
   html += '</div>';
   return html;
 }
@@ -565,10 +565,9 @@ function renderClientes(data) {
   html += '<div class="section-header"><div class="bar green"></div><h2 class="green">Clientes</h2></div>';
 
   // Cards
+  // "Total activos" / "Total inactivos" removidas: la base de clientes no está
+  // migrada completa, así que esos totales no son reales (no suman ni restan bien).
   html += '<div class="stats-row">';
-  html += '<div class="stat-card green"><div class="label">Total activos</div><div class="value">' + t.activos + '</div></div>';
-  html += '<div class="stat-card green"><div class="label">Total inactivos</div><div class="value">' + t.inactivos + '</div></div>';
-  html += '<div class="stat-card green"><div class="label">% activos</div><div class="value">' + pct(t.porcentaje_activos) + '</div></div>';
   html += '<div class="stat-card green"><div class="label">Con equipos</div><div class="value">' + t.con_equipos + '</div></div>';
   html += '</div>';
 
