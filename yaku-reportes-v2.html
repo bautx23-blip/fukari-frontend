@@ -329,8 +329,6 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
   contenido.innerHTML = html;
   // Bind del selector de mes (después de pegar el HTML)
   bindMonitoreoCompetencia(llamadasCompetencia || []);
-  // Bind del selector de vendedor de la planilla de órdenes
-  bindPlanillaVendedor(instalaciones && instalaciones.ordenes_detalle || []);
 
   // Render Chart.js charts after DOM is ready
   setTimeout(function() {
@@ -432,20 +430,32 @@ function renderInstalaciones(data, promoStats) {
     html += '</tbody></table></div>';
   }
 
-  // Planilla de órdenes por vendedor (desplegable, cerrada por default) — debajo de "Equipos vendidos por vendedor"
+  // Planilla total de órdenes — TODAS las órdenes juntas, sin filtrar por vendedor, desplegada por default
+  var ordDet = (data.ordenes_detalle || []).slice().sort(function(a, b){ return a.fecha_orden < b.fecha_orden ? -1 : a.fecha_orden > b.fecha_orden ? 1 : 0; });
+  var filasOrd = '';
+  if (ordDet.length) {
+    ordDet.forEach(function(o, i) {
+      var p = String(o.fecha_orden || '').substring(0, 10).split('-');
+      var fStr = p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : (o.fecha_orden || '—');
+      filasOrd += '<tr><td style="text-align:center;color:#9ca3af;">' + (i + 1) + '</td><td style="font-weight:600;">' + escHtmlReporte(o.razon_social || '—') + '</td><td>' + fStr + '</td><td>' + escHtmlReporte(o.vendedor || '—') + '</td><td class="right">' + (o.equipos || 0) + '</td></tr>';
+    });
+    var totalEqOrd = ordDet.reduce(function(a, o){ return a + (parseInt(o.equipos) || 0); }, 0);
+    filasOrd += '<tr><td colspan="4" style="text-align:right;font-weight:700;">Total equipos</td><td class="right" style="font-weight:700;">' + totalEqOrd + '</td></tr>';
+  } else {
+    filasOrd = '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:18px;font-size:12.5px;">Sin órdenes en el período.</td></tr>';
+  }
+  var theadOrd = '<thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de orden</th><th>Vendedor</th><th class="right">Equipos</th></tr></thead>';
   html += '<div class="tabla-wrap planilla-screen" style="margin-top:16px;">';
   html += '<div class="tabla-header" onclick="togglePlanilla()" style="display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;user-select:none;">';
-  html += '<h3>📋 Planilla de órdenes por vendedor</h3>';
-  html += '<span id="planilla-chev" style="color:#9ca3af;font-size:13px;transition:transform .2s;">▼</span>';
+  html += '<h3>📋 Planilla total de órdenes</h3>';
+  html += '<span id="planilla-chev" style="color:#9ca3af;font-size:13px;transition:transform .2s;transform:rotate(180deg);">▼</span>';
   html += '</div>';
-  html += '<div id="planilla-body" style="display:none;padding-bottom:4px;">';
-  html += '<div style="display:flex;align-items:center;gap:8px;padding:12px 18px 0;"><label style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Vendedor</label><select id="planilla-sel-vendedor" onchange="renderPlanillaVendedor()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;color:#1f2937;background:#fff;cursor:pointer;min-width:200px;"></select></div>';
-  html += '<div id="planilla-conteo" style="font-size:11.5px;color:#6b7280;font-weight:500;padding:10px 18px 0;"></div>';
-  html += '<table><thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de orden</th><th>Vendedor</th><th class="right">Equipos</th></tr></thead><tbody id="planilla-tbody"></tbody></table>';
-  html += '</div>';
-  html += '</div>';
-  // Versión para PDF: todos los vendedores con sus órdenes, expandido, sin flecha ni selector
-  html += '<div class="tabla-wrap planilla-print" style="margin-top:16px;"><div class="tabla-header"><h3>📋 Planilla de órdenes por vendedor</h3></div><div id="planilla-print-content" style="padding:0 18px 12px;"></div></div>';
+  html += '<div id="planilla-body" style="display:block;padding-bottom:4px;">';
+  html += '<div style="font-size:11.5px;color:#6b7280;font-weight:500;padding:12px 18px 0;">Todas las órdenes del período, con el cliente y la cantidad de equipos.</div>';
+  html += '<table>' + theadOrd + '<tbody>' + filasOrd + '</tbody></table>';
+  html += '</div></div>';
+  // Versión para PDF (expandida, sin flecha)
+  html += '<div class="tabla-wrap planilla-print" style="margin-top:16px;"><div class="tabla-header"><h3>📋 Planilla total de órdenes</h3></div><div style="padding:0 18px 12px;"><table>' + theadOrd + '<tbody>' + filasOrd + '</tbody></table></div></div>';
 
   // Tabla productos
   html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Productos mas vendidos</h3></div>';
