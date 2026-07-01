@@ -258,8 +258,8 @@ function bindPlanillaVendedor(detalle) {
   var opts = '<option value="">Todos los vendedores</option>';
   vendedores.forEach(function(v){ opts += '<option value="' + escHtmlReporte(v) + '">' + escHtmlReporte(v) + '</option>'; });
   sel.innerHTML = opts;
-  // Default: arrancar filtrando por René si tiene órdenes en el período
-  if (vendedores.indexOf('René Biagioni') !== -1) sel.value = 'René Biagioni';
+  // Default: mostrar TODOS los vendedores (planilla total). Se puede filtrar con el selector.
+  sel.value = '';
   renderPlanillaVendedor();
 }
 function togglePlanilla() {
@@ -281,12 +281,14 @@ function renderPlanillaPrint() {
     return a.fecha_orden < b.fecha_orden ? -1 : a.fecha_orden > b.fecha_orden ? 1 : 0;
   });
   if (!arr.length) { cont.innerHTML = '<div style="color:#9ca3af;font-size:12px;padding:10px;">Sin órdenes en el período.</div>'; return; }
-  var html = '<table><thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de orden</th><th>Vendedor</th></tr></thead><tbody>';
+  var html = '<table><thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de orden</th><th>Vendedor</th><th class="right">Equipos</th></tr></thead><tbody>';
   arr.forEach(function(o, i){
     var p = String(o.fecha_orden || '').substring(0, 10).split('-');
     var fStr = p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : (o.fecha_orden || '—');
-    html += '<tr><td style="text-align:center;color:#9ca3af;">' + (i + 1) + '</td><td style="font-weight:600;">' + escHtmlReporte(o.razon_social || '—') + '</td><td>' + fStr + '</td><td>' + escHtmlReporte(o.vendedor || '—') + '</td></tr>';
+    html += '<tr><td style="text-align:center;color:#9ca3af;">' + (i + 1) + '</td><td style="font-weight:600;">' + escHtmlReporte(o.razon_social || '—') + '</td><td>' + fStr + '</td><td>' + escHtmlReporte(o.vendedor || '—') + '</td><td class="right">' + (o.equipos || 0) + '</td></tr>';
   });
+  var totalEq = arr.reduce(function(a, o){ return a + (parseInt(o.equipos) || 0); }, 0);
+  html += '<tr><td colspan="4" style="text-align:right;font-weight:700;">Total equipos</td><td class="right" style="font-weight:700;">' + totalEq + '</td></tr>';
   html += '</tbody></table>';
   cont.innerHTML = html;
 }
@@ -300,13 +302,15 @@ function renderPlanillaVendedor() {
   if (conteo) conteo.innerHTML = vend
     ? 'Mostrando <b style="color:#2563eb;">' + arr.length + '</b> órdenes de <b style="color:#2563eb;">' + escHtmlReporte(vend) + '</b>'
     : 'Mostrando <b style="color:#2563eb;">' + arr.length + '</b> órdenes (todos los vendedores)';
-  if (!arr.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:18px;font-size:12.5px;">Sin órdenes para este vendedor en el período.</td></tr>'; return; }
+  if (!arr.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:18px;font-size:12.5px;">Sin órdenes para este vendedor en el período.</td></tr>'; return; }
   var html = '';
   arr.forEach(function(o, i) {
     var p = String(o.fecha_orden || '').substring(0, 10).split('-');
     var fStr = p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : (o.fecha_orden || '—');
-    html += '<tr><td style="text-align:center;color:#9ca3af;">' + (i + 1) + '</td><td style="font-weight:600;">' + escHtmlReporte(o.razon_social || '—') + '</td><td>' + fStr + '</td><td>' + escHtmlReporte(o.vendedor || '—') + '</td></tr>';
+    html += '<tr><td style="text-align:center;color:#9ca3af;">' + (i + 1) + '</td><td style="font-weight:600;">' + escHtmlReporte(o.razon_social || '—') + '</td><td>' + fStr + '</td><td>' + escHtmlReporte(o.vendedor || '—') + '</td><td class="right">' + (o.equipos || 0) + '</td></tr>';
   });
+  var totalEq = arr.reduce(function(a, o){ return a + (parseInt(o.equipos) || 0); }, 0);
+  html += '<tr><td colspan="4" style="text-align:right;font-weight:700;">Total equipos</td><td class="right" style="font-weight:700;">' + totalEq + '</td></tr>';
   tbody.innerHTML = html;
 }
 
@@ -437,7 +441,7 @@ function renderInstalaciones(data, promoStats) {
   html += '<div id="planilla-body" style="display:none;padding-bottom:4px;">';
   html += '<div style="display:flex;align-items:center;gap:8px;padding:12px 18px 0;"><label style="font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Vendedor</label><select id="planilla-sel-vendedor" onchange="renderPlanillaVendedor()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;color:#1f2937;background:#fff;cursor:pointer;min-width:200px;"></select></div>';
   html += '<div id="planilla-conteo" style="font-size:11.5px;color:#6b7280;font-weight:500;padding:10px 18px 0;"></div>';
-  html += '<table><thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de orden</th><th>Vendedor</th></tr></thead><tbody id="planilla-tbody"></tbody></table>';
+  html += '<table><thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de orden</th><th>Vendedor</th><th class="right">Equipos</th></tr></thead><tbody id="planilla-tbody"></tbody></table>';
   html += '</div>';
   html += '</div>';
   // Versión para PDF: todos los vendedores con sus órdenes, expandido, sin flecha ni selector
@@ -512,8 +516,44 @@ function renderBajas(data, resumen) {
     html += '</tbody></table></div>';
   }
 
+  // Planilla total de bajas — todos los nombres + cantidad de equipos, sin filtrar por vendedor
+  var bajasDet = (data.bajas_detalle || []).slice();
+  var filasBajas = '';
+  if (bajasDet.length) {
+    bajasDet.forEach(function(b, i) {
+      var p = String(b.fecha_baja || '').substring(0, 10).split('-');
+      var fStr = p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : (b.fecha_baja || '—');
+      filasBajas += '<tr><td style="text-align:center;color:#9ca3af;">' + (i + 1) + '</td><td style="font-weight:600;">' + escHtmlReporte(b.razon_social || '—') + '</td><td>' + fStr + '</td><td>' + escHtmlReporte(b.vendedor || '—') + '</td><td class="right">' + (b.equipos || 0) + '</td></tr>';
+    });
+    var totalEqBaja = bajasDet.reduce(function(a, b) { return a + (parseInt(b.equipos) || 0); }, 0);
+    filasBajas += '<tr><td colspan="4" style="text-align:right;font-weight:700;">Total equipos dados de baja</td><td class="right" style="font-weight:700;">' + totalEqBaja + '</td></tr>';
+  } else {
+    filasBajas = '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:18px;font-size:12.5px;">Sin bajas en el período.</td></tr>';
+  }
+  var theadBajas = '<thead><tr><th style="text-align:center;width:46px;">#</th><th>Cliente</th><th>Fecha de baja</th><th>Vendedor</th><th class="right">Equipos</th></tr></thead>';
+  // Pantalla (desplegable, cerrada por default)
+  html += '<div class="tabla-wrap planilla-screen" style="margin-top:16px;">';
+  html += '<div class="tabla-header" onclick="togglePlanillaBajas()" style="display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;user-select:none;">';
+  html += '<h3>📋 Planilla total de bajas</h3>';
+  html += '<span id="planilla-bajas-chev" style="color:#9ca3af;font-size:13px;transition:transform .2s;">▼</span>';
+  html += '</div>';
+  html += '<div id="planilla-bajas-body" style="display:none;padding-bottom:4px;">';
+  html += '<div style="font-size:11.5px;color:#6b7280;font-weight:500;padding:12px 18px 0;">Todas las bajas del período, con el cliente y la cantidad de equipos dados de baja.</div>';
+  html += '<table>' + theadBajas + '<tbody>' + filasBajas + '</tbody></table>';
+  html += '</div></div>';
+  // Versión para PDF (expandida, sin flecha)
+  html += '<div class="tabla-wrap planilla-print" style="margin-top:16px;"><div class="tabla-header"><h3>📋 Planilla total de bajas</h3></div><div style="padding:0 18px 12px;"><table>' + theadBajas + '<tbody>' + filasBajas + '</tbody></table></div></div>';
+
   html += '</div>';
   return html;
+}
+function togglePlanillaBajas() {
+  var body = document.getElementById('planilla-bajas-body');
+  var chev = document.getElementById('planilla-bajas-chev');
+  if (!body) return;
+  var abrir = body.style.display === 'none';
+  body.style.display = abrir ? 'block' : 'none';
+  if (chev) chev.style.transform = abrir ? 'rotate(180deg)' : '';
 }
 
 /* ══════════════════════════════════════════
