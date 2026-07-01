@@ -517,9 +517,9 @@ function renderBajas(data, resumen) {
   html += '<div class="tabla-wrap planilla-screen" style="margin-top:16px;">';
   html += '<div class="tabla-header" onclick="togglePlanillaBajas()" style="display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;user-select:none;">';
   html += '<h3>📋 Planilla total de bajas</h3>';
-  html += '<span id="planilla-bajas-chev" style="color:#9ca3af;font-size:13px;transition:transform .2s;">▼</span>';
+  html += '<span id="planilla-bajas-chev" style="color:#9ca3af;font-size:13px;transition:transform .2s;transform:rotate(180deg);">▼</span>';
   html += '</div>';
-  html += '<div id="planilla-bajas-body" style="display:none;padding-bottom:4px;">';
+  html += '<div id="planilla-bajas-body" style="display:block;padding-bottom:4px;">';
   html += '<div style="font-size:11.5px;color:#6b7280;font-weight:500;padding:12px 18px 0;">Todas las bajas del período, con el cliente y la cantidad de equipos dados de baja.</div>';
   html += '<table>' + theadBajas + '<tbody>' + filasBajas + '</tbody></table>';
   html += '</div></div>';
