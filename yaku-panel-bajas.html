@@ -297,6 +297,13 @@ function poblarFiltroMes() {
   });
   var sel = document.getElementById('filtro-mes');
   var val = sel.value;
+  // Default: mes actual (solo la primera carga; no pisa la selección del usuario).
+  if (!val && !sel.dataset.init) {
+    var ahora = new Date();
+    val = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
+    meses[val] = true; // asegurar que la opción exista aunque no haya bajas este mes
+    sel.dataset.init = '1';
+  }
   sel.innerHTML = '<option value="">Todos los meses</option>';
   Object.keys(meses).sort().reverse().forEach(function(k) {
     var parts = k.split('-');
