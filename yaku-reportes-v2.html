@@ -131,6 +131,7 @@ tbody td.money{font-weight:600;color:#16a34a;}
     <input type="date" id="filtro-hasta" onchange="onFechaManual()">
     <div class="periodo-btns">
       <button class="periodo-btn" onclick="setPeriodo('mes', this)">Este mes</button>
+      <button class="periodo-btn" onclick="setPeriodo('mespasado', this)">Mes pasado</button>
       <button class="periodo-btn" onclick="setPeriodo('trimestre', this)">Trimestre</button>
       <button class="periodo-btn active" onclick="setPeriodo('todo', this)">Todo</button>
     </div>
@@ -948,14 +949,22 @@ function renderChartMotivos(porMotivo) {
 /* ── PERIODO PRESETS ── */
 function setPeriodo(tipo, btn) {
   var ahora = new Date();
-  var desde = '';
-  var hasta = ahora.toISOString().split('T')[0];
+  var y = ahora.getFullYear(), m = ahora.getMonth();
+  // Formatea una fecha en local (evita el corrimiento de día de toISOString/UTC).
+  function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  var desde = '', hasta = '';
 
   if (tipo === 'mes') {
-    desde = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0') + '-01';
+    // Mes actual completo: del día 1 al último día del mes.
+    desde = iso(new Date(y, m, 1));
+    hasta = iso(new Date(y, m + 1, 0));
+  } else if (tipo === 'mespasado') {
+    // Mes anterior completo (ej. estando en julio → todo junio).
+    desde = iso(new Date(y, m - 1, 1));
+    hasta = iso(new Date(y, m, 0));
   } else if (tipo === 'trimestre') {
-    var d = new Date(ahora.getFullYear(), ahora.getMonth() - 2, 1);
-    desde = d.toISOString().split('T')[0];
+    desde = iso(new Date(y, m - 2, 1));
+    hasta = iso(new Date(y, m + 1, 0));
   } else {
     desde = '';
     hasta = '';
