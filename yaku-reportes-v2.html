@@ -326,7 +326,8 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
   html += renderNoFactibles(noFactibles || []);
   html += renderFuentes(fuentesResumen || {});
   html += renderMonitoreoCompetencia(llamadasCompetencia || []);
-  html += renderClientes(clientes);
+  // Sección "Clientes" removida del reporte a pedido del cliente: la base de
+  // clientes no está migrada completa, así que sus totales no son reales.
   contenido.innerHTML = html;
   // Bind del selector de mes (después de pegar el HTML)
   bindMonitoreoCompetencia(llamadasCompetencia || []);
