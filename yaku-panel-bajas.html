@@ -147,6 +147,7 @@ tr.fila-anulada td:last-child{opacity:1;text-decoration:none;}
     <div class="stat-card"><div class="label">Este mes</div><div class="value" id="stat-mes">—</div><div class="sub" id="stat-mes-label">—</div></div>
     <div class="stat-card"><div class="label">Última baja</div><div class="value" id="stat-ultima">—</div><div class="sub">número</div></div>
     <div class="stat-card"><div class="label">Parciales / Totales</div><div class="value" id="stat-tipo">—</div><div class="sub">equipos</div></div>
+    <div class="stat-card"><div class="label">Equipos de baja</div><div class="value" id="stat-equipos">—</div><div class="sub">unidades</div></div>
   </div>
 
   <div class="filtros">
@@ -345,6 +346,12 @@ function actualizarStatTipo() {
   });
   document.getElementById('stat-tipo').textContent = eqParciales + ' / ' + eqTotales;
   document.getElementById('stat-tipo').closest('.stat-card').querySelector('.sub').textContent = eqParciales + ' parciales / ' + eqTotales + ' totales';
+
+  // Total de equipos (unidades) dados de baja en la vista filtrada.
+  var eqTotal = eqParciales + eqTotales;
+  var ordenes = bajasFiltradas.length;
+  document.getElementById('stat-equipos').textContent = eqTotal;
+  document.getElementById('stat-equipos').closest('.stat-card').querySelector('.sub').textContent = 'en ' + ordenes + (ordenes === 1 ? ' orden' : ' órdenes');
 }
 
 function filtrar() {
