@@ -318,13 +318,18 @@ function calcularStats() {
   var mesActual = ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
   var activas = todasLasBajas.filter(function(b){ return !b.anulada; });
   var delMes = activas.filter(function(b){ return b.fecha_baja && b.fecha_baja.startsWith(mesActual); });
-  var parciales = activas.filter(function(b){ return (b.tipo_baja||'').toLowerCase() === 'parcial'; }).length;
-  var totales = activas.filter(function(b){ return (b.tipo_baja||'').toLowerCase() === 'total'; }).length;
 
   document.getElementById('stat-total').textContent = activas.length;
   document.getElementById('stat-mes').textContent = delMes.length;
   document.getElementById('stat-mes-label').textContent = ahora.toLocaleDateString('es-AR', {month:'long', year:'numeric'});
   document.getElementById('stat-ultima').textContent = activas.length > 0 ? (activas[0].numero_completo || '—') : '—';
+}
+
+// Parciales / Totales se calcula sobre la vista filtrada (por defecto, el mes actual),
+// así el número coincide con lo que se ve en la tabla y no con el histórico completo.
+function actualizarStatTipo() {
+  var parciales = bajasFiltradas.filter(function(b){ return (b.tipo_baja||'').toLowerCase() === 'parcial'; }).length;
+  var totales = bajasFiltradas.filter(function(b){ return (b.tipo_baja||'').toLowerCase() === 'total'; }).length;
   document.getElementById('stat-tipo').textContent = parciales + ' / ' + totales;
   document.getElementById('stat-tipo').closest('.stat-card').querySelector('.sub').textContent = parciales + ' parciales / ' + totales + ' totales';
 }
@@ -351,6 +356,7 @@ function filtrar() {
     return match;
   });
   paginaActual = 1;
+  actualizarStatTipo();
   renderTabla();
 }
 
