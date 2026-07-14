@@ -479,6 +479,9 @@ tbody tr:hover{background:#f8fafc;}
     <button class="sidebar-link" id="nav-bot" onclick="switchView('bot')">
       <span class="icon">&#129504;</span> Conocimiento del Bot
     </button>
+    <button class="sidebar-link" id="nav-agentes" onclick="switchView('agentes')">
+      <span class="icon">&#9211;</span> Agentes
+    </button>
   </div>
 </nav>
 
@@ -618,6 +621,52 @@ tbody tr:hover{background:#f8fafc;}
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- VIEW: AGENTES (control del bot: on/off + horario) -->
+  <style>
+  #view-agentes{padding:24px;overflow-y:auto;}
+  .ag-wrap{max-width:640px;}
+  .ag-loading,.ag-err{color:#9ca3af;font-size:13px;padding:24px;}
+  .ag-err{color:#991B1B;}
+  .ag-card{background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:22px;}
+  .ag-head{display:flex;align-items:center;gap:14px;}
+  .ag-icon{width:46px;height:46px;border-radius:12px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+  .ag-meta{flex:1;min-width:0;}
+  .ag-name{font-size:15px;font-weight:800;color:#1a1a2e;}
+  .ag-sub{font-size:12px;color:#6b7280;margin-top:2px;}
+  .ag-estado{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:20px;margin-top:8px;}
+  .ag-estado .pt{width:8px;height:8px;border-radius:50%;}
+  .ag-estado.on{background:#dcfce7;color:#16a34a;} .ag-estado.on .pt{background:#16a34a;}
+  .ag-estado.off{background:#f1f5f9;color:#64748b;} .ag-estado.off .pt{background:#94a3b8;}
+  .ag-estado.sched{background:#fef3c7;color:#b45309;} .ag-estado.sched .pt{background:#d97706;}
+  .ag-switch{position:relative;display:inline-block;width:48px;height:27px;flex-shrink:0;}
+  .ag-switch input{opacity:0;width:0;height:0;}
+  .ag-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:27px;transition:.2s;}
+  .ag-slider:before{content:'';position:absolute;height:21px;width:21px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .ag-switch input:checked + .ag-slider{background:#16a34a;}
+  .ag-switch input:checked + .ag-slider:before{transform:translateX(21px);}
+  .ag-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0 0;border-top:1px solid #f1f5f9;margin-top:14px;}
+  .ag-rowtxt .t{font-size:13.5px;font-weight:700;color:#1a1a2e;}
+  .ag-rowtxt .d{font-size:11.5px;color:#6b7280;margin-top:2px;}
+  .ag-sched{padding-top:14px;margin-top:14px;border-top:1px solid #f1f5f9;}
+  .ag-sched.ag-hidden{display:none;}
+  .ag-times{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .ag-times label{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;}
+  .ag-times input[type=time]{padding:7px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;}
+  .ag-sep{color:#9ca3af;}
+  .ag-days{display:flex;gap:6px;flex-wrap:wrap;}
+  .ag-day{width:40px;height:34px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit;}
+  .ag-day.sel{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
+  .ag-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;flex-wrap:wrap;}
+  .ag-saved{font-size:11.5px;color:#9ca3af;}
+  .ag-save{background:#0ea5e9;color:#fff;border:none;padding:10px 20px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .ag-save:disabled{opacity:.5;cursor:default;}
+  .ag-err2{color:#991B1B;font-size:12px;margin-top:8px;}
+  .ag-note{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;font-size:12px;color:#92400e;line-height:1.55;margin-top:14px;max-width:640px;}
+  </style>
+  <div class="view" id="view-agentes">
+    <div class="ag-wrap" id="ag-slot"><div class="ag-loading">Cargando…</div></div>
   </div>
 
 </div>
@@ -830,11 +879,120 @@ function switchView(view) {
   if (view === 'whatsapp') cargarConversacionesWA();
   if (view === 'pipeline') plLoad();
   if (view === 'probarbot') pbInit();
+  if (view === 'agentes') agLoad();
 }
 
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// AGENTES — control del bot de ventas (on/off + horario de atención)
+// ════════════════════════════════════════════════════════════════════
+var agCfg = null;
+var _agChipTimer = null;
+var AG_DIAS = [{n:1,l:'Lun'},{n:2,l:'Mar'},{n:3,l:'Mié'},{n:4,l:'Jue'},{n:5,l:'Vie'},{n:6,l:'Sáb'},{n:7,l:'Dom'}];
+var AG_TZ = 'America/Argentina/Buenos_Aires';
+
+function agEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function agHM(t){ return (t||'').slice(0,5); }
+
+async function agLoad(){
+  var slot = document.getElementById('ag-slot');
+  slot.innerHTML = '<div class="ag-loading">Cargando…</div>';
+  try {
+    var r = await fetch(API_URL + '/api/sales-bot/config', { headers: { 'x-user-email': _currentUserEmail } });
+    if (r.status === 403){ slot.innerHTML = '<div class="ag-err">No tenés permiso para esta sección.</div>'; return; }
+    if (!r.ok) throw new Error('status ' + r.status);
+    agCfg = await r.json();
+    agRender();
+  } catch(e){ slot.innerHTML = '<div class="ag-err">Error al cargar: ' + agEsc(e.message) + '</div>'; }
+}
+
+function agAhoraTZ(){
+  var parts = new Intl.DateTimeFormat('en-US',{timeZone:AG_TZ,hour12:false,weekday:'short',hour:'2-digit',minute:'2-digit'}).formatToParts(new Date());
+  var g = function(t){ var p = parts.find(function(x){return x.type===t;}); return p?p.value:''; };
+  var hh = parseInt(g('hour'),10); if(hh===24) hh=0; var mm = parseInt(g('minute'),10)||0;
+  var map = {Sun:7,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+  return { min: hh*60+mm, dow: map[g('weekday')]||0 };
+}
+function agToMin(t){ var p=(t||'0:0').split(':'); return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0); }
+function agDentro(){
+  if (!agCfg.horario_activo) return true;
+  var a = agAhoraTZ();
+  var dias = (agCfg.dias_semana&&agCfg.dias_semana.length)?agCfg.dias_semana:[1,2,3,4,5,6,7];
+  if (dias.indexOf(a.dow)===-1) return false;
+  var d=agToMin(agCfg.hora_desde), h=agToMin(agCfg.hora_hasta);
+  if (d===h) return true;
+  if (d<h) return a.min>=d && a.min<h;
+  return a.min>=d || a.min<h;
+}
+function agChip(){
+  if (!agCfg.activo) return '<span class="ag-estado off"><span class="pt"></span>Apagado</span>';
+  if (agDentro()) return '<span class="ag-estado on"><span class="pt"></span>Atendiendo ahora</span>';
+  return '<span class="ag-estado sched"><span class="pt"></span>Encendido — fuera de horario</span>';
+}
+
+function agRender(){
+  var diasSel = agCfg.dias_semana || [];
+  var html = ''
+   + '<div class="ag-card">'
+   + '  <div class="ag-head">'
+   + '    <div class="ag-icon">💧</div>'
+   + '    <div class="ag-meta">'
+   + '      <div class="ag-name">Bot de Ventas Yakú</div>'
+   + '      <div class="ag-sub">Atiende WhatsApp, responde consultas y toma leads.</div>'
+   + '      <div id="ag-chip">' + agChip() + '</div>'
+   + '    </div>'
+   + '    <label class="ag-switch"><input type="checkbox" id="ag-activo" '+(agCfg.activo?'checked':'')+' onchange="agOnActivo()"><span class="ag-slider"></span></label>'
+   + '  </div>'
+   + '  <div class="ag-row">'
+   + '    <div class="ag-rowtxt"><div class="t">Restringir horario de atención</div><div class="d">Si está apagado, el bot atiende las 24 hs.</div></div>'
+   + '    <label class="ag-switch"><input type="checkbox" id="ag-horario" '+(agCfg.horario_activo?'checked':'')+' onchange="agOnHorario()"><span class="ag-slider"></span></label>'
+   + '  </div>'
+   + '  <div class="ag-sched '+(agCfg.horario_activo?'':'ag-hidden')+'" id="ag-sched">'
+   + '    <div class="ag-times">'
+   + '      <label>Desde</label><input type="time" id="ag-desde" value="'+agHM(agCfg.hora_desde)+'" onchange="agDirty()">'
+   + '      <span class="ag-sep">→</span>'
+   + '      <label>Hasta</label><input type="time" id="ag-hasta" value="'+agHM(agCfg.hora_hasta)+'" onchange="agDirty()">'
+   + '    </div>'
+   + '    <div class="ag-days">'
+   +        AG_DIAS.map(function(d){ return '<button type="button" class="ag-day '+(diasSel.indexOf(d.n)!==-1?'sel':'')+'" data-d="'+d.n+'" onclick="agToggleDay('+d.n+')">'+d.l+'</button>'; }).join('')
+   + '    </div>'
+   + '  </div>'
+   + '  <div class="ag-foot">'
+   + '    <span class="ag-saved" id="ag-saved">'+(agCfg.updated_at?('Último cambio: '+new Date(agCfg.updated_at).toLocaleString('es-AR')):'')+'</span>'
+   + '    <button class="ag-save" id="ag-save" onclick="agSave()" disabled>Guardar cambios</button>'
+   + '  </div>'
+   + '  <div class="ag-err2" id="ag-err" style="display:none"></div>'
+   + '</div>'
+   + '<div class="ag-note">⚠️ Cuando prendés el bot, empieza a responder <b>solo</b> los mensajes nuevos. Si hay chats que estás atendiendo a mano, pausá el bot en esa conversación desde <b>WhatsApp</b>. El bot además se pausa solo cuando cierra una venta o deriva a un asesor.</div>';
+  document.getElementById('ag-slot').innerHTML = html;
+  if (_agChipTimer) clearInterval(_agChipTimer);
+  _agChipTimer = setInterval(function(){ var c=document.getElementById('ag-chip'); if(c && agCfg) c.innerHTML=agChip(); }, 30000);
+}
+
+function agDirty(){ var b=document.getElementById('ag-save'); if(b) b.disabled=false; }
+function agOnActivo(){ agCfg.activo=document.getElementById('ag-activo').checked; document.getElementById('ag-chip').innerHTML=agChip(); agDirty(); }
+function agOnHorario(){ agCfg.horario_activo=document.getElementById('ag-horario').checked; document.getElementById('ag-sched').classList.toggle('ag-hidden', !agCfg.horario_activo); document.getElementById('ag-chip').innerHTML=agChip(); agDirty(); }
+function agToggleDay(n){ agCfg.dias_semana=agCfg.dias_semana||[]; var i=agCfg.dias_semana.indexOf(n); if(i===-1)agCfg.dias_semana.push(n); else agCfg.dias_semana.splice(i,1); document.querySelector('.ag-day[data-d="'+n+'"]').classList.toggle('sel'); document.getElementById('ag-chip').innerHTML=agChip(); agDirty(); }
+
+async function agSave(){
+  var btn=document.getElementById('ag-save'), err=document.getElementById('ag-err');
+  err.style.display='none';
+  var body={ activo:document.getElementById('ag-activo').checked, horario_activo:document.getElementById('ag-horario').checked, hora_desde:document.getElementById('ag-desde').value||'09:00', hora_hasta:document.getElementById('ag-hasta').value||'18:00', dias_semana:(agCfg.dias_semana||[]).slice().sort(function(a,b){return a-b;}) };
+  if (body.horario_activo && body.dias_semana.length===0){ err.textContent='Elegí al menos un día de atención.'; err.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Guardando…';
+  try {
+    var r=await fetch(API_URL + '/api/sales-bot/config', { method:'PUT', headers:{'Content-Type':'application/json','x-user-email':_currentUserEmail}, body:JSON.stringify(body) });
+    var j=await r.json();
+    if (!r.ok) throw new Error(j.error||('status '+r.status));
+    agCfg={ activo:j.activo, horario_activo:j.horario_activo, hora_desde:j.hora_desde, hora_hasta:j.hora_hasta, dias_semana:j.dias_semana, timezone:j.timezone, updated_at:j.updated_at };
+    document.getElementById('ag-saved').textContent='Guardado ✓ '+new Date().toLocaleTimeString('es-AR');
+    document.getElementById('ag-chip').innerHTML=agChip();
+    btn.textContent='Guardar cambios';
+  } catch(e){ err.textContent='No se pudo guardar: '+e.message; err.style.display='block'; btn.disabled=false; btn.textContent='Guardar cambios'; }
 }
 
 // ════════════════════════════════════════════════════════════════════
