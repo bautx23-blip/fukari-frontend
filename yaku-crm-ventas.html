@@ -495,7 +495,7 @@ tbody tr:hover{background:#f8fafc;}
         <div class="pl-h-title">Pipeline de Ventas</div>
         <div class="pl-h-sub" id="pl-total">—</div>
       </div>
-      <button class="pl-btn-add" onclick="plOpenModal()">+ Agregar lead</button>
+      <button class="pl-btn-add" onclick="plOpenModal()">+ Agregar contacto</button>
     </div>
     <div id="pl-stages-slot"><div class="pl-loading">Cargando…</div></div>
   </div>
@@ -2281,31 +2281,32 @@ switchView = function(view) {
 
 <!-- ══ PIPELINE (etapas del bot) — namespaceado pl- para no chocar con el resto ══ -->
 <style>
-.pl-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
-.pl-h-title{font-size:16px;font-weight:800;color:#1a1a2e;}
-.pl-h-sub{font-size:12px;color:#9ca3af;margin-top:2px;}
+.pl-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.pl-h-title{font-size:18px;font-weight:800;color:#1a1a2e;}
+.pl-h-sub{font-size:12.5px;color:#9ca3af;margin-top:2px;}
 .pl-btn-add{background:#0ea5e9;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
-.pl-stages{display:flex;flex-direction:column;gap:8px;padding-bottom:16px;}
-.pl-stage{border:1.5px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff;}
-.pl-stage-head{width:100%;padding:10px 14px;background:#f8fafc;border:none;display:flex;align-items:center;gap:10px;cursor:pointer;font-family:inherit;}
-.pl-caret{font-size:11px;color:#4b5563;width:12px;display:inline-block;}
-.pl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.pl-label{font-size:12px;font-weight:800;color:#1a1a2e;}
-.pl-count{margin-left:auto;font-size:11px;font-weight:800;color:#6b7280;background:#fff;border-radius:10px;padding:2px 8px;}
-.pl-body{border-top:1.5px solid #e5e7eb;}
-.pl-empty{padding:16px;text-align:center;color:#9ca3af;font-size:12px;}
-.pl-table{width:100%;border-collapse:collapse;font-size:12.5px;}
-.pl-table thead tr{background:#f8fafc;color:#9ca3af;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;}
-.pl-table th{text-align:left;padding:8px 14px;font-weight:700;}
-.pl-table th.r{text-align:right;}
-.pl-table tbody tr{border-top:1px solid #e5e7eb;}
-.pl-table td{padding:10px 14px;vertical-align:top;}
-.pl-name{font-size:13px;font-weight:700;color:#1a1a2e;}
-.pl-muted{font-size:10px;color:#9ca3af;margin-top:2px;}
-.pl-table select{padding:4px 8px;border-radius:6px;border:1px solid #e5e7eb;font-size:11px;font-family:inherit;background:#fff;color:#1a1a2e;cursor:pointer;}
-.pl-actions{text-align:right;white-space:nowrap;}
-.pl-del{width:26px;height:26px;border-radius:6px;border:none;background:transparent;color:#9ca3af;cursor:pointer;}
-.pl-del:hover{background:#FEE2E2;color:#DC2626;}
+/* ── Tablero Kanban (estética bitasks, colores Fukari) ── */
+.pl-board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding-bottom:18px;}
+.pl-col{flex:0 0 272px;width:272px;display:flex;flex-direction:column;gap:10px;}
+.pl-col-head{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;border-left:3px solid;}
+.pl-col-name{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;}
+.pl-col-count{margin-left:auto;font-size:11px;font-weight:800;border-radius:20px;padding:1px 9px;}
+.pl-col-body{display:flex;flex-direction:column;gap:10px;min-height:60px;border-radius:10px;padding:2px;transition:background .12s;}
+.pl-col-body.drag-over{background:#e0f2fe;outline:2px dashed #0ea5e9;outline-offset:-2px;}
+.pl-vacio{border:1.5px dashed #e5e7eb;border-radius:10px;padding:22px;text-align:center;color:#cbd5e1;font-size:12px;}
+.pl-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:13px 14px;box-shadow:0 1px 2px rgba(16,24,40,.05);cursor:grab;transition:box-shadow .12s,border-color .12s;}
+.pl-card:hover{box-shadow:0 4px 14px rgba(16,24,40,.10);border-color:#cbd5e1;}
+.pl-card.dragging{opacity:.45;}
+.pl-card:active{cursor:grabbing;}
+.pl-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.pl-card-name{font-size:13.5px;font-weight:800;color:#1a1a2e;line-height:1.3;word-break:break-word;}
+.pl-card-x{flex-shrink:0;width:22px;height:22px;border:none;background:transparent;color:#cbd5e1;font-size:16px;line-height:1;cursor:pointer;border-radius:5px;}
+.pl-card-x:hover{background:#FEE2E2;color:#DC2626;}
+.pl-card-tel{display:flex;align-items:center;gap:5px;font-size:12px;color:#6b7280;margin-top:6px;}
+.pl-card-tel svg{width:12px;height:12px;flex-shrink:0;color:#9ca3af;}
+.pl-card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.pl-chip{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;background:#f1f5f9;color:#475569;word-break:break-word;}
+.pl-chip.loc{background:#eff6ff;color:#1d4ed8;}
 .pl-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:600;display:none;align-items:center;justify-content:center;}
 .pl-modal-bg.open{display:flex;}
 .pl-modal{background:#fff;border-radius:12px;padding:24px;width:420px;max-width:92vw;}
@@ -2337,48 +2338,48 @@ switchView = function(view) {
 <script>
 (function(){
   var PL_STAGES = [
-    { key:'en conversación', label:'En conversación', color:'#3B82F6', open:true },
-    { key:'venta de equipo', label:'Pidió comprar equipo', color:'#8B5CF6', open:true },
-    { key:'contactar manualmente', label:'Contactar manualmente', color:'#F59E0B', open:true },
-    { key:'aguardando instalacion', label:'Aguardando instalación', color:'#16A34A', open:true },
-    { key:'no calificado', label:'No calificado', color:'#9CA3AF', open:false },
-    { key:'sin cobertura', label:'Sin cobertura', color:'#9CA3AF', open:false }
+    { key:'en conversación', label:'En conversación', color:'#3B82F6' },
+    { key:'venta de equipo', label:'Pidió comprar equipo', color:'#8B5CF6' },
+    { key:'contactar manualmente', label:'Contactar manualmente', color:'#F59E0B' },
+    { key:'aguardando instalacion', label:'Aguardando instalación', color:'#16A34A' },
+    { key:'no calificado', label:'No calificado', color:'#9CA3AF' },
+    { key:'sin cobertura', label:'Sin cobertura', color:'#9CA3AF' }
   ];
-  var plExpanded = {}; PL_STAGES.forEach(function(s){ plExpanded[s.key] = s.open; });
   var plLeads = [];
   var plModalReady = false;
+  var _plDragId = null;
 
   function plEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function plHeaders(){ return { 'Content-Type':'application/json', 'x-user-email': _currentUserEmail }; }
   function plOptsFor(etapa){ return PL_STAGES.map(function(s){ return '<option value="'+s.key+'"'+(s.key===etapa?' selected':'')+'>'+s.label+'</option>'; }).join(''); }
 
-  function plRowHtml(l){
-    return '<tr><td><div class="pl-name">'+plEsc(l.nombre||'(sin nombre)')+'</div>'
-      + (l.telefono?'<div class="pl-muted">'+plEsc(l.telefono)+'</div>':'')
-      + (l.email?'<div class="pl-muted">'+plEsc(l.email)+'</div>':'') + '</td>'
-      + '<td>'+(l.localidad?plEsc(l.localidad):'<span style="color:#cbd5e1">—</span>')+'</td>'
-      + '<td><select onchange="plMove(\''+l.id+'\', this.value)">'+plOptsFor(l.etapa)+'</select></td>'
-      + '<td class="pl-actions"><button class="pl-del" title="Sacar del pipeline" onclick="plDel(\''+l.id+'\')">'
-      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>'
-      + '</button></td></tr>';
+  var PL_TEL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>';
+
+  function plCardHtml(l){
+    return '<div class="pl-card" draggable="true" data-id="'+l.id+'" ondragstart="plDragStart(event)" ondragend="plDragEnd(event)">'
+      + '<div class="pl-card-top"><div class="pl-card-name">'+plEsc(l.nombre||'(sin nombre)')+'</div>'
+      + '<button class="pl-card-x" title="Sacar del pipeline" onclick="plDel(\''+l.id+'\')">&times;</button></div>'
+      + (l.telefono?'<div class="pl-card-tel">'+PL_TEL_SVG+plEsc(l.telefono)+'</div>':'')
+      + ((l.localidad||l.email)?('<div class="pl-card-tags">'
+          + (l.localidad?'<span class="pl-chip loc">'+plEsc(l.localidad)+'</span>':'')
+          + (l.email?'<span class="pl-chip">'+plEsc(l.email)+'</span>':'')
+        + '</div>'):'')
+      + '</div>';
   }
 
   function plRender(){
-    document.getElementById('pl-total').textContent = plLeads.length + ' lead' + (plLeads.length===1?'':'s') + ' en total';
-    var html = '<div class="pl-stages">';
+    document.getElementById('pl-total').textContent = plLeads.length + ' contacto' + (plLeads.length===1?'':'s') + ' en total';
+    var html = '<div class="pl-board">';
     PL_STAGES.forEach(function(st){
       var rows = plLeads.filter(function(l){ return l.etapa === st.key; });
-      var open = plExpanded[st.key];
-      html += '<div class="pl-stage"><button class="pl-stage-head" onclick="plToggle(\''+st.key+'\')">'
-        + '<span class="pl-caret">'+(open?'▼':'▶')+'</span>'
-        + '<span class="pl-dot" style="background:'+st.color+'"></span>'
-        + '<span class="pl-label">'+st.label+'</span>'
-        + '<span class="pl-count">'+rows.length+'</span></button>';
-      if (open){
-        if (rows.length===0){ html += '<div class="pl-body"><div class="pl-empty">Sin leads en esta etapa</div></div>'; }
-        else { html += '<div class="pl-body" style="overflow-x:auto"><table class="pl-table"><thead><tr><th>Contacto</th><th>Localidad</th><th>Mover a</th><th class="r">&nbsp;</th></tr></thead><tbody>'+rows.map(plRowHtml).join('')+'</tbody></table></div>'; }
-      }
-      html += '</div>';
+      html += '<div class="pl-col">'
+        + '<div class="pl-col-head" style="background:'+st.color+'14;border-left-color:'+st.color+'">'
+        +   '<span class="pl-col-name" style="color:'+st.color+'">'+plEsc(st.label)+'</span>'
+        +   '<span class="pl-col-count" style="background:'+st.color+'22;color:'+st.color+'">'+rows.length+'</span>'
+        + '</div>'
+        + '<div class="pl-col-body" data-stage="'+plEsc(st.key)+'" ondragover="plDragOver(event)" ondragleave="plDragLeave(event)" ondrop="plDrop(event,\''+st.key+'\')">'
+        +   (rows.length? rows.map(plCardHtml).join('') : '<div class="pl-vacio">Vacío</div>')
+        + '</div></div>';
     });
     html += '</div>';
     document.getElementById('pl-stages-slot').innerHTML = html;
@@ -2393,16 +2394,27 @@ switchView = function(view) {
       plRender();
     } catch(e){ document.getElementById('pl-stages-slot').innerHTML = '<div class="pl-loading" style="color:#991B1B">Error: ' + plEsc(e.message) + '</div>'; }
   };
-  window.plToggle = function(key){ plExpanded[key] = !plExpanded[key]; plRender(); };
   window.plMove = async function(id, etapa){
-    try { var r = await fetch(API_URL + '/api/sales-bot/pipeline/' + id, { method:'PATCH', headers: plHeaders(), body: JSON.stringify({ etapa: etapa }) }); if (!r.ok) throw new Error('status '+r.status); var l = plLeads.find(function(x){ return x.id===id; }); if (l) l.etapa = etapa; plRender(); }
-    catch(e){ alert('No se pudo mover: ' + e.message); }
+    var l = plLeads.find(function(x){ return x.id===id; });
+    var prev = l ? l.etapa : null;
+    if (l) l.etapa = etapa;
+    plRender(); // optimista
+    try { var r = await fetch(API_URL + '/api/sales-bot/pipeline/' + id, { method:'PATCH', headers: plHeaders(), body: JSON.stringify({ etapa: etapa }) }); if (!r.ok) throw new Error('status '+r.status); }
+    catch(e){ if (l) l.etapa = prev; plRender(); alert('No se pudo mover: ' + e.message); }
   };
   window.plDel = async function(id){
     if (!confirm('¿Sacar este lead del CRM?')) return;
     try { var r = await fetch(API_URL + '/api/sales-bot/pipeline/' + id, { method:'DELETE', headers: { 'x-user-email': _currentUserEmail } }); if (!r.ok) throw new Error('status '+r.status); plLeads = plLeads.filter(function(x){ return x.id!==id; }); plRender(); }
     catch(e){ alert('No se pudo eliminar: ' + e.message); }
   };
+
+  // ── Drag & drop entre columnas ──
+  window.plDragStart = function(e){ _plDragId = e.currentTarget.getAttribute('data-id'); e.currentTarget.classList.add('dragging'); if (e.dataTransfer){ e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain', _plDragId); }catch(_){} } };
+  window.plDragEnd = function(e){ e.currentTarget.classList.remove('dragging'); };
+  window.plDragOver = function(e){ e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect='move'; e.currentTarget.classList.add('drag-over'); };
+  window.plDragLeave = function(e){ if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('drag-over'); };
+  window.plDrop = function(e, etapa){ e.preventDefault(); e.currentTarget.classList.remove('drag-over'); var id = _plDragId || (e.dataTransfer && e.dataTransfer.getData('text/plain')); _plDragId = null; if (!id) return; var l = plLeads.find(function(x){ return x.id===id; }); if (!l || l.etapa===etapa) return; plMove(id, etapa); };
+
   window.plOpenModal = function(){ if (!plModalReady){ document.getElementById('plm-etapa').innerHTML = plOptsFor(''); plModalReady = true; } document.getElementById('pl-modal').classList.add('open'); };
   window.plCloseModal = function(){ document.getElementById('pl-modal').classList.remove('open'); ['plm-nombre','plm-telefono','plm-email','plm-localidad'].forEach(function(id){ document.getElementById(id).value=''; }); };
   window.plSaveLead = async function(){
@@ -2410,7 +2422,7 @@ switchView = function(view) {
     var body = { nombre:document.getElementById('plm-nombre').value.trim(), telefono:document.getElementById('plm-telefono').value.trim(), email:document.getElementById('plm-email').value.trim(), localidad:document.getElementById('plm-localidad').value.trim(), etapa:document.getElementById('plm-etapa').value };
     if (!body.nombre && !body.telefono){ alert('Poné al menos nombre o teléfono'); return; }
     btn.disabled = true;
-    try { var r = await fetch(API_URL + '/api/sales-bot/pipeline', { method:'POST', headers: plHeaders(), body: JSON.stringify(body) }); var j = await r.json(); if (!r.ok) throw new Error(j.error||('status '+r.status)); plLeads.unshift(j); if (!plExpanded[j.etapa]) plExpanded[j.etapa]=true; plCloseModal(); plRender(); }
+    try { var r = await fetch(API_URL + '/api/sales-bot/pipeline', { method:'POST', headers: plHeaders(), body: JSON.stringify(body) }); var j = await r.json(); if (!r.ok) throw new Error(j.error||('status '+r.status)); plLeads.unshift(j); plCloseModal(); plRender(); }
     catch(e){ alert('No se pudo agregar: ' + e.message); }
     finally { btn.disabled = false; }
   };
