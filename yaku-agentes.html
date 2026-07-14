@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yakú — Agentes</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f5f7;color:#1a1a2e;}
+  .topbar{background:#1a1a2e;color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar-logos img{height:26px;}
+  .topbar-title{font-size:14px;font-weight:600;letter-spacing:0.3px;}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+  .btn-logout{background:transparent;border:1px solid #4b5563;color:#d1d5db;padding:6px 14px;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;text-decoration:none;}
+  .btn-logout:hover{border-color:#9ca3af;color:#fff;}
+
+  .wrap{max-width:720px;margin:24px auto;padding:0 18px;}
+  .page-h{margin-bottom:18px;}
+  .page-h h1{font-size:19px;font-weight:800;}
+  .page-h p{font-size:12.5px;color:#6b7280;margin-top:3px;}
+
+  .card{background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:22px;margin-bottom:16px;}
+  .card.loading-card{color:#9ca3af;text-align:center;font-size:13px;padding:36px;}
+
+  .bot-head{display:flex;align-items:center;gap:14px;}
+  .bot-icon{width:46px;height:46px;border-radius:12px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+  .bot-meta{flex:1;min-width:0;}
+  .bot-name{font-size:15px;font-weight:800;}
+  .bot-sub{font-size:12px;color:#6b7280;margin-top:2px;}
+
+  /* estado chip */
+  .estado{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:20px;margin-top:8px;}
+  .estado .pt{width:8px;height:8px;border-radius:50%;}
+  .estado.on{background:#dcfce7;color:#16a34a;}   .estado.on .pt{background:#16a34a;}
+  .estado.off{background:#f1f5f9;color:#64748b;}   .estado.off .pt{background:#94a3b8;}
+  .estado.sched{background:#fef3c7;color:#b45309;} .estado.sched .pt{background:#d97706;}
+
+  /* switch */
+  .switch{position:relative;display:inline-block;width:48px;height:27px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:27px;transition:.2s;}
+  .slider:before{content:'';position:absolute;height:21px;width:21px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  input:checked + .slider{background:#16a34a;}
+  input:checked + .slider:before{transform:translateX(21px);}
+  input:disabled + .slider{opacity:.5;cursor:not-allowed;}
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-top:1px solid #f1f5f9;}
+  .row:first-of-type{border-top:none;}
+  .row-txt .t{font-size:13.5px;font-weight:700;}
+  .row-txt .d{font-size:11.5px;color:#6b7280;margin-top:2px;}
+
+  .sched-box{margin-top:4px;padding-top:14px;border-top:1px solid #f1f5f9;}
+  .sched-box.hidden{display:none;}
+  .times{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .times label{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;}
+  .times input[type=time]{padding:7px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;}
+  .times .sep{color:#9ca3af;font-size:12px;}
+  .days{display:flex;gap:6px;flex-wrap:wrap;}
+  .day{width:38px;height:34px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;font-family:inherit;}
+  .day.sel{background:#1a1a2e;color:#fff;border-color:#1a1a2e;}
+
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;flex-wrap:wrap;}
+  .saved{font-size:11.5px;color:#9ca3af;}
+  .btn-save{background:#0ea5e9;color:#fff;border:none;padding:10px 20px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .btn-save:disabled{opacity:.5;cursor:default;}
+
+  .note{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;font-size:12px;color:#92400e;line-height:1.55;margin-top:6px;}
+  .note a{color:#92400e;font-weight:700;}
+  .err{color:#991B1B;font-size:12px;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logos">
+    <img src="https://yakuagua.com.ar/wp-content/uploads/2024/04/logo.png" alt="Yakú">
+  </div>
+  <span class="topbar-title">Agentes</span>
+  <div class="topbar-right">
+    <a href="/hub.html" class="btn-logout">&#8592; Inicio</a>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="page-h">
+    <h1>Agentes</h1>
+    <p>Prendé o apagá el bot de ventas y definí su horario de atención.</p>
+  </div>
+
+  <div id="slot"><div class="card loading-card">Cargando…</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var API_URL = 'https://fukari-backend-production.up.railway.app';
+var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var userEmail = '';
+var cfg = null;
+var DIAS = [{n:1,l:'Lun'},{n:2,l:'Mar'},{n:3,l:'Mié'},{n:4,l:'Jue'},{n:5,l:'Vie'},{n:6,l:'Sáb'},{n:7,l:'Dom'}];
+var TZ = 'America/Argentina/Buenos_Aires';
+
+sb.auth.getSession().then(function(result){
+  var session = result.data.session;
+  if (!session) { window.location.href = '/index.html'; return; }
+  userEmail = session.user.email;
+  load();
+});
+function logout(){ sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); }
+function headers(){ return { 'Content-Type':'application/json', 'x-user-email': userEmail }; }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hhmm(t){ return (t||'').slice(0,5); }
+
+async function load(){
+  try {
+    var r = await fetch(API_URL + '/api/sales-bot/config', { headers: { 'x-user-email': userEmail } });
+    if (r.status === 403) { document.getElementById('slot').innerHTML = '<div class="card err">No tenés permiso para ver esta sección.</div>'; return; }
+    if (!r.ok) throw new Error('status ' + r.status);
+    cfg = await r.json();
+    render();
+  } catch(e){
+    document.getElementById('slot').innerHTML = '<div class="card err">Error al cargar: ' + esc(e.message) + '</div>';
+  }
+}
+
+// ¿Está atendiendo ahora? (misma lógica que el backend)
+function ahoraTZ(){
+  var parts = new Intl.DateTimeFormat('en-US',{timeZone:TZ,hour12:false,weekday:'short',hour:'2-digit',minute:'2-digit'}).formatToParts(new Date());
+  var g = function(t){ var p = parts.find(function(x){return x.type===t;}); return p?p.value:''; };
+  var hh = parseInt(g('hour'),10); if(hh===24) hh=0;
+  var mm = parseInt(g('minute'),10)||0;
+  var map = {Sun:7,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+  return { min: hh*60+mm, dow: map[g('weekday')]||0 };
+}
+function toMin(t){ var p=(t||'0:0').split(':'); return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0); }
+function dentroHorario(){
+  if (!cfg.horario_activo) return true;
+  var a = ahoraTZ();
+  var dias = (cfg.dias_semana&&cfg.dias_semana.length)?cfg.dias_semana:[1,2,3,4,5,6,7];
+  if (dias.indexOf(a.dow)===-1) return false;
+  var d=toMin(cfg.hora_desde), h=toMin(cfg.hora_hasta);
+  if (d===h) return true;
+  if (d<h) return a.min>=d && a.min<h;
+  return a.min>=d || a.min<h;
+}
+function estadoChip(){
+  if (!cfg.activo) return '<span class="estado off"><span class="pt"></span>Apagado</span>';
+  if (dentroHorario()) return '<span class="estado on"><span class="pt"></span>Atendiendo ahora</span>';
+  return '<span class="estado sched"><span class="pt"></span>Encendido — fuera de horario</span>';
+}
+
+function render(){
+  var diasSel = cfg.dias_semana || [];
+  var html = ''
+   + '<div class="card">'
+   + '  <div class="bot-head">'
+   + '    <div class="bot-icon">💧</div>'
+   + '    <div class="bot-meta">'
+   + '      <div class="bot-name">Bot de Ventas Yakú</div>'
+   + '      <div class="bot-sub">Atiende WhatsApp, responde consultas y toma leads.</div>'
+   + '      <div id="chip">' + estadoChip() + '</div>'
+   + '    </div>'
+   + '    <label class="switch"><input type="checkbox" id="sw-activo" '+(cfg.activo?'checked':'')+' onchange="onActivo()"><span class="slider"></span></label>'
+   + '  </div>'
+
+   + '  <div class="row">'
+   + '    <div class="row-txt"><div class="t">Restringir horario de atención</div><div class="d">Si está apagado, el bot atiende las 24 hs.</div></div>'
+   + '    <label class="switch"><input type="checkbox" id="sw-horario" '+(cfg.horario_activo?'checked':'')+' onchange="onHorario()"><span class="slider"></span></label>'
+   + '  </div>'
+
+   + '  <div class="sched-box '+(cfg.horario_activo?'':'hidden')+'" id="sched">'
+   + '    <div class="times">'
+   + '      <label>Desde</label><input type="time" id="t-desde" value="'+hhmm(cfg.hora_desde)+'" onchange="markDirty()">'
+   + '      <span class="sep">→</span>'
+   + '      <label>Hasta</label><input type="time" id="t-hasta" value="'+hhmm(cfg.hora_hasta)+'" onchange="markDirty()">'
+   + '    </div>'
+   + '    <div class="days">'
+   +        DIAS.map(function(d){ return '<button type="button" class="day '+(diasSel.indexOf(d.n)!==-1?'sel':'')+'" data-d="'+d.n+'" onclick="toggleDay('+d.n+')">'+d.l+'</button>'; }).join('')
+   + '    </div>'
+   + '  </div>'
+
+   + '  <div class="foot">'
+   + '    <span class="saved" id="saved">'+(cfg.updated_at?('Último cambio: '+new Date(cfg.updated_at).toLocaleString('es-AR')):'')+'</span>'
+   + '    <button class="btn-save" id="btn-save" onclick="save()" disabled>Guardar cambios</button>'
+   + '  </div>'
+   + '  <div class="err" id="err" style="display:none"></div>'
+   + '</div>'
+
+   + '<div class="note">⚠️ Cuando prendés el bot, empieza a responder <b>solo</b> los mensajes nuevos. Si hay chats que estás atendiendo a mano, pausá el bot en esa conversación desde el <a href="/yaku-crm-ventas.html">CRM / conversaciones</a>. El bot además se pausa solo cuando cierra una venta o deriva a un asesor.</div>';
+
+  document.getElementById('slot').innerHTML = html;
+  refreshChip();
+}
+
+var chipTimer = null;
+function refreshChip(){
+  if (chipTimer) clearInterval(chipTimer);
+  chipTimer = setInterval(function(){ var c=document.getElementById('chip'); if(c) c.innerHTML=estadoChip(); }, 30000);
+}
+
+function markDirty(){ var b=document.getElementById('btn-save'); if(b) b.disabled=false; }
+function onActivo(){ cfg.activo = document.getElementById('sw-activo').checked; document.getElementById('chip').innerHTML=estadoChip(); markDirty(); }
+function onHorario(){
+  cfg.horario_activo = document.getElementById('sw-horario').checked;
+  document.getElementById('sched').classList.toggle('hidden', !cfg.horario_activo);
+  document.getElementById('chip').innerHTML=estadoChip();
+  markDirty();
+}
+function toggleDay(n){
+  cfg.dias_semana = cfg.dias_semana || [];
+  var i = cfg.dias_semana.indexOf(n);
+  if (i===-1) cfg.dias_semana.push(n); else cfg.dias_semana.splice(i,1);
+  document.querySelector('.day[data-d="'+n+'"]').classList.toggle('sel');
+  document.getElementById('chip').innerHTML=estadoChip();
+  markDirty();
+}
+
+async function save(){
+  var btn = document.getElementById('btn-save');
+  var err = document.getElementById('err');
+  err.style.display='none';
+  var body = {
+    activo: document.getElementById('sw-activo').checked,
+    horario_activo: document.getElementById('sw-horario').checked,
+    hora_desde: document.getElementById('t-desde').value || '09:00',
+    hora_hasta: document.getElementById('t-hasta').value || '18:00',
+    dias_semana: (cfg.dias_semana||[]).slice().sort(function(a,b){return a-b;}),
+  };
+  if (body.horario_activo && body.dias_semana.length===0){
+    err.textContent='Elegí al menos un día de atención.'; err.style.display='block'; return;
+  }
+  btn.disabled = true; btn.textContent='Guardando…';
+  try {
+    var r = await fetch(API_URL + '/api/sales-bot/config', { method:'PUT', headers: headers(), body: JSON.stringify(body) });
+    var j = await r.json();
+    if (!r.ok) throw new Error(j.error || ('status ' + r.status));
+    cfg = { activo:j.activo, horario_activo:j.horario_activo, hora_desde:j.hora_desde, hora_hasta:j.hora_hasta, dias_semana:j.dias_semana, timezone:j.timezone, updated_at:j.updated_at };
+    document.getElementById('saved').textContent = 'Guardado ✓ ' + new Date().toLocaleTimeString('es-AR');
+    document.getElementById('chip').innerHTML = estadoChip();
+    btn.textContent='Guardar cambios';
+  } catch(e){
+    err.textContent='No se pudo guardar: '+e.message; err.style.display='block';
+    btn.disabled=false; btn.textContent='Guardar cambios';
+  }
+}
+</script>
+</body>
+</html>
