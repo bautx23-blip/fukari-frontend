@@ -1019,8 +1019,12 @@ function actualizarMetricas() {
   document.getElementById('s-ganado').textContent = allLeads.filter(function(l) { return l.estado === 'ganado'; }).length;
 }
 
-document.getElementById('filtro-estado').addEventListener('change', renderTabla);
-document.getElementById('filtro-buscar').addEventListener('input', function() {
+// Guardas: estos elementos son del CRM de empresas y no existen en este CRM.
+// Sin el chequeo, getElementById(...).addEventListener rompía TODO el init.
+var _plFiltroEstado = document.getElementById('filtro-estado');
+if (_plFiltroEstado) _plFiltroEstado.addEventListener('change', renderTabla);
+var _plFiltroBuscar = document.getElementById('filtro-buscar');
+if (_plFiltroBuscar) _plFiltroBuscar.addEventListener('input', function() {
   clearTimeout(_debounceTimer);
   _debounceTimer = setTimeout(renderTabla, 300);
 });
@@ -2386,13 +2390,28 @@ switchView = function(view) {
   }
 
   window.plLoad = async function(){
-    if (!plModalReady){ document.getElementById('plm-etapa').innerHTML = plOptsFor(''); plModalReady = true; }
-    try {
-      var r = await fetch(API_URL + '/api/sales-bot/pipeline', { headers: { 'x-user-email': _currentUserEmail } });
-      if (!r.ok) throw new Error('status ' + r.status);
-      plLeads = await r.json();
-      plRender();
-    } catch(e){ document.getElementById('pl-stages-slot').innerHTML = '<div class="pl-loading" style="color:#991B1B">Error: ' + plEsc(e.message) + '</div>'; }
+    if (!plModalReady){ var em = document.getElementById('plm-etapa'); if (em){ em.innerHTML = plOptsFor(''); plModalReady = true; } }
+    var slot = document.getElementById('pl-stages-slot');
+    if (slot) slot.innerHTML = '<div class="pl-loading">Cargando…</div>';
+    var intentos = 0;
+    async function intento(){
+      intentos++;
+      var ctrl = new AbortController();
+      var to = setTimeout(function(){ ctrl.abort(); }, 12000); // corta si el backend se cuelga
+      try {
+        var r = await fetch(API_URL + '/api/sales-bot/pipeline', { headers: { 'x-user-email': _currentUserEmail }, signal: ctrl.signal });
+        clearTimeout(to);
+        if (!r.ok) throw new Error('status ' + r.status);
+        plLeads = await r.json();
+        plRender();
+      } catch(e){
+        clearTimeout(to);
+        if (intentos < 2) return intento(); // 1 reintento automático (cold-start del backend)
+        var msg = (e && e.name === 'AbortError') ? 'La carga tardó demasiado (el servidor no respondió).' : ('Error al cargar: ' + plEsc(e && e.message || 'desconocido'));
+        if (slot) slot.innerHTML = '<div class="pl-loading" style="color:#991B1B">' + msg + ' <button class="pl-btn pl-btn-primary" style="margin-left:10px;padding:6px 14px" onclick="plLoad()">Reintentar</button></div>';
+      }
+    }
+    await intento();
   };
   window.plMove = async function(id, etapa){
     var l = plLeads.find(function(x){ return x.id===id; });
