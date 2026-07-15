@@ -862,9 +862,20 @@ sb.auth.getSession().then(function(result) {
   if (email === INTEGRATOR_EMAIL) {
     document.getElementById('bot-actions-admin').style.display = '';
   }
-  plLoad();
-  cargarConversacionesWA();
-  _waPollingInterval = setInterval(pollWhatsApp, 10000);
+  // OJO: plLoad/pollWhatsApp se definen en bloques <script> POSTERIORES. Si la
+  // sesión resuelve rápido (cache), este callback corre antes de que existan y
+  // tiraba "plLoad is not defined" → pipeline colgado en "Cargando…". Diferimos
+  // hasta que todo el HTML/scripts estén parseados.
+  function _crmInitData(){
+    plLoad();
+    cargarConversacionesWA();
+    _waPollingInterval = setInterval(pollWhatsApp, 10000);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _crmInitData);
+  } else {
+    _crmInitData();
+  }
 });
 
 async function logout() { await sb.auth.signOut(); window.location.href = '/index.html'; }
