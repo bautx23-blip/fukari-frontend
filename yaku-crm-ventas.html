@@ -457,6 +457,10 @@ tbody tr:hover{background:#f8fafc;}
     <button class="sidebar-link active" id="nav-pipeline" onclick="switchView('pipeline')">
       <span class="icon">&#128202;</span> Pipeline
     </button>
+    <button class="sidebar-link" id="nav-agenda" onclick="switchView('agenda')">
+      <span class="icon">&#128197;</span> Agenda
+      <span class="sidebar-badge" id="agenda-badge"></span>
+    </button>
     <button class="sidebar-link" id="nav-probarbot" onclick="switchView('probarbot')">
       <span class="icon">&#129302;</span> Probar bot
     </button>
@@ -670,6 +674,85 @@ tbody tr:hover{background:#f8fafc;}
     <div class="ag-wrap" id="ag-slot"><div class="ag-loading">Cargando…</div></div>
   </div>
 
+  <!-- VIEW: AGENDA (calendario de instalaciones, SLA 72hs hábiles) -->
+  <style>
+  #view-agenda{padding:22px;overflow-y:auto;}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap;}
+  .cal-title{font-size:18px;font-weight:800;color:#1a1a2e;text-transform:capitalize;}
+  .cal-sub{font-size:12px;color:#9ca3af;margin-bottom:16px;}
+  .cal-nav{display:flex;align-items:center;gap:6px;}
+  .cal-nav button{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#1a1a2e;}
+  .cal-nav button:hover{border-color:#0ea5e9;color:#0ea5e9;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-dow{font-size:10.5px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;text-align:center;padding:4px 0;}
+  .cal-cell{min-height:96px;background:#fff;border:1px solid #eef0f3;border-radius:9px;padding:6px 7px;display:flex;flex-direction:column;gap:3px;overflow:hidden;}
+  .cal-cell.otro{background:#fafbfc;}
+  .cal-cell.otro .cal-num{color:#cbd5e1;}
+  .cal-cell.hoy{border-color:#0ea5e9;box-shadow:0 0 0 1px #0ea5e9 inset;}
+  .cal-num{font-size:12px;font-weight:700;color:#64748b;}
+  .cal-cell.hoy .cal-num{color:#0ea5e9;}
+  .cal-ev{font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cal-ev.pendiente{background:#eff6ff;color:#1d4ed8;}
+  .cal-ev.vencida{background:#fee2e2;color:#b91c1c;}
+  .cal-ev.hoy{background:#fef3c7;color:#92400e;}
+  .cal-ev.hecho{background:#dcfce7;color:#166534;text-decoration:line-through;}
+  .cal-loading{padding:30px;text-align:center;color:#9ca3af;font-size:13px;}
+  .cal-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:700;display:none;align-items:center;justify-content:center;}
+  .cal-modal-bg.open{display:flex;}
+  .cal-modal{background:#fff;border-radius:12px;padding:22px;width:440px;max-width:92vw;max-height:80vh;overflow-y:auto;}
+  .cal-modal h3{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+  .cal-modal h3 .x{cursor:pointer;color:#9ca3af;font-size:20px;line-height:1;border:none;background:none;}
+  .cal-item{border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px;}
+  .cal-item.hecho{opacity:.6;}
+  .cal-item .n{font-size:13.5px;font-weight:800;color:#1a1a2e;}
+  .cal-item .m{font-size:12px;color:#6b7280;margin-top:3px;}
+  .cal-item .acc{margin-top:9px;}
+  .cal-btn{padding:7px 13px;border-radius:8px;border:none;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .cal-btn-done{background:#16a34a;color:#fff;}
+  .cal-chip{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle;}
+  .cal-chip.vencida{background:#fee2e2;color:#b91c1c;} .cal-chip.hoy{background:#fef3c7;color:#92400e;} .cal-chip.hecho{background:#dcfce7;color:#166534;}
+  .cal-noti-bg{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:800;display:none;align-items:flex-start;justify-content:center;padding:60px 16px;}
+  .cal-noti-bg.open{display:flex;}
+  .cal-noti{background:#fff;border-radius:14px;width:100%;max-width:460px;padding:22px;box-shadow:0 24px 60px rgba(15,23,42,.25);}
+  .cal-noti h3{font-size:16px;font-weight:800;color:#b45309;display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .cal-noti .d{font-size:12.5px;color:#6b7280;margin-bottom:12px;}
+  .cal-noti-item{font-size:13px;padding:9px 0;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;gap:10px;align-items:center;}
+  .cal-noti-item:last-child{border-bottom:none;}
+  .cal-noti-cerrar{margin-top:16px;width:100%;background:#1a1a2e;color:#fff;border:none;padding:10px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  </style>
+  <div class="view" id="view-agenda">
+    <div class="cal-head">
+      <div>
+        <div class="cal-title" id="cal-title">—</div>
+        <div class="cal-sub">Instalaciones a coordinar — vencimiento a 72 hs hábiles del cierre.</div>
+      </div>
+      <div class="cal-nav">
+        <button onclick="calMes(-1)" title="Mes anterior">&#8249;</button>
+        <button onclick="calHoy()">Hoy</button>
+        <button onclick="calMes(1)" title="Mes siguiente">&#8250;</button>
+      </div>
+    </div>
+    <div id="cal-slot"><div class="cal-loading">Cargando…</div></div>
+  </div>
+
+</div>
+
+<!-- Modal día de agenda -->
+<div class="cal-modal-bg" id="cal-modal">
+  <div class="cal-modal">
+    <h3><span id="cal-modal-title">Día</span> <button class="x" onclick="calCerrarDia()">&times;</button></h3>
+    <div id="cal-modal-body"></div>
+  </div>
+</div>
+
+<!-- Popup de notificaciones de agenda -->
+<div class="cal-noti-bg" id="cal-noti">
+  <div class="cal-noti">
+    <h3>&#128276; Instalaciones por coordinar</h3>
+    <div class="d">Estas instalaciones vencen hoy o ya están vencidas (el técnico tiene que contactar dentro de 72 hs hábiles).</div>
+    <div id="cal-noti-body"></div>
+    <button class="cal-noti-cerrar" onclick="calCerrarNotis()">Entendido</button>
+  </div>
 </div>
 
 <!-- Side Panel (leads) -->

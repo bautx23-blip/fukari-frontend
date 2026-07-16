@@ -52,6 +52,7 @@ sb.auth.getSession().then(function(result) {
   function _crmInitData(){
     plLoad();
     cargarConversacionesWA();
+    calCargarNotis(); // badge de agenda + popup de instalaciones por vencer
     _waPollingInterval = setInterval(pollWhatsApp, 10000);
     // Vuelta del embedded signup de Kapso: verificar conexión del número de ventas.
     if (location.search.indexOf('wa=ok') !== -1) {
@@ -79,6 +80,7 @@ function switchView(view) {
   if (view === 'pipeline') plLoad();
   if (view === 'probarbot') pbInit();
   if (view === 'agentes') agLoad();
+  if (view === 'agenda') calCargar();
 }
 
 function toggleSidebar() {
@@ -1696,12 +1698,135 @@ switchView = function(view) {
 })();
 
 // ══════════════════════════════════════════════════════════════════════════
+// AGENDA — calendario de instalaciones (SLA 72hs hábiles) + notificaciones
+// ══════════════════════════════════════════════════════════════════════════
+(function(){
+  var calEventos = [];
+  var calAnio = null, calMesN = null;   // mes visible (0-11)
+  var calNotis = null;
+  var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var DOW = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+  function calHeaders(){ return { 'x-user-email': _currentUserEmail }; }
+  function hoyAR(){ return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires'}).format(new Date()); }
+  function ymd(y,m,d){ return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+
+  window.calHoy = function(){ var h=hoyAR().split('-'); calAnio=+h[0]; calMesN=+h[1]-1; calCargar(); };
+  window.calMes = function(delta){
+    if (calAnio==null){ calHoy(); return; }
+    calMesN += delta;
+    if (calMesN<0){ calMesN=11; calAnio--; }
+    if (calMesN>11){ calMesN=0; calAnio++; }
+    calCargar();
+  };
+
+  window.calCargar = async function(){
+    if (calAnio==null){ var h=hoyAR().split('-'); calAnio=+h[0]; calMesN=+h[1]-1; }
+    var slot=document.getElementById('cal-slot');
+    var t=document.getElementById('cal-title'); if(t) t.textContent = MESES[calMesN]+' '+calAnio;
+    if (slot) slot.innerHTML='<div class="cal-loading">Cargando…</div>';
+    var desde=ymd(calAnio,calMesN,1);
+    var ultimo=new Date(calAnio,calMesN+1,0).getDate();
+    var hasta=ymd(calAnio,calMesN,ultimo);
+    try {
+      var r=await fetch(API_URL+'/api/agenda?desde='+desde+'&hasta='+hasta,{headers:calHeaders()});
+      calEventos = r.ok ? await r.json() : [];
+      calRender();
+    } catch(e){ if(slot) slot.innerHTML='<div class="cal-loading" style="color:#991B1B">Error: '+esc(e.message)+'</div>'; }
+  };
+
+  function evClase(e){
+    if (e.estado==='hecho') return 'hecho';
+    var h=hoyAR(); var fl=String(e.fecha_limite).slice(0,10);
+    if (fl<h) return 'vencida';
+    if (fl===h) return 'hoy';
+    return 'pendiente';
+  }
+
+  function calRender(){
+    var slot=document.getElementById('cal-slot'); if(!slot) return;
+    var porDia={};
+    calEventos.forEach(function(e){ var d=String(e.fecha_limite).slice(0,10); (porDia[d]=porDia[d]||[]).push(e); });
+    var primero=new Date(Date.UTC(calAnio,calMesN,1,12)).getUTCDay(); // 0=dom..6=sab
+    var offset=(primero+6)%7; // lun=0
+    var ultimo=new Date(calAnio,calMesN+1,0).getDate();
+    var h=hoyAR();
+    var html='<div class="cal-grid">';
+    DOW.forEach(function(d){ html+='<div class="cal-dow">'+d+'</div>'; });
+    for(var i=0;i<offset;i++) html+='<div class="cal-cell otro"></div>';
+    for(var day=1;day<=ultimo;day++){
+      var f=ymd(calAnio,calMesN,day);
+      var evs=porDia[f]||[];
+      html+='<div class="cal-cell'+(f===h?' hoy':'')+'">'
+        + '<div class="cal-num">'+day+'</div>'
+        + evs.slice(0,3).map(function(e){ return '<div class="cal-ev '+evClase(e)+'" onclick="calAbrirDia(\''+f+'\')" title="'+esc(e.nombre||e.telefono||'')+'">'+esc(e.nombre||e.telefono||'(sin nombre)')+'</div>'; }).join('')
+        + (evs.length>3 ? '<div class="cal-ev pendiente" onclick="calAbrirDia(\''+f+'\')">+'+(evs.length-3)+' más</div>' : '')
+        + '</div>';
+    }
+    html+='</div>';
+    slot.innerHTML=html;
+  }
+
+  window.calAbrirDia = function(f){
+    var evs=calEventos.filter(function(e){ return String(e.fecha_limite).slice(0,10)===f; });
+    var p=f.split('-');
+    document.getElementById('cal-modal-title').textContent='Instalaciones — '+p[2]+'/'+p[1]+'/'+p[0];
+    document.getElementById('cal-modal-body').innerHTML = evs.length ? evs.map(function(e){
+      var cls=evClase(e);
+      var chip = cls==='vencida'?'<span class="cal-chip vencida">vencida</span>':(cls==='hoy'?'<span class="cal-chip hoy">vence hoy</span>':(cls==='hecho'?'<span class="cal-chip hecho">hecho</span>':''));
+      return '<div class="cal-item'+(e.estado==='hecho'?' hecho':'')+'">'
+        + '<div class="n">'+esc(e.nombre||'(sin nombre)')+chip+'</div>'
+        + '<div class="m">'+(e.telefono?esc(e.telefono):'')+(e.localidad?' &middot; '+esc(e.localidad):'')+'</div>'
+        + (e.estado==='hecho' ? '' : '<div class="acc"><button class="cal-btn cal-btn-done" onclick="calMarcarHecho(\''+e.id+'\')">Marcar como contactado</button></div>')
+        + '</div>';
+    }).join('') : '<div style="color:#9ca3af;font-size:13px">Sin instalaciones este día.</div>';
+    document.getElementById('cal-modal').classList.add('open');
+  };
+  window.calCerrarDia = function(){ document.getElementById('cal-modal').classList.remove('open'); };
+
+  window.calMarcarHecho = async function(id){
+    try {
+      var r=await fetch(API_URL+'/api/agenda/'+id,{method:'PATCH',headers:{'Content-Type':'application/json','x-user-email':_currentUserEmail},body:JSON.stringify({estado:'hecho'})});
+      if(!r.ok) throw new Error('status '+r.status);
+      var e=calEventos.find(function(x){return x.id===id;}); if(e) e.estado='hecho';
+      calRender(); calCerrarDia(); calCargarNotis();
+    } catch(err){ alert('No se pudo marcar: '+err.message); }
+  };
+
+  // ── Notificaciones: badge en el sidebar + popup una vez por día ──
+  window.calCargarNotis = async function(){
+    try {
+      var r=await fetch(API_URL+'/api/agenda/notificaciones',{headers:calHeaders()});
+      if(!r.ok) return;
+      calNotis=await r.json();
+      var badge=document.getElementById('agenda-badge');
+      if(badge) badge.textContent = calNotis.urgentes>0 ? calNotis.urgentes : '';
+      if (calNotis.urgentes>0 && localStorage.getItem('agenda_noti_'+calNotis.hoy)!=='1') calPopupNotis();
+    } catch(e){}
+  };
+  function calPopupNotis(){
+    if(!calNotis) return;
+    var urg=calNotis.items.filter(function(i){ return i.urgencia==='vencida'||i.urgencia==='hoy'; });
+    if(!urg.length) return;
+    document.getElementById('cal-noti-body').innerHTML = urg.map(function(i){
+      var chip = i.urgencia==='vencida'?'<span class="cal-chip vencida">vencida</span>':'<span class="cal-chip hoy">vence hoy</span>';
+      return '<div class="cal-noti-item"><span><b>'+esc(i.nombre||'(sin nombre)')+'</b>'+(i.localidad?' &middot; '+esc(i.localidad):'')+'</span>'+chip+'</div>';
+    }).join('');
+    document.getElementById('cal-noti').classList.add('open');
+  }
+  window.calCerrarNotis = function(){
+    document.getElementById('cal-noti').classList.remove('open');
+    if(calNotis) localStorage.setItem('agenda_noti_'+calNotis.hoy,'1');
+  };
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
 // Guardarraíl anti-fragilidad: con defer, todo esto ya está definido acá.
 // Si a futuro alguien rompe el orden, lo gritamos en consola en vez de fallar
 // en silencio con un "Cargando…" eterno.
 // ══════════════════════════════════════════════════════════════════════════
 (function(){
-  var criticas = ['switchView','plLoad','pbInit','agLoad','cargarConversacionesWA','pollWhatsApp','waVerificarConexion','waConectar'];
+  var criticas = ['switchView','plLoad','pbInit','agLoad','cargarConversacionesWA','pollWhatsApp','waVerificarConexion','waConectar','calCargar','calCargarNotis','calMes'];
   var faltan = criticas.filter(function(n){ return typeof window[n] !== 'function'; });
   if (faltan.length) console.error('[CRM] Funciones de init sin definir (revisar carga):', faltan.join(', '));
 })();
