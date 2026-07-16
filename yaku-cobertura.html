@@ -49,6 +49,16 @@
   <div class="panel">
 
     <div class="card">
+      <h3>🌎 Ir a una ciudad</h3>
+      <div class="hint">Buscá una ciudad o localidad y el mapa te lleva ahí para pintar en esa zona.</div>
+      <div style="display:flex;gap:8px;">
+        <input id="c-buscar" placeholder="Ej: Santa Fe, Paraná…" autocomplete="off" style="margin-bottom:0;" onkeydown="if(event.key==='Enter')buscarCiudad()">
+        <button class="btn btn-primary" style="flex-shrink:0;justify-content:center;" onclick="buscarCiudad()">Ir</button>
+      </div>
+      <div id="c-res" class="res"></div>
+    </div>
+
+    <div class="card">
       <h3>🖍️ Pintar zonas</h3>
       <div class="hint">Usá la herramienta de polígono (arriba a la izquierda del mapa) para dibujar una zona de cobertura. Al cerrar el polígono te pide un nombre y se guarda. Para borrar una zona, usá el modo borrar (ícono de tacho) o el botón de la lista.</div>
       <div id="zonas-lista"><div class="empty">Cargando zonas…</div></div>
@@ -223,6 +233,40 @@ async function probar() {
       box.className = 'res no';
       box.innerHTML = '❌ <b>Fuera de cobertura</b> — el bot diría que no llegan hasta ahí.<br><span style="font-size:11px;color:#b91c1c">' + escapeHtml(j.nomenclatura || '') + '</span>';
     }
+  } catch (err) {
+    box.className = 'res warn'; box.textContent = 'Error: ' + err.message;
+  }
+}
+
+// ── Buscar ciudad y volar el mapa ahí (geocoding con georef, oficial AR) ──
+async function geocodeCiudad(nombre) {
+  const base = 'https://apis.datos.gob.ar/georef/api/';
+  // 1) municipios (nivel ciudad), 2) localidades (fallback)
+  for (const ep of ['municipios', 'localidades']) {
+    try {
+      const r = await fetch(base + ep + '?nombre=' + encodeURIComponent(nombre) + '&max=1&campos=nombre,centroide,provincia');
+      if (!r.ok) continue;
+      const j = await r.json();
+      const arr = j[ep] || [];
+      if (arr.length && arr[0].centroide && arr[0].centroide.lat != null) {
+        return { lat: arr[0].centroide.lat, lon: arr[0].centroide.lon, nombre: arr[0].nombre, provincia: arr[0].provincia && arr[0].provincia.nombre };
+      }
+    } catch (_) {}
+  }
+  return null;
+}
+
+async function buscarCiudad() {
+  const q = document.getElementById('c-buscar').value.trim();
+  const box = document.getElementById('c-res');
+  if (!q) { box.style.display = 'block'; box.className = 'res warn'; box.textContent = 'Escribí una ciudad.'; return; }
+  box.style.display = 'block'; box.className = 'res warn'; box.textContent = 'Buscando…';
+  try {
+    const loc = await geocodeCiudad(q);
+    if (!loc) { box.className = 'res warn'; box.textContent = '🤔 No encontré esa ciudad. Probá con otro nombre.'; return; }
+    map.flyTo([loc.lat, loc.lon], 13);
+    box.className = 'res ok';
+    box.innerHTML = '📍 <b>' + escapeHtml(loc.nombre) + '</b>' + (loc.provincia ? ' <span style="font-size:11px;color:#15803d">(' + escapeHtml(loc.provincia) + ')</span>' : '');
   } catch (err) {
     box.className = 'res warn'; box.textContent = 'Error: ' + err.message;
   }
