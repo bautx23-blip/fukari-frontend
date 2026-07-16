@@ -1097,7 +1097,7 @@ async function guardarNotas(id) {
 
 async function cargarConversacionesWA() {
   try {
-    var res = await fetch(API_URL + '/api/whatsapp/conversaciones');
+    var res = await fetch(API_URL + '/api/whatsapp/conversaciones?canal=empresas');
     if (!res.ok) throw new Error('Error ' + res.status);
     waConversaciones = await res.json();
     renderConversacionesWA();
@@ -1305,7 +1305,7 @@ function verLeadDesdeWA(leadId) {
 // ── Polling ──
 async function pollWhatsApp() {
   try {
-    var res = await fetch(API_URL + '/api/whatsapp/conversaciones');
+    var res = await fetch(API_URL + '/api/whatsapp/conversaciones?canal=empresas');
     if (!res.ok) return;
     waConversaciones = await res.json();
     renderConversacionesWA();
