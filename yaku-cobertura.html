@@ -50,9 +50,9 @@
 
     <div class="card">
       <h3>🌎 Ir a una ciudad</h3>
-      <div class="hint">Buscá una ciudad o localidad y el mapa te lleva ahí para pintar en esa zona.</div>
+      <div class="hint">Buscá una ciudad y el mapa te lleva ahí para pintar. Si el nombre se repite en varias provincias, agregá la provincia con coma: <b>Victoria, Entre Ríos</b>.</div>
       <div style="display:flex;gap:8px;">
-        <input id="c-buscar" placeholder="Ej: Santa Fe, Paraná…" autocomplete="off" style="margin-bottom:0;" onkeydown="if(event.key==='Enter')buscarCiudad()">
+        <input id="c-buscar" placeholder="Ej: Victoria, Entre Ríos" autocomplete="off" style="margin-bottom:0;" onkeydown="if(event.key==='Enter')buscarCiudad()">
         <button class="btn btn-primary" style="flex-shrink:0;justify-content:center;" onclick="buscarCiudad()">Ir</button>
       </div>
       <div id="c-res" class="res"></div>
@@ -239,14 +239,22 @@ async function probar() {
 }
 
 // ── Buscar ciudad y volar el mapa ahí (geocoding con georef, oficial AR) ──
-async function geocodeCiudad(nombre) {
+async function geocodeCiudad(query) {
   const base = 'https://apis.datos.gob.ar/georef/api/';
+  // "Ciudad, Provincia" → filtra por provincia para desambiguar (ej: Victoria,
+  // Entre Ríos — hay otra Victoria en Buenos Aires).
+  const partes = String(query).split(',');
+  const nombre = partes[0].trim();
+  const provincia = partes.length > 1 ? partes.slice(1).join(',').trim() : '';
+  if (!nombre) return null;
   // 1) localidades (centroide = centro urbano real), 2) municipios (fallback).
   // El centroide del municipio es el centro geométrico del área administrativa y
   // suele caer lejos del centro de la ciudad — por eso localidades va primero.
   for (const ep of ['localidades', 'municipios']) {
     try {
-      const r = await fetch(base + ep + '?nombre=' + encodeURIComponent(nombre) + '&max=1&campos=nombre,centroide,provincia');
+      let url = base + ep + '?nombre=' + encodeURIComponent(nombre) + '&max=1&campos=nombre,centroide,provincia';
+      if (provincia) url += '&provincia=' + encodeURIComponent(provincia);
+      const r = await fetch(url);
       if (!r.ok) continue;
       const j = await r.json();
       const arr = j[ep] || [];
