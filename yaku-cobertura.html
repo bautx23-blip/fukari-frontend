@@ -241,8 +241,10 @@ async function probar() {
 // ── Buscar ciudad y volar el mapa ahí (geocoding con georef, oficial AR) ──
 async function geocodeCiudad(nombre) {
   const base = 'https://apis.datos.gob.ar/georef/api/';
-  // 1) municipios (nivel ciudad), 2) localidades (fallback)
-  for (const ep of ['municipios', 'localidades']) {
+  // 1) localidades (centroide = centro urbano real), 2) municipios (fallback).
+  // El centroide del municipio es el centro geométrico del área administrativa y
+  // suele caer lejos del centro de la ciudad — por eso localidades va primero.
+  for (const ep of ['localidades', 'municipios']) {
     try {
       const r = await fetch(base + ep + '?nombre=' + encodeURIComponent(nombre) + '&max=1&campos=nombre,centroide,provincia');
       if (!r.ok) continue;
