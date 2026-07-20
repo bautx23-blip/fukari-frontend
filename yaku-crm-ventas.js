@@ -33,7 +33,8 @@ sb.auth.getSession().then(function(result) {
   if (!session) { window.location.href = '/index.html'; return; }
   var email = session.user.email;
   _currentUserEmail = email;
-  if (email !== 'info@wearebilab.com') { window.location.href = '/hub.html'; return; }
+  // CRM de ventas: bi.lab + el cliente (René). El resto va al hub.
+  if (email !== 'info@wearebilab.com' && email !== 'renebiagioni@yakuagua.com.ar') { window.location.href = '/hub.html'; return; }
   document.body.classList.add('ready');
   // Métrica "Cerrados por Bot": por ahora visible solo para info@wearebilab.com.
   if (email === 'info@wearebilab.com') {
@@ -45,6 +46,11 @@ sb.auth.getSession().then(function(result) {
   // Mostrar sección Configuración a usuarios autorizados
   if (BOT_ALLOWED_EMAILS.indexOf(email) !== -1) {
     document.getElementById('sidebar-config').style.display = '';
+  }
+  // Agentes (prender/apagar el bot + horario): SOLO info@wearebilab.com.
+  if (email !== 'info@wearebilab.com') {
+    var _navAg = document.getElementById('nav-agentes');
+    if (_navAg) _navAg.style.display = 'none';
   }
   // Botones de admin (exportar/integrar) solo para INTEGRATOR_EMAIL
   if (email === INTEGRATOR_EMAIL) {
