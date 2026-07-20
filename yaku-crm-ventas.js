@@ -35,6 +35,11 @@ sb.auth.getSession().then(function(result) {
   _currentUserEmail = email;
   if (email !== 'info@wearebilab.com') { window.location.href = '/hub.html'; return; }
   document.body.classList.add('ready');
+  // Métrica "Cerrados por Bot": por ahora visible solo para info@wearebilab.com.
+  if (email === 'info@wearebilab.com') {
+    var _navCer = document.getElementById('nav-cerrados');
+    if (_navCer) _navCer.style.display = '';
+  }
   var d = new Date();
   document.getElementById('topbar-fecha').textContent = d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
   // Mostrar sección Configuración a usuarios autorizados
@@ -81,6 +86,7 @@ function switchView(view) {
   if (view === 'probarbot') pbInit();
   if (view === 'agentes') agLoad();
   if (view === 'agenda') calCargar();
+  if (view === 'cerrados') cerLoad();
 }
 
 function toggleSidebar() {
@@ -505,6 +511,7 @@ async function cargarConversacionesWA() {
 // ── Conexión del número de ventas (embedded signup de Kapso) ──
 var waCanalVentas = null;
 var _waPollConexion = null;
+var waSetupUrl = null; // URL de embedded signup de Kapso (para el link de respaldo)
 
 async function waCargarEstadoCanal() {
   try {
@@ -524,9 +531,14 @@ function waRenderBanner() {
     var num = (waCanalVentas.display_phone_number || '').trim();
     el.innerHTML = '<div style="padding:8px 14px;font-size:11.5px;color:#16a34a;background:#f0fdf4;border-bottom:1px solid #dcfce7;">&#9989; WhatsApp de ventas conectado' + (num ? ' &middot; <b>' + esc(num) + '</b>' : '') + '</div>';
   } else if (estado === 'pendiente') {
-    el.innerHTML = '<div style="padding:12px 14px;background:#fffbeb;border-bottom:1px solid #fde68a;font-size:12px;color:#92400e;line-height:1.5;">Conexión en proceso. Completá el alta en la ventana de Kapso y después tocá <b>Verificar</b>.'
-      + '<div style="margin-top:8px;display:flex;gap:8px;"><button onclick="waConectar()" style="background:#fff;border:1px solid #fde68a;color:#92400e;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Reabrir</button>'
-      + '<button onclick="waVerificarConexion(true)" style="background:#25d366;border:none;color:#fff;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Verificar</button></div></div>';
+    // Link REAL a Kapso (un <a> nunca lo bloquea el navegador). Si no tenemos la
+    // URL (ej: recarga de página), ofrecemos "Reabrir" que regenera el link.
+    var abrir = waSetupUrl
+      ? '<a href="' + esc(waSetupUrl) + '" target="_blank" rel="noopener" style="background:#25d366;color:#fff;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;font-family:inherit;text-decoration:none;display:inline-block;">Abrir Kapso</a>'
+      : '<button onclick="waConectar()" style="background:#25d366;border:none;color:#fff;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Reabrir</button>';
+    el.innerHTML = '<div style="padding:12px 14px;background:#fffbeb;border-bottom:1px solid #fde68a;font-size:12px;color:#92400e;line-height:1.5;">Conexión en proceso. Abrí el alta en Kapso, completala y después tocá <b>Verificar</b>. Si no se abrió la ventana sola, usá el botón <b>Abrir Kapso</b>.'
+      + '<div style="margin-top:8px;display:flex;gap:8px;">' + abrir
+      + '<button onclick="waVerificarConexion(true)" style="background:#fff;border:1px solid #d1d5db;color:#374151;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Verificar</button></div></div>';
   } else {
     el.innerHTML = '<div style="padding:14px;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:12px;color:#475569;line-height:1.5;">El WhatsApp del bot de ventas todav&iacute;a no est&aacute; conectado (es un n&uacute;mero aparte del de empresas).'
       + '<div style="margin-top:9px;"><button onclick="waConectar()" style="background:#25d366;border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">Conectar WhatsApp</button></div></div>';
@@ -534,6 +546,12 @@ function waRenderBanner() {
 }
 
 async function waConectar() {
+  // La pestaña se abre YA, sincrónico con el click. Si se abriera después del
+  // await (como antes), el navegador la bloquea y "no hace nada". Luego la
+  // redirigimos a la URL de Kapso; si el navegador igual la bloqueó, queda el
+  // link "Abrir Kapso" en el banner como respaldo.
+  var win = null;
+  try { win = window.open('about:blank', '_blank'); } catch (_) {}
   try {
     var r = await fetch(API_URL + '/api/whatsapp/canales/ventas/connect', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-email': _currentUserEmail },
@@ -541,12 +559,17 @@ async function waConectar() {
     });
     var j = await r.json();
     if (!r.ok) throw new Error((j && (j.error || (j.detalle && j.detalle.error))) || ('status ' + r.status));
-    if (j.url) window.open(j.url, '_blank', 'noopener');
+    waSetupUrl = j.url || null;
+    if (waSetupUrl && win) { try { win.opener = null; } catch (_) {} win.location.href = waSetupUrl; }
+    else if (win) { try { win.close(); } catch (_) {} }
     waCanalVentas = { canal: 'ventas', estado: 'pendiente' };
     waRenderBanner();
     if (_waPollConexion) clearInterval(_waPollConexion);
     _waPollConexion = setInterval(function(){ waVerificarConexion(false); }, 8000);
-  } catch (e) { alert('No se pudo iniciar la conexión: ' + e.message); }
+  } catch (e) {
+    if (win) { try { win.close(); } catch (_) {} }
+    alert('No se pudo iniciar la conexión: ' + e.message);
+  }
 }
 
 async function waVerificarConexion(avisar) {
@@ -1821,12 +1844,41 @@ switchView = function(view) {
 })();
 
 // ══════════════════════════════════════════════════════════════════════════
+// CERRADOS POR BOT — métrica (solo info@wearebilab.com)
+// ══════════════════════════════════════════════════════════════════════════
+window.cerLoad = async function(){
+  var slot = document.getElementById('cer-slot'); if(!slot) return;
+  slot.innerHTML = '<div class="cer-loading">Cargando…</div>';
+  try {
+    var r = await fetch(API_URL + '/api/sales-bot/cerrados-stats', { headers: { 'x-user-email': _currentUserEmail } });
+    if(!r.ok) throw new Error('status '+r.status);
+    var d = await r.json();
+    var meses = d.por_mes || [];
+    var max = meses.reduce(function(a,m){ return Math.max(a, m.cantidad||0); }, 1);
+    var MESN = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    function fmtMes(k){ var p=String(k).split('-'); return MESN[(+p[1]-1)]+' '+p[0]; }
+    var html = '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span></div>';
+    if (meses.length){
+      html += '<div class="cer-meses-t">Por mes</div><div class="cer-meses">' + meses.map(function(m){
+        var w = Math.round((m.cantidad||0)/max*100);
+        return '<div class="cer-mes-row"><span class="cer-mes-lbl">'+esc(fmtMes(m.mes))+'</span>'
+          + '<div class="cer-bar-wrap"><div class="cer-bar" style="width:'+w+'%"></div></div>'
+          + '<span class="cer-mes-val">'+(m.cantidad||0)+'</span></div>';
+      }).join('') + '</div>';
+    } else {
+      html += '<div class="cer-empty">Todavía no hay ventas cerradas por el bot.</div>';
+    }
+    slot.innerHTML = html;
+  } catch(e){ slot.innerHTML = '<div class="cer-loading" style="color:#991B1B">Error: '+esc(e.message)+'</div>'; }
+};
+
+// ══════════════════════════════════════════════════════════════════════════
 // Guardarraíl anti-fragilidad: con defer, todo esto ya está definido acá.
 // Si a futuro alguien rompe el orden, lo gritamos en consola en vez de fallar
 // en silencio con un "Cargando…" eterno.
 // ══════════════════════════════════════════════════════════════════════════
 (function(){
-  var criticas = ['switchView','plLoad','pbInit','agLoad','cargarConversacionesWA','pollWhatsApp','waVerificarConexion','waConectar','calCargar','calCargarNotis','calMes'];
+  var criticas = ['switchView','plLoad','pbInit','agLoad','cargarConversacionesWA','pollWhatsApp','waVerificarConexion','waConectar','calCargar','calCargarNotis','calMes','cerLoad','waConectar'];
   var faltan = criticas.filter(function(n){ return typeof window[n] !== 'function'; });
   if (faltan.length) console.error('[CRM] Funciones de init sin definir (revisar carga):', faltan.join(', '));
 })();

@@ -461,6 +461,9 @@ tbody tr:hover{background:#f8fafc;}
       <span class="icon">&#128197;</span> Agenda
       <span class="sidebar-badge" id="agenda-badge"></span>
     </button>
+    <button class="sidebar-link" id="nav-cerrados" onclick="switchView('cerrados')" style="display:none;">
+      <span class="icon">&#128200;</span> Cerrados x Bot
+    </button>
     <button class="sidebar-link" id="nav-probarbot" onclick="switchView('probarbot')">
       <span class="icon">&#129302;</span> Probar bot
     </button>
@@ -733,6 +736,29 @@ tbody tr:hover{background:#f8fafc;}
       </div>
     </div>
     <div id="cal-slot"><div class="cal-loading">Cargando…</div></div>
+  </div>
+
+  <!-- VIEW: CERRADOS POR BOT (métrica, solo info@wearebilab.com) -->
+  <style>
+  #view-cerrados{padding:22px;overflow-y:auto;}
+  .cer-title{font-size:18px;font-weight:800;color:#1a1a2e;}
+  .cer-sub{font-size:12px;color:#9ca3af;margin:3px 0 18px;}
+  .cer-total-card{background:#1a1a2e;color:#fff;border-radius:14px;padding:20px 24px;display:inline-flex;flex-direction:column;gap:3px;margin-bottom:22px;min-width:230px;}
+  .cer-total-num{font-size:34px;font-weight:800;line-height:1;}
+  .cer-total-lbl{font-size:12px;color:#9ca3af;}
+  .cer-meses-t{font-size:11px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
+  .cer-meses{display:flex;flex-direction:column;gap:8px;max-width:540px;}
+  .cer-mes-row{display:flex;align-items:center;gap:10px;}
+  .cer-mes-lbl{font-size:12px;font-weight:700;color:#475569;width:78px;flex-shrink:0;text-transform:capitalize;}
+  .cer-bar-wrap{flex:1;background:#f1f5f9;border-radius:6px;height:22px;overflow:hidden;}
+  .cer-bar{height:100%;background:#16a34a;border-radius:6px;min-width:2px;}
+  .cer-mes-val{font-size:12px;font-weight:800;color:#1a1a2e;width:26px;text-align:right;}
+  .cer-empty,.cer-loading{color:#9ca3af;font-size:13px;padding:22px 0;}
+  </style>
+  <div class="view" id="view-cerrados">
+    <div class="cer-title">Cerrados por Bot</div>
+    <div class="cer-sub">Ventas que el bot dejó en "Aguardando instalación", por mes.</div>
+    <div id="cer-slot"><div class="cer-loading">Cargando…</div></div>
   </div>
 
 </div>
