@@ -456,6 +456,7 @@ tbody tr:hover{background:#f8fafc;}
     <div class="sidebar-section-label">Módulos</div>
     <button class="sidebar-link active" id="nav-pipeline" onclick="switchView('pipeline')">
       <span class="icon">&#128202;</span> Pipeline
+      <span class="sidebar-badge" id="pipeline-badge" style="background:#f59e0b;"></span>
     </button>
     <button class="sidebar-link" id="nav-agenda" onclick="switchView('agenda')">
       <span class="icon">&#128197;</span> Agenda
@@ -675,6 +676,7 @@ tbody tr:hover{background:#f8fafc;}
   </style>
   <div class="view" id="view-agentes">
     <div class="ag-wrap" id="ag-slot"><div class="ag-loading">Cargando…</div></div>
+    <div class="ag-wrap" id="ag-errores" style="margin-top:18px;"></div>
   </div>
 
   <!-- VIEW: AGENDA (calendario de instalaciones, SLA 72hs hábiles) -->
@@ -778,6 +780,16 @@ tbody tr:hover{background:#f8fafc;}
     <div class="d">Estas instalaciones vencen hoy o ya están vencidas (el técnico tiene que contactar dentro de 72 hs hábiles).</div>
     <div id="cal-noti-body"></div>
     <button class="cal-noti-cerrar" onclick="calCerrarNotis()">Entendido</button>
+  </div>
+</div>
+
+<!-- Popup de derivaciones a humano (el bot derivó estos leads a un asesor) -->
+<div class="cal-noti-bg" id="pl-noti">
+  <div class="cal-noti">
+    <h3 style="color:#b45309;">&#128587; Leads para contactar</h3>
+    <div class="d">El bot derivó estos leads a un asesor (pidieron hablar con alguien o hay algo que resolver a mano). Contactalos vos.</div>
+    <div id="pl-noti-body"></div>
+    <button class="cal-noti-cerrar" onclick="plCerrarNotiHandoff()">Entendido</button>
   </div>
 </div>
 

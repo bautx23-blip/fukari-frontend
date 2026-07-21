@@ -120,7 +120,32 @@ async function agLoad(){
     if (!r.ok) throw new Error('status ' + r.status);
     agCfg = await r.json();
     agRender();
+    agCargarErrores();
   } catch(e){ slot.innerHTML = '<div class="ag-err">Error al cargar: ' + agEsc(e.message) + '</div>'; }
+}
+
+// Salud del bot: últimos errores registrados (solo info@wearebilab.com).
+async function agCargarErrores(){
+  var cont = document.getElementById('ag-errores');
+  if (!cont) return;
+  try {
+    var r = await fetch(API_URL + '/api/sales-bot/errores', { headers: { 'x-user-email': _currentUserEmail } });
+    if (!r.ok) { cont.innerHTML = ''; return; }
+    var errs = await r.json();
+    var head = '<div class="ag-card"><div class="ag-name" style="margin-bottom:4px;">🩺 Salud del bot</div>';
+    if (!errs.length){
+      cont.innerHTML = head + '<div style="font-size:12.5px;color:#16a34a;font-weight:600;">🟢 Sin errores registrados.</div></div>';
+      return;
+    }
+    var filas = errs.slice(0,20).map(function(e){
+      var f = new Date(e.created_at).toLocaleString('es-AR');
+      return '<div style="font-size:11.5px;color:#475569;padding:7px 0;border-top:1px solid #f1f5f9;">'
+        + '<span style="color:#b91c1c;font-weight:700;">'+agEsc(e.tipo||'error')+'</span> · '+agEsc(f)
+        + (e.telefono?' · '+agEsc(e.telefono):'')
+        + '<div style="color:#6b7280;margin-top:2px;word-break:break-word;">'+agEsc((e.detalle||'').slice(0,180))+'</div></div>';
+    }).join('');
+    cont.innerHTML = head + '<div style="font-size:12px;color:#b45309;font-weight:700;margin-bottom:4px;">⚠️ '+errs.length+' error'+(errs.length===1?'':'es')+' (últimos 50)</div>' + filas + '</div>';
+  } catch(e){ cont.innerHTML = ''; }
 }
 
 function agAhoraTZ(){
@@ -1624,7 +1649,34 @@ switchView = function(view) {
     });
     html += '</div>';
     document.getElementById('pl-stages-slot').innerHTML = html;
+    plNotificarHandoffs();
   }
+
+  // ── Derivaciones a humano: badge en Pipeline + popup (una vez por día) ──
+  var _plNotiMostrada = false;
+  function plNotificarHandoffs(){
+    var handoffs = plLeads.filter(function(l){ return l.etapa === 'contactar manualmente'; });
+    var badge = document.getElementById('pipeline-badge');
+    if (badge) badge.textContent = handoffs.length ? handoffs.length : '';
+    if (!_plNotiMostrada && handoffs.length){
+      _plNotiMostrada = true;
+      var hoy = new Date().toISOString().slice(0,10);
+      if (localStorage.getItem('pl_handoff_'+hoy) !== '1'){
+        var body = document.getElementById('pl-noti-body');
+        if (body){
+          body.innerHTML = handoffs.map(function(l){
+            return '<div class="cal-noti-item"><span><b>'+plEsc(l.nombre||'(sin nombre)')+'</b>'
+              + (l.telefono?' &middot; '+plEsc(l.telefono):'')+(l.localidad?' &middot; '+plEsc(l.localidad):'')+'</span></div>';
+          }).join('');
+          document.getElementById('pl-noti').classList.add('open');
+        }
+      }
+    }
+  }
+  window.plCerrarNotiHandoff = function(){
+    document.getElementById('pl-noti').classList.remove('open');
+    localStorage.setItem('pl_handoff_'+new Date().toISOString().slice(0,10), '1');
+  };
 
   window.plLoad = async function(){
     if (!plModalReady){ var em = document.getElementById('plm-etapa'); if (em){ em.innerHTML = plOptsFor(''); plModalReady = true; } }
@@ -1803,13 +1855,35 @@ switchView = function(view) {
     document.getElementById('cal-modal-body').innerHTML = evs.length ? evs.map(function(e){
       var cls=evClase(e);
       var chip = cls==='vencida'?'<span class="cal-chip vencida">vencida</span>':(cls==='hoy'?'<span class="cal-chip hoy">vence hoy</span>':(cls==='hecho'?'<span class="cal-chip hecho">hecho</span>':''));
+      // Planilla pre-cargada: todos los datos que capturó el bot al cerrar.
       return '<div class="cal-item'+(e.estado==='hecho'?' hecho':'')+'">'
         + '<div class="n">'+esc(e.nombre||'(sin nombre)')+chip+'</div>'
-        + '<div class="m">'+(e.telefono?esc(e.telefono):'')+(e.localidad?' &middot; '+esc(e.localidad):'')+'</div>'
-        + (e.estado==='hecho' ? '' : '<div class="acc"><button class="cal-btn cal-btn-done" onclick="calMarcarHecho(\''+e.id+'\')">Marcar como contactado</button></div>')
+        + '<div class="m" style="line-height:1.7;">'
+        +   (e.telefono?'&#128222; '+esc(e.telefono)+'<br>':'')
+        +   (e.email?'&#9993; '+esc(e.email)+'<br>':'')
+        +   (e.localidad?'&#128205; '+esc(e.localidad)+'<br>':'')
+        +   (e.notas?'&#128203; '+esc(e.notas):'')
+        + '</div>'
+        + '<div class="acc" style="display:flex;gap:8px;flex-wrap:wrap;">'
+        +   '<button class="cal-btn" style="background:#0ea5e9;color:#fff;" onclick="calCopiarPlanilla(\''+e.id+'\')">Copiar planilla</button>'
+        +   (e.estado==='hecho' ? '' : '<button class="cal-btn cal-btn-done" onclick="calMarcarHecho(\''+e.id+'\')">Marcar como contactado</button>')
+        + '</div>'
         + '</div>';
     }).join('') : '<div style="color:#9ca3af;font-size:13px">Sin instalaciones este día.</div>';
     document.getElementById('cal-modal').classList.add('open');
+  };
+  window.calCopiarPlanilla = function(id){
+    var e = calEventos.find(function(x){ return x.id===id; }); if(!e) return;
+    var txt = ['PLANILLA — INSTALACIÓN (cierre del bot)',
+      'Nombre: '+(e.nombre||''),
+      'Teléfono: '+(e.telefono||''),
+      'Email: '+(e.email||''),
+      'Localidad: '+(e.localidad||''),
+      (e.notas||''),
+      'Contactar antes de (72hs háb.): '+e.fecha_limite].filter(Boolean).join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ alert('Planilla copiada al portapapeles.'); }, function(){ window.prompt('Copiá los datos:', txt); });
+    } else { window.prompt('Copiá los datos:', txt); }
   };
   window.calCerrarDia = function(){ document.getElementById('cal-modal').classList.remove('open'); };
 
