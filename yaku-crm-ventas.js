@@ -871,10 +871,17 @@ document.getElementById('ct-buscar').addEventListener('input', function() {
 
 function getFilteredContactos() {
   var q = (document.getElementById('ct-buscar').value || '').toLowerCase().trim();
-  if (!q) return allContactos;
-  return allContactos.filter(function(c) {
+  var list = !q ? allContactos.slice() : allContactos.filter(function(c) {
     return (c.nombre||'').toLowerCase().indexOf(q)!==-1 || (c.empresa||'').toLowerCase().indexOf(q)!==-1 || (c.telefono||'').indexOf(q)!==-1 || (c.email||'').toLowerCase().indexOf(q)!==-1;
   });
+  var ordenEl = document.getElementById('ct-orden');
+  var orden = ordenEl ? ordenEl.value : 'recientes';
+  if (orden === 'recientes') {
+    list.sort(function(a,b){ return new Date(b.created_at||0) - new Date(a.created_at||0); });
+  } else {
+    list.sort(function(a,b){ return (a.nombre||'').localeCompare(b.nombre||'', 'es', {sensitivity:'base'}); });
+  }
+  return list;
 }
 
 function renderContactos() {
@@ -1970,14 +1977,21 @@ window.cerLoad = async function(){
   var slot = document.getElementById('cer-slot'); if(!slot) return;
   slot.innerHTML = '<div class="cer-loading">Cargando…</div>';
   try {
-    var r = await fetch(API_URL + '/api/sales-bot/cerrados-stats', { headers: { 'x-user-email': _currentUserEmail } });
-    if(!r.ok) throw new Error('status '+r.status);
-    var d = await r.json();
+    var hdr = { 'x-user-email': _currentUserEmail };
+    var res = await Promise.all([
+      fetch(API_URL + '/api/sales-bot/cerrados-stats', { headers: hdr }).then(function(r){ return r.ok?r.json():{total:0,por_mes:[]}; }),
+      fetch(API_URL + '/api/sales-bot/uso-stats', { headers: hdr }).then(function(r){ return r.ok?r.json():{total_usd:0,mes_usd:0}; })
+    ]);
+    var d = res[0], u = res[1];
     var meses = d.por_mes || [];
     var max = meses.reduce(function(a,m){ return Math.max(a, m.cantidad||0); }, 1);
     var MESN = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
     function fmtMes(k){ var p=String(k).split('-'); return MESN[(+p[1]-1)]+' '+p[0]; }
-    var html = '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span></div>';
+    function usd(n){ return 'US$ '+(Number(n)||0).toFixed(2); }
+    var html = '<div class="cer-cards">'
+      + '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span></div>'
+      + '<div class="cer-total-card cer-gasto"><span class="cer-total-num">'+usd(u.total_usd)+'</span><span class="cer-total-lbl">gasto estimado en IA</span><span class="cer-gasto-mes">Este mes: '+usd(u.mes_usd)+'</span></div>'
+      + '</div>';
     if (meses.length){
       html += '<div class="cer-meses-t">Por mes</div><div class="cer-meses">' + meses.map(function(m){
         var w = Math.round((m.cantidad||0)/max*100);
