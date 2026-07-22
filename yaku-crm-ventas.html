@@ -981,6 +981,14 @@ tbody tr:hover{background:#f8fafc;}
 .pl-modal label{font-size:11px;font-weight:600;color:#6b7280;display:block;margin:8px 0 3px;text-transform:uppercase;letter-spacing:0.3px;}
 .pl-modal input,.pl-modal select{width:100%;padding:9px 11px;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;font-family:inherit;}
 .pl-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+.pl-chip.eq{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;}
+.pld-etapa{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:12px;}
+.pld-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px;}
+.pld-row .pld-k{color:#6b7280;font-weight:600;flex-shrink:0;}
+.pld-row .pld-v{color:#111827;text-align:right;word-break:break-word;}
+.pld-lbl{font-size:11px;font-weight:600;color:#6b7280;display:block;margin:12px 0 3px;text-transform:uppercase;letter-spacing:.3px;}
+.pld-ta{width:100%;min-height:70px;padding:9px 11px;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;font-family:inherit;resize:vertical;}
+.pl-modal h3 .pld-x{cursor:pointer;color:#9ca3af;font-size:22px;line-height:1;border:none;background:none;float:right;}
 .pl-btn{padding:9px 16px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 .pl-btn-primary{background:#0ea5e9;color:#fff;}
 .pl-btn-ghost{background:#fff;border:1px solid #e5e7eb;color:#6b7280;}
@@ -999,6 +1007,14 @@ tbody tr:hover{background:#f8fafc;}
       <button class="pl-btn pl-btn-ghost" onclick="plCloseModal()">Cancelar</button>
       <button class="pl-btn pl-btn-primary" id="plm-save" onclick="plSaveLead()">Agregar</button>
     </div>
+  </div>
+</div>
+
+<!-- Detalle de un lead del pipeline -->
+<div class="pl-modal-bg" id="pl-detalle">
+  <div class="pl-modal" style="width:460px;">
+    <h3><span id="pld-nombre-txt">Detalle</span><button class="pld-x" onclick="plVerClose()">&times;</button></h3>
+    <div id="pld-body"></div>
   </div>
 </div>
 

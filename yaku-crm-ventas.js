@@ -1622,12 +1622,14 @@ switchView = function(view) {
   var PL_TEL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>';
 
   function plCardHtml(l){
-    return '<div class="pl-card" draggable="true" data-id="'+l.id+'" ondragstart="plDragStart(event)" ondragend="plDragEnd(event)">'
+    var mm = /Modelo:\s*([^·]+)/.exec(l.notas||''); var modelo = mm ? mm[1].trim() : '';
+    return '<div class="pl-card" draggable="true" data-id="'+l.id+'" onclick="plVer(\''+l.id+'\')" ondragstart="plDragStart(event)" ondragend="plDragEnd(event)">'
       + '<div class="pl-card-top"><div class="pl-card-name">'+plEsc(l.nombre||'(sin nombre)')+'</div>'
-      + '<button class="pl-card-x" title="Sacar del pipeline" onclick="plDel(\''+l.id+'\')">&times;</button></div>'
+      + '<button class="pl-card-x" title="Sacar del pipeline" onclick="event.stopPropagation();plDel(\''+l.id+'\')">&times;</button></div>'
       + (l.telefono?'<div class="pl-card-tel">'+PL_TEL_SVG+plEsc(l.telefono)+'</div>':'')
-      + ((l.localidad||l.email)?('<div class="pl-card-tags">'
+      + ((l.localidad||l.email||modelo)?('<div class="pl-card-tags">'
           + (l.localidad?'<span class="pl-chip loc">'+plEsc(l.localidad)+'</span>':'')
+          + (modelo?'<span class="pl-chip eq">'+plEsc(modelo)+'</span>':'')
           + (l.email?'<span class="pl-chip">'+plEsc(l.email)+'</span>':'')
         + '</div>'):'')
       + '</div>';
@@ -1733,6 +1735,44 @@ switchView = function(view) {
     try { var r = await fetch(API_URL + '/api/sales-bot/pipeline', { method:'POST', headers: plHeaders(), body: JSON.stringify(body) }); var j = await r.json(); if (!r.ok) throw new Error(j.error||('status '+r.status)); plLeads.unshift(j); plCloseModal(); plRender(); }
     catch(e){ alert('No se pudo agregar: ' + e.message); }
     finally { btn.disabled = false; }
+  };
+
+  // ── Detalle del lead (abrir tarjeta) ──
+  window.plVer = function(id){
+    var l = plLeads.find(function(x){ return x.id===id; });
+    if (!l) return;
+    var stage = PL_STAGES.find(function(s){ return s.key===l.etapa; }) || {label:l.etapa,color:'#64748b'};
+    // notas del bot: "Modelo: X · Tipo: Y · Personas: Z · CUIT/CUIL: W · Dir: V"
+    var ex = {};
+    (l.notas||'').split(' · ').forEach(function(p){ var i=p.indexOf(':'); if(i>0){ ex[p.slice(0,i).trim()] = p.slice(i+1).trim(); } });
+    function row(k,v){ return v ? '<div class="pld-row"><span class="pld-k">'+plEsc(k)+'</span><span class="pld-v">'+plEsc(v)+'</span></div>' : ''; }
+    var fecha=''; try{ if(l.created_at) fecha=new Date(l.created_at).toLocaleString('es-AR'); }catch(_){}
+    var html = '<div class="pld-etapa" style="background:'+stage.color+'1e;color:'+stage.color+'">'+plEsc(stage.label)+'</div>'
+      + row('Teléfono', l.telefono)
+      + row('Email', l.email)
+      + row('Localidad', l.localidad)
+      + row('Equipo', ex['Modelo'])
+      + row('Tipo', ex['Tipo'])
+      + row('Personas', ex['Personas'])
+      + row('CUIT/CUIL', ex['CUIT/CUIL'] || ex['CUIT'] || ex['CUIL'])
+      + row('Dirección', ex['Dir'] || ex['Dirección'])
+      + row('Ingreso', fecha)
+      + '<label class="pld-lbl">Notas</label>'
+      + '<textarea id="pld-notas" class="pld-ta">'+plEsc(l.notas||'')+'</textarea>'
+      + '<div class="pl-modal-actions"><button class="pl-btn pl-btn-primary" onclick="plGuardarNotas(\''+l.id+'\')">Guardar notas</button></div>';
+    document.getElementById('pld-nombre-txt').textContent = l.nombre || '(sin nombre)';
+    document.getElementById('pld-body').innerHTML = html;
+    document.getElementById('pl-detalle').classList.add('open');
+  };
+  window.plVerClose = function(){ document.getElementById('pl-detalle').classList.remove('open'); };
+  window.plGuardarNotas = async function(id){
+    var notas = document.getElementById('pld-notas').value;
+    try {
+      var r = await fetch(API_URL + '/api/sales-bot/pipeline/' + id, { method:'PATCH', headers: plHeaders(), body: JSON.stringify({ notas: notas }) });
+      if (!r.ok) throw new Error('status '+r.status);
+      var l = plLeads.find(function(x){ return x.id===id; }); if (l) l.notas = notas;
+      plVerClose(); plRender();
+    } catch(e){ alert('No se pudo guardar: '+e.message); }
   };
 })();
 
