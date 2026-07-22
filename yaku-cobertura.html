@@ -266,6 +266,8 @@ async function geocodeCiudad(query) {
   return null;
 }
 
+let ultimaLocalidad = null; // último resultado de búsqueda (para "pintar toda la localidad")
+
 async function buscarCiudad() {
   const q = document.getElementById('c-buscar').value.trim();
   const box = document.getElementById('c-res');
@@ -273,12 +275,57 @@ async function buscarCiudad() {
   box.style.display = 'block'; box.className = 'res warn'; box.textContent = 'Buscando…';
   try {
     const loc = await geocodeCiudad(q);
-    if (!loc) { box.className = 'res warn'; box.textContent = '🤔 No encontré esa ciudad. Probá con otro nombre.'; return; }
+    if (!loc) { ultimaLocalidad = null; box.className = 'res warn'; box.textContent = '🤔 No encontré esa ciudad. Probá con otro nombre.'; return; }
+    ultimaLocalidad = loc;
     map.flyTo([loc.lat, loc.lon], 13);
     box.className = 'res ok';
-    box.innerHTML = '📍 <b>' + escapeHtml(loc.nombre) + '</b>' + (loc.provincia ? ' <span style="font-size:11px;color:#15803d">(' + escapeHtml(loc.provincia) + ')</span>' : '');
+    let html = '📍 <b>' + escapeHtml(loc.nombre) + '</b>' + (loc.provincia ? ' <span style="font-size:11px;color:#15803d">(' + escapeHtml(loc.provincia) + ')</span>' : '');
+    // Rosario se pinta a mano (zonas parciales); el resto se puede pintar entero.
+    if (loc.nombre && loc.nombre.trim().toLowerCase() !== 'rosario') {
+      html += '<div style="margin-top:8px;"><button class="btn btn-primary" style="font-size:12px;padding:6px 12px;" onclick="pintarLocalidad()">🖌️ Pintar toda la localidad</button></div>';
+    }
+    box.innerHTML = html;
   } catch (err) {
+    ultimaLocalidad = null;
     box.className = 'res warn'; box.textContent = 'Error: ' + err.message;
+  }
+}
+
+// Pinta el límite completo de la última localidad buscada como zona de cobertura.
+// El polígono lo trae el backend desde OpenStreetMap (GET /api/cobertura/limite).
+async function pintarLocalidad() {
+  const loc = ultimaLocalidad;
+  const box = document.getElementById('c-res');
+  if (!loc) return;
+  const nombreZona = loc.provincia ? (loc.nombre + ', ' + loc.provincia) : loc.nombre;
+  // Dedupe: si ya hay una zona con ese nombre, no la dupliques.
+  const yaExiste = Object.values(zonaLayers).some(l => (l.zonaNombre || '').trim().toLowerCase() === nombreZona.trim().toLowerCase());
+  if (yaExiste) { box.className = 'res warn'; box.innerHTML = '⚠️ Ya existe una zona <b>' + escapeHtml(nombreZona) + '</b>.'; return; }
+  box.className = 'res warn'; box.textContent = 'Trazando el límite de ' + loc.nombre + '…';
+  try {
+    let url = API_URL + '/api/cobertura/limite?nombre=' + encodeURIComponent(loc.nombre);
+    if (loc.provincia) url += '&provincia=' + encodeURIComponent(loc.provincia);
+    const rl = await fetch(url);
+    const lim = await rl.json();
+    if (!lim || !lim.encontrado || !lim.geojson) {
+      box.className = 'res warn';
+      box.textContent = '🤔 No hay un límite de OpenStreetMap para esa localidad. Pintala a mano con el mapa.';
+      return;
+    }
+    const r = await fetch(API_URL + '/api/cobertura', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: nombreZona, geojson: lim.geojson }),
+    });
+    if (!r.ok) throw new Error((await r.json()).error || 'Error al guardar');
+    const saved = await r.json();
+    addZonaLayer(saved);
+    refrescarLista();
+    const capa = zonaLayers[saved.id];
+    if (capa && capa.getBounds) map.fitBounds(capa.getBounds(), { padding: [20, 20] });
+    box.className = 'res ok';
+    box.innerHTML = '✅ Zona <b>' + escapeHtml(nombreZona) + '</b> pintada.';
+  } catch (err) {
+    box.className = 'res warn'; box.textContent = 'No se pudo pintar: ' + err.message;
   }
 }
 
