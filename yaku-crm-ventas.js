@@ -910,7 +910,7 @@ function renderContactos() {
   html += '<th></th></tr></thead><tbody>';
   list.forEach(function(c) {
     var custom = c.campos_custom || {};
-    html += '<tr><td class="ct-name">' + esc(c.nombre) + '</td><td class="ct-sub">' + esc(c.telefono||'—') + '</td><td class="ct-sub">' + esc(c.email||'—') + '</td><td class="ct-sub">' + esc(c.empresa||'—') + '</td>';
+    html += '<tr><td class="ct-name" style="cursor:pointer;color:#0ea5e9;" title="Ver detalle" onclick="ctVerDetalle(\'' + c.id + '\')">' + esc(c.nombre) + '</td><td class="ct-sub">' + esc(c.telefono||'—') + '</td><td class="ct-sub">' + esc(c.email||'—') + '</td><td class="ct-sub">' + esc(c.empresa||'—') + '</td>';
     camposCustom.forEach(function(f) { html += '<td class="ct-sub">' + esc(custom[f.slug]||'—') + '</td>'; });
     html += '<td><div class="ct-actions-cell">' +
       '<button class="btn-ct btn-ct-wa" onclick="enviarWAContacto(\'' + c.id + '\')">WA</button>' +
@@ -921,6 +921,19 @@ function renderContactos() {
   html += '</tbody></table>';
   document.getElementById('ct-tabla').innerHTML = html;
 }
+
+// Al clickear un contacto: mostrar el detalle del pipeline (equipo, CUIT, dirección,
+// etapa…) buscando el lead por teléfono. Si no está en el pipeline, edita el contacto.
+window.ctVerDetalle = async function(id) {
+  var c = allContactos.find(function(x){ return x.id===id; });
+  if (!c) return;
+  var tel = String(c.telefono||'').replace(/\D/g,'').slice(-10);
+  var leads = [];
+  try { var r = await fetch(API_URL + '/api/sales-bot/pipeline', { headers: { 'x-user-email': _currentUserEmail } }); if (r.ok) leads = await r.json(); } catch(e){}
+  var lead = tel ? leads.find(function(l){ return String(l.telefono||'').replace(/\D/g,'').slice(-10) === tel; }) : null;
+  if (lead && window.plVerLead) { window.plVerLead(lead); return; }
+  abrirContactoModal(c); // sin lead en el pipeline → datos básicos del contacto
+};
 
 // ── Contact Modal ──
 function abrirContactoModal(contacto) {
@@ -1760,10 +1773,12 @@ switchView = function(view) {
   };
 
   // ── Detalle del lead (abrir tarjeta) ──
-  window.plVer = function(id){
-    var l = plLeads.find(function(x){ return x.id===id; });
+  window.plVer = function(id){ plRenderDetalle(plLeads.find(function(x){ return x.id===id; })); };
+  // Abrir el mismo panel de detalle con un lead pasado directo (lo usa Contactos).
+  window.plVerLead = function(lead){ plRenderDetalle(lead); };
+  function plRenderDetalle(l){
     if (!l) return;
-    var stage = PL_STAGES.find(function(s){ return s.key===l.etapa; }) || {label:l.etapa,color:'#64748b'};
+    var stage = PL_STAGES.find(function(s){ return s.key===l.etapa; }) || {label:l.etapa||'—',color:'#64748b'};
     // notas del bot: "Modelo: X · Tipo: Y · Personas: Z · CUIT/CUIL: W · Dir: V"
     var ex = {};
     (l.notas||'').split(' · ').forEach(function(p){ var i=p.indexOf(':'); if(i>0){ ex[p.slice(0,i).trim()] = p.slice(i+1).trim(); } });
@@ -1929,6 +1944,7 @@ switchView = function(view) {
         + '<div class="acc" style="display:flex;gap:8px;flex-wrap:wrap;">'
         +   '<button class="cal-btn" style="background:#0ea5e9;color:#fff;" onclick="calCopiarPlanilla(\''+e.id+'\')">Copiar planilla</button>'
         +   (e.estado==='hecho' ? '' : '<button class="cal-btn cal-btn-done" onclick="calMarcarHecho(\''+e.id+'\')">Marcar como contactado</button>')
+        +   '<button class="cal-btn" style="background:#fee2e2;color:#b91c1c;" onclick="calEliminar(\''+e.id+'\')">Eliminar</button>'
         + '</div>'
         + '</div>';
     }).join('') : '<div style="color:#9ca3af;font-size:13px">Sin instalaciones este día.</div>';
@@ -1956,6 +1972,17 @@ switchView = function(view) {
       var e=calEventos.find(function(x){return x.id===id;}); if(e) e.estado='hecho';
       calRender(); calCerrarDia(); calCargarNotis();
     } catch(err){ alert('No se pudo marcar: '+err.message); }
+  };
+
+  window.calEliminar = async function(id){
+    var e=calEventos.find(function(x){return x.id===id;});
+    if(!confirm('¿Eliminar de la agenda a '+((e&&e.nombre)||'este contacto')+'? No se puede deshacer.')) return;
+    try {
+      var r=await fetch(API_URL+'/api/agenda/'+id,{method:'DELETE',headers:calHeaders()});
+      if(!r.ok) throw new Error('status '+r.status);
+      calEventos=calEventos.filter(function(x){return x.id!==id;});
+      calRender(); calCerrarDia(); calCargarNotis();
+    } catch(err){ alert('No se pudo eliminar: '+err.message); }
   };
 
   // ── Notificaciones: badge en el sidebar + popup una vez por día ──
