@@ -733,12 +733,21 @@ async function cargarMensajesWA(convId) {
 // vienen de Kapso como "Audio attached (...) URL: ... Transcript: ..." — mostramos solo lo útil).
 function contenidoMensajeWA(m) {
   var c = m.contenido || '';
+  var tipo = m.tipo || 'text';
+  // Imagen: mostrarla inline (las URLs de Kapso son públicas). Fallback a [Imagen] si falla.
+  if (tipo === 'image' && m.media_url) {
+    var cap = /^image\s+attached/i.test(c) ? '' : c;
+    return '<img src="' + esc(m.media_url) + '" alt="imagen" loading="lazy" class="wa-img" onclick="window.open(this.src,\'_blank\')" onerror="this.replaceWith(document.createTextNode(\'[Imagen]\'))">'
+      + (cap ? '<div style="margin-top:4px;">' + esc(cap) + '</div>' : '');
+  }
+  // Otros media (audio/video/doc) que vienen como "X attached (...) URL: ..." de Kapso.
   var mt = /^(image|audio|video|document|sticker)\s+attached/i.exec(c);
   if (mt) {
     var t = /Transcript(?:ion)?:\s*([\s\S]+)/i.exec(c);
     if (t) return esc(t[1].trim()); // audio transcripto → mostramos el texto
     var label = { image: 'Imagen', audio: 'Audio', video: 'Video', document: 'Documento', sticker: 'Sticker' }[mt[1].toLowerCase()] || 'Archivo';
-    return '<span style="opacity:.7;font-style:italic;">[' + label + ']</span>';
+    var link = m.media_url ? ' <a href="' + esc(m.media_url) + '" target="_blank">ver</a>' : '';
+    return '<span style="opacity:.7;font-style:italic;">[' + label + ']' + link + '</span>';
   }
   return esc(c);
 }
