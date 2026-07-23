@@ -96,7 +96,6 @@ const zonaLayers = {}; // id -> layer
 // ── Auth gate (igual que el resto de las páginas) ──
 sb.auth.getSession().then(({ data: { session } }) => {
   if (!session) { window.location.href = '/index.html'; return; }
-  if (session.user.email === 'ventas@yakuagua.com.ar') { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
   initMapa();
 });
 

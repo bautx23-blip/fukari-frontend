@@ -415,8 +415,6 @@
     }
     document.body.classList.add('ready');
     const email = session.user.email;
-    /* María Pía suspendida — borrar este bloque para reactivar su acceso */
-    if (email === 'ventas@yakuagua.com.ar') { sb.auth.signOut().then(function(){ window.location.href = '/index.html'; }); return; }
     document.getElementById('user-email').textContent = email;
     if (email === 'renebiagioni@yakuagua.com.ar' || email === 'info@wearebilab.com') {
       document.getElementById('card-papelera').style.display = '';
@@ -430,13 +428,14 @@
       document.getElementById('card-crm-pipeline').style.display = '';
       document.getElementById('card-cobertura').style.display = '';
     }
-    // Pia: solo ve Órdenes de Instalación y Órdenes de Baja
+    // Pía: Órdenes (instalación/bajas) + CRM de ventas + Cobertura
     if (email === 'ventas@yakuagua.com.ar') {
+      document.getElementById('card-crm-pipeline').style.display = '';
+      document.getElementById('card-cobertura').style.display = '';
+      var permitidasPia = ['/yaku-panel.html', '/yaku-panel-bajas.html', '/yaku-orden-instalacion.html', '/yaku-crm-ventas.html', '/yaku-cobertura.html'];
       document.querySelectorAll('.task-card').forEach(function(card) {
         var href = card.getAttribute('href') || '';
-        if (href !== '/yaku-panel.html' && href !== '/yaku-panel-bajas.html' && href !== '/yaku-orden-instalacion.html') {
-          card.style.display = 'none';
-        }
+        if (permitidasPia.indexOf(href) === -1) card.style.display = 'none';
       });
     }
     // Agustín: acceso restringido a Órdenes de Instalación, Planilla de Contactos, Monitoreo y Stock
