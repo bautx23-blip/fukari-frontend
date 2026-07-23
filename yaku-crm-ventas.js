@@ -34,7 +34,7 @@ sb.auth.getSession().then(function(result) {
   var email = session.user.email;
   _currentUserEmail = email;
   // CRM de ventas: bi.lab + el cliente (René) + ventas (María Pía). El resto va al hub.
-  var CRM_EMAILS = ['info@wearebilab.com', 'renebiagioni@yakuagua.com.ar', 'ventas@yakuagua.com.ar'];
+  var CRM_EMAILS = ['info@wearebilab.com', 'renebiagioni@yakuagua.com.ar', 'ventas@yakuagua.com.ar', 'agustincalabres@yakuagua.com.ar'];
   if (CRM_EMAILS.indexOf(email) === -1) { window.location.href = '/hub.html'; return; }
   document.body.classList.add('ready');
   // Métrica "Cerrados por Bot": por ahora visible solo para info@wearebilab.com.

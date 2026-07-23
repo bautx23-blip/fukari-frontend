@@ -440,7 +440,9 @@
     }
     // Agustín: acceso restringido a Órdenes de Instalación, Planilla de Contactos, Monitoreo y Stock
     if (email === 'agustincalabres@yakuagua.com.ar') {
-      var permitidasAgustin = ['/yaku-panel.html', '/yaku-planilla-contactos.html', '/yaku-competencia.html', '/yaku-stock.html'];
+      document.getElementById('card-crm-pipeline').style.display = '';
+      document.getElementById('card-cobertura').style.display = '';
+      var permitidasAgustin = ['/yaku-panel.html', '/yaku-planilla-contactos.html', '/yaku-competencia.html', '/yaku-stock.html', '/yaku-crm-ventas.html', '/yaku-cobertura.html'];
       document.querySelectorAll('.task-card').forEach(function(card) {
         var href = card.getAttribute('href') || '';
         card.style.display = permitidasAgustin.indexOf(href) !== -1 ? '' : 'none';
