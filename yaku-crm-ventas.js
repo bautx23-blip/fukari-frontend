@@ -729,6 +729,20 @@ async function cargarMensajesWA(convId) {
   }
 }
 
+// Muestra el contenido de un mensaje: texto normal, o media limpia (los audios/imágenes
+// vienen de Kapso como "Audio attached (...) URL: ... Transcript: ..." — mostramos solo lo útil).
+function contenidoMensajeWA(m) {
+  var c = m.contenido || '';
+  var mt = /^(image|audio|video|document|sticker)\s+attached/i.exec(c);
+  if (mt) {
+    var t = /Transcript(?:ion)?:\s*([\s\S]+)/i.exec(c);
+    if (t) return esc(t[1].trim()); // audio transcripto → mostramos el texto
+    var label = { image: 'Imagen', audio: 'Audio', video: 'Video', document: 'Documento', sticker: 'Sticker' }[mt[1].toLowerCase()] || 'Archivo';
+    return '<span style="opacity:.7;font-style:italic;">[' + label + ']</span>';
+  }
+  return esc(c);
+}
+
 function renderMensajesWA() {
   var container = document.getElementById('wa-messages');
   if (waMensajes.length === 0) {
@@ -739,7 +753,7 @@ function renderMensajesWA() {
   waMensajes.forEach(function(m) {
     var cls = m.direccion === 'saliente' ? 'saliente' : 'entrante';
     var time = m.created_at ? new Date(m.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '';
-    html += '<div class="wa-msg ' + cls + '">' + esc(m.contenido || '') + '<div class="msg-time">' + time + '</div></div>';
+    html += '<div class="wa-msg ' + cls + '">' + contenidoMensajeWA(m) + '<div class="msg-time">' + time + '</div></div>';
   });
   container.innerHTML = html;
   container.scrollTop = container.scrollHeight;
