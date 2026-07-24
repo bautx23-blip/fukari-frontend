@@ -2053,7 +2053,7 @@ window.cerLoad = async function(){
     }
     var html = '<div class="cer-cards">'
       + '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span></div>'
-      + '<div class="cer-total-card cer-gasto"><span class="cer-total-num">'+usd(u.total_usd)+'</span><span class="cer-total-lbl">gasto estimado en IA</span><span class="cer-gasto-mes">Este mes: '+usd(u.mes_usd)+'</span></div>'
+      + '<div class="cer-total-card cer-gasto"><span class="cer-total-num">'+usd(u.total_usd)+'</span><span class="cer-total-lbl">gasto en IA (tokens reales)</span><span class="cer-gasto-mes">Este mes: '+usd(u.mes_usd)+'</span></div>'
       + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">conversaciones del bot</span></div>'
       + '<div class="cer-total-card cer-resp"><span class="cer-total-num" style="font-size:24px;">'+hace(a.ultima_respuesta_bot)+'</span><span class="cer-total-lbl">última respuesta del bot</span></div>'
       + '</div>';
