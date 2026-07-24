@@ -967,12 +967,12 @@ tbody tr:hover{background:#f8fafc;}
 .pl-h-sub{font-size:12.5px;color:#9ca3af;margin-top:2px;}
 .pl-btn-add{background:#0ea5e9;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 /* ── Tablero Kanban (estética bitasks, colores Fukari) ── */
-.pl-board{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding-bottom:18px;}
-.pl-col{flex:0 0 272px;width:272px;display:flex;flex-direction:column;gap:10px;}
-.pl-col-head{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;border-left:3px solid;}
+.pl-board{display:flex;gap:14px;align-items:stretch;overflow-x:auto;height:calc(100vh - 200px);min-height:360px;padding-bottom:6px;}
+.pl-col{flex:0 0 272px;width:272px;display:flex;flex-direction:column;gap:10px;height:100%;min-height:0;}
+.pl-col-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;border-left:3px solid;}
 .pl-col-name{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;}
 .pl-col-count{margin-left:auto;font-size:11px;font-weight:800;border-radius:20px;padding:1px 9px;}
-.pl-col-body{display:flex;flex-direction:column;gap:10px;min-height:60px;border-radius:10px;padding:2px;transition:background .12s;}
+.pl-col-body{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:60px;border-radius:10px;padding:2px;transition:background .12s;}
 .pl-col-body.drag-over{background:#e0f2fe;outline:2px dashed #0ea5e9;outline-offset:-2px;}
 .pl-vacio{border:1.5px dashed #e5e7eb;border-radius:10px;padding:22px;text-align:center;color:#cbd5e1;font-size:12px;}
 .pl-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:13px 14px;box-shadow:0 1px 2px rgba(16,24,40,.05);cursor:grab;transition:box-shadow .12s,border-color .12s;}
