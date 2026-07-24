@@ -2029,15 +2029,14 @@ switchView = function(view) {
 // ══════════════════════════════════════════════════════════════════════════
 window.cerLoad = async function(){
   var slot = document.getElementById('cer-slot'); if(!slot) return;
-  slot.innerHTML = '<div class="cer-loading">Cargando…</div>';
+  // Si ya cargó antes, mostramos lo cacheado al instante y refrescamos en segundo plano.
+  if (!window._cerCache) slot.innerHTML = '<div class="cer-loading">Cargando…</div>';
   try {
     var hdr = { 'x-user-email': _currentUserEmail };
-    var res = await Promise.all([
-      fetch(API_URL + '/api/sales-bot/cerrados-stats', { headers: hdr }).then(function(r){ return r.ok?r.json():{total:0,por_mes:[]}; }),
-      fetch(API_URL + '/api/sales-bot/uso-stats', { headers: hdr }).then(function(r){ return r.ok?r.json():{total_usd:0,mes_usd:0}; }),
-      fetch(API_URL + '/api/sales-bot/actividad', { headers: hdr }).then(function(r){ return r.ok?r.json():{conversaciones:0,ultima_respuesta_bot:null}; })
-    ]);
-    var d = res[0], u = res[1], a = res[2];
+    var m = await fetch(API_URL + '/api/sales-bot/metricas', { headers: hdr }).then(function(r){ return r.ok?r.json():null; });
+    if (!m) throw new Error('no se pudo cargar');
+    window._cerCache = m;
+    var d = m.cerrados || {total:0,por_mes:[]}, u = m.uso || {total_usd:0,mes_usd:0}, a = m.actividad || {conversaciones:0,ultima_respuesta_bot:null};
     var meses = d.por_mes || [];
     var max = meses.reduce(function(a,m){ return Math.max(a, m.cantidad||0); }, 1);
     var MESN = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
