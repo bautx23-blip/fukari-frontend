@@ -1654,6 +1654,7 @@ switchView = function(view) {
     { key:'venta de equipo', label:'Pidió comprar equipo', color:'#8B5CF6' },
     { key:'contactar manualmente', label:'Contactar manualmente', color:'#F59E0B' },
     { key:'aguardando instalacion', label:'Aguardando instalación', color:'#16A34A' },
+    { key:'venta cerrada', label:'Venta cerrada', color:'#059669' },
     { key:'no calificado', label:'No calificado', color:'#9CA3AF' },
     { key:'sin cobertura', label:'Sin cobertura', color:'#9CA3AF' }
   ];
