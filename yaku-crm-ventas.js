@@ -685,6 +685,27 @@ document.getElementById('wa-search').addEventListener('input', function() {
   _waSearchTimer = setTimeout(renderConversacionesWA, 200);
 });
 
+// Muestra la etapa del pipeline del contacto (chip) en el header del chat.
+var _waPipeCache = null, _waPipeCacheAt = 0;
+async function waMostrarEtapa(tel) {
+  var n = String(tel || '').replace(/\D/g, '').slice(-10);
+  if (!n) return;
+  try {
+    if (!_waPipeCache || (Date.now() - _waPipeCacheAt) > 30000) {
+      var r = await fetch(API_URL + '/api/sales-bot/pipeline', { headers: { 'x-user-email': _currentUserEmail } });
+      if (r.ok) { _waPipeCache = await r.json(); _waPipeCacheAt = Date.now(); }
+    }
+    // ¿sigue abierta la misma conversación?
+    if (!waConvActual || String(waConvActual.telefono || '').replace(/\D/g, '').slice(-10) !== n) return;
+    var lead = (_waPipeCache || []).find(function (l) { return String(l.telefono || '').replace(/\D/g, '').slice(-10) === n; });
+    var slot = document.querySelector('#wa-chat-header-info .wa-etapa-slot');
+    if (!slot) return;
+    if (!lead) { slot.innerHTML = ''; return; }
+    var st = ((window.plStages || []).find(function (s) { return s.key === lead.etapa; })) || { label: lead.etapa || '—', color: '#64748b' };
+    slot.innerHTML = '<span class="wa-etapa-chip" style="background:' + st.color + '22;color:' + st.color + ';">' + esc(st.label) + '</span>';
+  } catch (e) {}
+}
+
 async function seleccionarConversacion(id) {
   var conv = waConversaciones.find(function(c) { return c.id === id; });
   if (!conv) return;
@@ -702,11 +723,13 @@ async function seleccionarConversacion(id) {
   // Header
   var nombre = conv.nombre_contacto || conv.telefono;
   var empresa = conv.leads_empresas?.empresa || '';
-  var headerHtml = '<div><h4>' + esc(nombre) + '</h4><span>' + esc(conv.telefono) + (empresa ? ' · ' + esc(empresa) : '') + '</span></div>';
-  if (conv.lead_id) {
-    headerHtml += '<button class="btn-ver-lead" onclick="verLeadDesdeWA(\'' + conv.lead_id + '\')">Ver lead</button>';
-  }
+  var headerHtml = '<div><h4>' + esc(nombre) + '</h4><span>' + esc(conv.telefono) + (empresa ? ' · ' + esc(empresa) : '') + '</span></div>'
+    + '<div class="wa-header-right">'
+    +   '<span class="wa-etapa-slot"></span>'
+    +   (conv.lead_id ? '<button class="btn-ver-lead" onclick="verLeadDesdeWA(\'' + conv.lead_id + '\')">Ver lead</button>' : '')
+    + '</div>';
   document.getElementById('wa-chat-header-info').innerHTML = headerHtml;
+  waMostrarEtapa(conv.telefono); // chip con la etapa del pipeline
 
   // Highlight in list
   renderConversacionesWA();
@@ -1658,6 +1681,7 @@ switchView = function(view) {
     { key:'no calificado', label:'No calificado', color:'#9CA3AF' },
     { key:'sin cobertura', label:'Sin cobertura', color:'#9CA3AF' }
   ];
+  window.plStages = PL_STAGES; // para que el chat de WhatsApp muestre la etapa
   var plLeads = [];
   var plModalReady = false;
   var _plDragId = null;
