@@ -442,7 +442,8 @@
     if (email === 'agustincalabres@yakuagua.com.ar') {
       document.getElementById('card-crm-pipeline').style.display = '';
       document.getElementById('card-cobertura').style.display = '';
-      var permitidasAgustin = ['/yaku-panel.html', '/yaku-planilla-contactos.html', '/yaku-competencia.html', '/yaku-stock.html', '/yaku-crm-ventas.html', '/yaku-cobertura.html'];
+      document.getElementById('card-papelera').style.display = '';
+      var permitidasAgustin = ['/yaku-panel.html', '/yaku-planilla-contactos.html', '/yaku-competencia.html', '/yaku-stock.html', '/yaku-crm-ventas.html', '/yaku-cobertura.html', '/yaku-papelera.html'];
       document.querySelectorAll('.task-card').forEach(function(card) {
         var href = card.getAttribute('href') || '';
         card.style.display = permitidasAgustin.indexOf(href) !== -1 ? '' : 'none';
