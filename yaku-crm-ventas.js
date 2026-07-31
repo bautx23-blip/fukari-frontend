@@ -2061,6 +2061,7 @@ window.cerLoad = async function(){
     if (!m) throw new Error('no se pudo cargar');
     window._cerCache = m;
     var d = m.cerrados || {total:0,por_mes:[]}, u = m.uso || {total_usd:0,mes_usd:0}, a = m.actividad || {conversaciones:0,ultima_respuesta_bot:null};
+    var p = m.pauta || {total:0,organicas:0,por_creatividad:[],disponible:false};
     var meses = d.por_mes || [];
     var max = meses.reduce(function(a,m){ return Math.max(a, m.cantidad||0); }, 1);
     var MESN = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -2078,8 +2079,18 @@ window.cerLoad = async function(){
       + '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span></div>'
       + '<div class="cer-total-card cer-gasto"><span class="cer-total-num">'+usd(u.total_usd)+'</span><span class="cer-total-lbl">gasto en IA (tokens reales)</span><span class="cer-gasto-mes">Este mes: '+usd(u.mes_usd)+'</span></div>'
       + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">conversaciones del bot</span></div>'
-      + '<div class="cer-total-card cer-resp"><span class="cer-total-num" style="font-size:24px;">'+hace(a.ultima_respuesta_bot)+'</span><span class="cer-total-lbl">última respuesta del bot</span></div>'
-      + '</div>';
+      + '<div class="cer-total-card cer-resp"><span class="cer-total-num" style="font-size:24px;">'+hace(a.ultima_respuesta_bot)+'</span><span class="cer-total-lbl">última respuesta del bot</span></div>';
+    // Pauta: cuántas consultas entraron por un anuncio (lo detectamos por el texto
+    // prellenado del click-to-WhatsApp). El denominador son las conversaciones que
+    // arrancaron con un mensaje de texto, no el total: sin texto no se puede clasificar.
+    if (p.disponible) {
+      var clasificadas = (p.total||0) + (p.organicas||0);
+      var pct = clasificadas ? Math.round((p.total||0)/clasificadas*100) : 0;
+      html += '<div class="cer-total-card cer-pauta"><span class="cer-total-num">'+(p.total||0)+'</span>'
+        + '<span class="cer-total-lbl">consultas por pauta</span>'
+        + '<span class="cer-pauta-sub">'+pct+'% de '+clasificadas+' · '+(p.organicas||0)+' orgánicas</span></div>';
+    }
+    html += '</div>';
     if (meses.length){
       html += '<div class="cer-meses-t">Por mes</div><div class="cer-meses">' + meses.map(function(m){
         var w = Math.round((m.cantidad||0)/max*100);
@@ -2089,6 +2100,17 @@ window.cerLoad = async function(){
       }).join('') + '</div>';
     } else {
       html += '<div class="cer-empty">Todavía no hay ventas cerradas por el bot.</div>';
+    }
+    // Desglose por creatividad: qué anuncio trae más consultas.
+    var creas = p.por_creatividad || [];
+    if (creas.length){
+      var maxC = creas.reduce(function(a,c){ return Math.max(a, c.cantidad||0); }, 1);
+      html += '<div class="cer-meses-t" style="margin-top:26px;">Consultas por pauta</div><div class="cer-meses">' + creas.map(function(c){
+        var w = Math.round((c.cantidad||0)/maxC*100);
+        return '<div class="cer-mes-row"><span class="cer-mes-lbl cer-crea-lbl">'+esc(c.label||c.clave)+'</span>'
+          + '<div class="cer-bar-wrap"><div class="cer-bar cer-bar-pauta" style="width:'+w+'%"></div></div>'
+          + '<span class="cer-mes-val">'+(c.cantidad||0)+'</span></div>';
+      }).join('') + '</div>';
     }
     slot.innerHTML = html;
   } catch(e){ slot.innerHTML = '<div class="cer-loading" style="color:#991B1B">Error: '+esc(e.message)+'</div>'; }
