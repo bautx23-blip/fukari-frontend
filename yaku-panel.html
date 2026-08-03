@@ -554,6 +554,7 @@ function renderTabla() {
     else if (o.fuente_adquisicion === 'Vía pública') fuenteBadge = '<span style="display:inline-block;background:#ffedd5;color:#9a3412;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Vía pública</span>';
     else if (o.fuente_adquisicion === 'Ya era cliente') fuenteBadge = '<span style="display:inline-block;background:#ede9fe;color:#6d28d9;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Ya era cliente</span>';
     else if (o.fuente_adquisicion === 'Concurso / Licitación') fuenteBadge = '<span style="display:inline-block;background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">Concurso / Licitación</span>';
+    else if (o.fuente_adquisicion === 'UPCN') fuenteBadge = '<span style="display:inline-block;background:#cffafe;color:#155e75;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:4px;">UPCN</span>';
     var completadaCell = '';
     if (esAdmin) {
       var checked = o.completada ? ' checked' : '';
@@ -1135,10 +1136,12 @@ function cancelarRechazoMonto() {
 
 // ── Fuente de Adquisición ──
 function abrirFuente(id, actual) {
-  var opciones = ['CRM', 'Referidos', 'Vía pública', 'Ya era cliente', 'Concurso / Licitación'];
+  // Mismo orden que FUENTES en el backend (ordenes.js). UPCN = convenio con la mutual.
+  var opciones = ['CRM', 'Referidos', 'Vía pública', 'Ya era cliente', 'Concurso / Licitación', 'UPCN'];
   var msg = 'Fuente de adquisición:\n';
   opciones.forEach(function(o, i) { msg += (i+1) + '. ' + o + (o === actual ? ' (actual)' : '') + '\n'; });
-  msg += '\nIngresá el número (1, 2, 3, 4 o 5):';
+  // Derivado de la lista: si se agrega otra fuente no hay que acordarse de tocar este texto.
+  msg += '\nIngresá el número (1 a ' + opciones.length + '):';
   var sel = prompt(msg);
   if (!sel) return;
   var idx = parseInt(sel) - 1;
