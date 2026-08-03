@@ -778,10 +778,33 @@ tbody tr:hover{background:#f8fafc;}
   .cer-bar{height:100%;background:#16a34a;border-radius:6px;min-width:2px;}
   .cer-mes-val{font-size:12px;font-weight:800;color:#1a1a2e;width:26px;text-align:right;}
   .cer-empty,.cer-loading{color:#9ca3af;font-size:13px;padding:22px 0;}
+  /* Selector de período. Mismo lenguaje visual que el de yaku-reportes-v2. */
+  .cer-periodo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 20px;padding-bottom:16px;border-bottom:1px solid #eef2f7;}
+  .cer-periodo label{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;}
+  .cer-periodo-tit{font-size:11px;font-weight:800;color:#b45309;background:#fef3c7;padding:4px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.04em;}
+  .cer-periodo input[type=date]{padding:5px 8px;border:1.5px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:11.5px;color:#374151;}
+  .cer-per-btns{display:flex;gap:6px;margin-left:4px;flex-wrap:wrap;}
+  .cer-per-btn{padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:6px;background:#fff;font-family:inherit;font-size:11.5px;font-weight:600;color:#6b7280;cursor:pointer;transition:all .15s;}
+  .cer-per-btn:hover{border-color:#2563eb;color:#2563eb;}
+  .cer-per-btn.active{background:#2563eb;color:#fff;border-color:#2563eb;}
+  .cer-nota{font-size:11.5px;color:#9ca3af;margin:-6px 0 14px;}
   </style>
   <div class="view" id="view-cerrados">
     <div class="cer-title">Métricas</div>
-    <div class="cer-sub">Ventas cerradas por el bot y gasto estimado en IA.</div>
+    <div class="cer-sub">Ventas cerradas por el bot, consultas por pauta y gasto en IA.</div>
+    <!-- El período mueve SOLO la tarjeta de consultas por pauta y su desglose. Se
+         aclara en el título para que nadie lea las otras tarjetas como filtradas. -->
+    <div class="cer-periodo">
+      <span class="cer-periodo-tit">Período de pauta</span>
+      <label>Desde</label><input type="date" id="cer-desde" onchange="cerFechaManual()">
+      <label>Hasta</label><input type="date" id="cer-hasta" onchange="cerFechaManual()">
+      <div class="cer-per-btns">
+        <button class="cer-per-btn" onclick="cerSetPeriodo('mes', this)">Este mes</button>
+        <button class="cer-per-btn" onclick="cerSetPeriodo('mespasado', this)">Mes pasado</button>
+        <button class="cer-per-btn" onclick="cerSetPeriodo('30d', this)">Últimos 30 días</button>
+        <button class="cer-per-btn active" onclick="cerSetPeriodo('todo', this)">Todo</button>
+      </div>
+    </div>
     <div id="cer-slot"><div class="cer-loading">Cargando…</div></div>
   </div>
 

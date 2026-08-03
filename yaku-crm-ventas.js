@@ -2051,15 +2051,47 @@ switchView = function(view) {
 // ══════════════════════════════════════════════════════════════════════════
 // CERRADOS POR BOT — métrica (solo info@wearebilab.com)
 // ══════════════════════════════════════════════════════════════════════════
+// Fechas en local: new Date().toISOString() corre el día cuando estás en UTC-3.
+function cerIso(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+
+window.cerSetPeriodo = function(tipo, btn){
+  var hoy = new Date(), y = hoy.getFullYear(), m = hoy.getMonth();
+  var desde = '', hasta = '';
+  if (tipo === 'mes')            { desde = cerIso(new Date(y, m, 1));       hasta = cerIso(new Date(y, m+1, 0)); }
+  else if (tipo === 'mespasado') { desde = cerIso(new Date(y, m-1, 1));     hasta = cerIso(new Date(y, m, 0)); }
+  else if (tipo === '30d')       { desde = cerIso(new Date(y, m, hoy.getDate()-29)); hasta = cerIso(hoy); }
+  document.getElementById('cer-desde').value = desde;
+  document.getElementById('cer-hasta').value = hasta;
+  document.querySelectorAll('.cer-per-btn').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  cerLoad();
+};
+
+// Tocar las fechas a mano desactiva el botón de preset: lo que se muestra ya no es
+// ninguno de ellos y dejarlo marcado haría creer que el filtro es otro.
+window.cerFechaManual = function(){
+  document.querySelectorAll('.cer-per-btn').forEach(function(b){ b.classList.remove('active'); });
+  cerLoad();
+};
+
 window.cerLoad = async function(){
   var slot = document.getElementById('cer-slot'); if(!slot) return;
-  // Si ya cargó antes, mostramos lo cacheado al instante y refrescamos en segundo plano.
-  if (!window._cerCache) slot.innerHTML = '<div class="cer-loading">Cargando…</div>';
+  var elD = document.getElementById('cer-desde'), elH = document.getElementById('cer-hasta');
+  var desde = (elD && elD.value) || '', hasta = (elH && elH.value) || '';
+  // pauta_* y no desde/hasta: el período mide solo las consultas por pauta. El resto
+  // de las tarjetas (cerradas, gasto, conversaciones) son históricas y no se filtran.
+  var qs = [];
+  if (desde) qs.push('pauta_desde=' + encodeURIComponent(desde));
+  if (hasta) qs.push('pauta_hasta=' + encodeURIComponent(hasta));
+  var clave = desde + '|' + hasta;
+  // El cache es por período: si no, al cambiar de filtro se verían un instante los
+  // números del filtro anterior como si fueran los nuevos.
+  if (window._cerCacheKey !== clave) slot.innerHTML = '<div class="cer-loading">Cargando…</div>';
   try {
     var hdr = { 'x-user-email': _currentUserEmail };
-    var m = await fetch(API_URL + '/api/sales-bot/metricas', { headers: hdr }).then(function(r){ return r.ok?r.json():null; });
+    var m = await fetch(API_URL + '/api/sales-bot/metricas' + (qs.length ? '?' + qs.join('&') : ''), { headers: hdr }).then(function(r){ return r.ok?r.json():null; });
     if (!m) throw new Error('no se pudo cargar');
-    window._cerCache = m;
+    window._cerCache = m; window._cerCacheKey = clave;
     var d = m.cerrados || {total:0,por_mes:[]}, u = m.uso || {total_usd:0,mes_usd:0}, a = m.actividad || {conversaciones:0,ultima_respuesta_bot:null};
     var p = m.pauta || {total:0,organicas:0,por_creatividad:[],disponible:false};
     var meses = d.por_mes || [];
@@ -2084,11 +2116,18 @@ window.cerLoad = async function(){
     // prellenado del click-to-WhatsApp). El denominador son las conversaciones que
     // arrancaron con un mensaje de texto, no el total: sin texto no se puede clasificar.
     if (p.disponible) {
-      var clasificadas = (p.total||0) + (p.organicas||0);
-      var pct = clasificadas ? Math.round((p.total||0)/clasificadas*100) : 0;
+      // medidas = las que salen de la base. previas = las anteriores al bot, que el
+      // backend sólo suma si el período llega hasta antes de esa fecha.
+      var medidas = (p.medidas != null) ? p.medidas : (p.total||0);
+      var previas = p.previas || 0;
+      var clasificadas = medidas + (p.organicas||0);
+      var pct = clasificadas ? Math.round(medidas/clasificadas*100) : 0;
+      var sub = previas
+        ? medidas + ' medidas + ' + previas + ' previas al bot'
+        : pct + '% de ' + clasificadas + ' · ' + (p.organicas||0) + ' orgánicas';
       html += '<div class="cer-total-card cer-pauta"><span class="cer-total-num">'+(p.total||0)+'</span>'
         + '<span class="cer-total-lbl">consultas por pauta</span>'
-        + '<span class="cer-pauta-sub">'+pct+'% de '+clasificadas+' · '+(p.organicas||0)+' orgánicas</span></div>';
+        + '<span class="cer-pauta-sub">'+esc(sub)+'</span></div>';
     }
     html += '</div>';
     if (meses.length){
@@ -2105,7 +2144,16 @@ window.cerLoad = async function(){
     var creas = p.por_creatividad || [];
     if (creas.length){
       var maxC = creas.reduce(function(a,c){ return Math.max(a, c.cantidad||0); }, 1);
-      html += '<div class="cer-meses-t" style="margin-top:26px;">Consultas por pauta</div><div class="cer-meses">' + creas.map(function(c){
+      html += '<div class="cer-meses-t" style="margin-top:26px;">Consultas por pauta</div>';
+      // De las previas al bot no sabemos qué anuncio las trajo, así que el desglose
+      // suma menos que la tarjeta. Decirlo evita que parezca un error de cuentas.
+      if (p.previas) {
+        // YYYY-MM-DD -> DD/MM/YYYY. Sin new Date() para no correr el día por UTC.
+        var pd = String(p.previas_hasta || '').split('-');
+        var fechaCorte = pd.length === 3 ? (pd[2] + '/' + pd[1] + '/' + pd[0]) : (p.previas_hasta || '');
+        html += '<div class="cer-nota">Desglose de las ' + (p.medidas||0) + ' medidas. Las ' + p.previas + ' previas al bot (antes del ' + esc(fechaCorte) + ') no tienen creatividad registrada.</div>';
+      }
+      html += '<div class="cer-meses">' + creas.map(function(c){
         var w = Math.round((c.cantidad||0)/maxC*100);
         return '<div class="cer-mes-row"><span class="cer-mes-lbl cer-crea-lbl">'+esc(c.label||c.clave)+'</span>'
           + '<div class="cer-bar-wrap"><div class="cer-bar cer-bar-pauta" style="width:'+w+'%"></div></div>'
