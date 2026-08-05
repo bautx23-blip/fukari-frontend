@@ -1000,10 +1000,11 @@ function renderFuentes(data) {
   // dispensers entró por una sola fuente y suma 1, no 3. Es la diferencia con
   // "Equipos vendidos por vendedor", que sí cuenta equipos.
   html += '<p style="font-size:12px;color:#6b7280;margin:-6px 0 14px;line-height:1.5;">' +
-    'Se cuenta <strong>una orden = una fuente</strong>, sin importar cuántos equipos tenga. ' +
-    'Sólo órdenes <strong>instaladas</strong>, por fecha de instalación — mismo universo que el resto del reporte, ' +
-    'así que el total cierra con la columna “Ordenes” de <em>Facturado por vendedor</em>. ' +
-    'No cierra con “Equipos vendidos por vendedor” porque esa cuenta equipos, no órdenes.</p>';
+    'Cuenta <strong>clientes adquiridos</strong>, no órdenes ni equipos. Una licitación que genera ' +
+    'varias órdenes para el mismo cliente suma <strong>1</strong>, y una segunda orden de un cliente que ' +
+    'ya teníamos no suma. Sólo órdenes <strong>instaladas</strong>, por fecha de instalación. ' +
+    'La columna <em>Órdenes</em> de la tabla de abajo muestra el conteo por orden, que es el que cierra ' +
+    'con <em>Facturado por vendedor</em>.</p>';
 
   var conteos = FUENTES_REPORTE.map(function(f) { return data[f.key] || 0; });
   var sinAsignar = data.sin_asignar || 0;
@@ -1011,9 +1012,16 @@ function renderFuentes(data) {
   var asignadas = conteos.reduce(function(a, n) { return a + n; }, 0);
   var pctAsig = total > 0 ? Math.round((asignadas / total) * 100) : 0;
 
+  // El número grande es clientes adquiridos; abajo, en chico, cuántas órdenes
+  // generaron — así se ve de una que una licitación de 1 cliente trajo 3 órdenes.
+  var porOrden = data.por_orden || {};
   html += '<div class="stats-row">';
   FUENTES_REPORTE.forEach(function(f, i) {
-    html += '<div class="stat-card" style="border-top-color:' + f.color + '"><div class="label">' + f.key + '</div><div class="value" style="color:' + f.color + '">' + conteos[i] + '</div></div>';
+    var ords = porOrden[f.key] || 0;
+    var pie = ords !== conteos[i]
+      ? '<div style="font-size:10.5px;color:#9ca3af;margin-top:4px;">' + ords + ' ' + (ords === 1 ? 'orden' : 'órdenes') + '</div>'
+      : '';
+    html += '<div class="stat-card" style="border-top-color:' + f.color + '"><div class="label">' + f.key + '</div><div class="value" style="color:' + f.color + '">' + conteos[i] + '</div>' + pie + '</div>';
   });
   html += '<div class="stat-card" style="border-top-color:#9ca3af"><div class="label">Con fuente asignada</div><div class="value">' + pctAsig + '%</div><div style="font-size:11px;color:#9ca3af;margin-top:2px;">' + asignadas + ' de ' + total + '</div></div>';
   html += '</div>';
@@ -1025,14 +1033,15 @@ function renderFuentes(data) {
   // Tabla cierres por vendedor y fuente
   var byVend = data.by_vendedor || [];
   if (byVend.length > 0) {
-    html += '<div class="tabla-wrap" style="margin-top:20px;"><div class="tabla-header"><h3>Cierres por vendedor y fuente</h3></div>';
+    html += '<div class="tabla-wrap" style="margin-top:20px;"><div class="tabla-header"><h3>Clientes adquiridos por vendedor y fuente</h3></div>';
     html += '<table><thead><tr>';
     html += '<th>Vendedor</th>';
     FUENTES_REPORTE.forEach(function(f) {
       html += '<th class="right" style="color:' + f.color + ';">' + f.key + '</th>';
     });
     html += '<th class="right" style="color:#9ca3af;">Sin asignar</th>';
-    html += '<th class="right">Total</th>';
+    html += '<th class="right">Clientes</th>';
+    html += '<th class="right" style="color:#6b7280;">Órdenes</th>';
     html += '</tr></thead><tbody>';
     byVend.forEach(function(r) {
       html += '<tr>';
@@ -1042,6 +1051,7 @@ function renderFuentes(data) {
       });
       html += '<td class="right" style="color:#9ca3af;">' + (r.sin_asignar || 0) + '</td>';
       html += '<td class="right bold">' + r.total + '</td>';
+      html += '<td class="right" style="color:#6b7280;">' + (r.ordenes != null ? r.ordenes : '—') + '</td>';
       html += '</tr>';
     });
     // Fila de totales
@@ -1050,6 +1060,7 @@ function renderFuentes(data) {
     conteos.forEach(function(n) { html += '<td class="right">' + n + '</td>'; });
     html += '<td class="right" style="color:#9ca3af;">' + sinAsignar + '</td>';
     html += '<td class="right bold">' + total + '</td>';
+    html += '<td class="right" style="color:#6b7280;">' + (data.ordenes_total != null ? data.ordenes_total : '—') + '</td>';
     html += '</tr>';
     html += '</tbody></table></div>';
   }
