@@ -860,7 +860,15 @@ function seleccionarTipoBaja(tipo) {
     } else {
       list.innerHTML = equipos.map(function(e, i) {
         var cant = parseInt(e.cantidad) || 1;
-        var cantHtml = cant > 1 ? '<div class="eq-cant-wrap" data-idx="' + i + '" style="display:none;flex-basis:100%;align-items:center;gap:6px;margin-top:6px;padding:6px 8px 2px;border-top:1px dashed #e5e7eb;"><label style="font-size:10px;color:#6b7280;white-space:nowrap;">Dar de baja:</label><select class="eq-cant-select" data-idx="' + i + '" style="border:1px solid #d1d5db;border-radius:4px;padding:2px 6px;font-size:11px;" onchange="actualizarEquiposBaja()">' + Array.from({length:cant},function(_,n){return '<option value="'+(n+1)+'"'+(n+1===cant?' selected':'')+'>'+(n+1)+' de '+cant+'</option>';}).join('') + '</select></div>' : '';
+        // La cantidad se escribe a mano: la ficha del cliente puede estar incompleta
+        // (equipos de órdenes viejas que nunca se cargaron), así que se permite dar de
+        // baja MÁS de lo registrado. Si excede, se avisa pero no se bloquea.
+        var cantHtml = '<div class="eq-cant-wrap" data-idx="' + i + '" style="display:none;flex-basis:100%;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px;padding:6px 8px 2px;border-top:1px dashed #e5e7eb;">' +
+          '<label style="font-size:10px;color:#6b7280;white-space:nowrap;">Dar de baja:</label>' +
+          '<input type="number" class="eq-cant-select" data-idx="' + i + '" value="' + cant + '" min="1" step="1" style="width:64px;border:1px solid #d1d5db;border-radius:4px;padding:2px 6px;font-size:11px;font-family:inherit;" oninput="actualizarEquiposBaja()">' +
+          '<span style="font-size:10px;color:#9ca3af;white-space:nowrap;">de ' + cant + ' registrado(s)</span>' +
+          '<span class="eq-cant-alerta" data-idx="' + i + '" style="display:none;flex-basis:100%;font-size:10px;color:#c2410c;font-weight:600;"></span>' +
+          '</div>';
         return '<div class="equipo-check" style="flex-wrap:wrap;"><input type="checkbox" value="' + i + '" onchange="toggleCantBaja(this,'+i+','+cant+')">' +
           '<div style="flex:1;"><div class="eq-info">' + nombreModelo(e.modelo) + ' — Total: ' + cant + '</div>' +
           '<div class="eq-loc">' + (e.domicilio || '') + (e.localidad ? ' — ' + e.localidad : '') + '</div></div>' + cantHtml + '</div>';
@@ -885,16 +893,29 @@ function actualizarEquiposBaja() {
   _equiposBaja = [];
   document.querySelectorAll('#equipos-check-list input[type=checkbox]:checked').forEach(function(cb) {
     var idx = parseInt(cb.value);
-    if (equipos[idx]) {
-      var cantSelect = document.querySelector('.eq-cant-select[data-idx="' + idx + '"]');
-      var cantBaja = cantSelect ? parseInt(cantSelect.value) : (parseInt(equipos[idx].cantidad) || 1);
-      _equiposBaja.push({
-        modelo: nombreModelo(equipos[idx].modelo),
-        cantidad: cantBaja,
-        domicilio: equipos[idx].domicilio,
-        localidad: equipos[idx].localidad
-      });
+    if (!equipos[idx]) return;
+    var cantRegistrada = parseInt(equipos[idx].cantidad) || 1;
+    var cantInput = document.querySelector('.eq-cant-select[data-idx="' + idx + '"]');
+    var cantBaja = cantInput ? (parseInt(cantInput.value) || 0) : cantRegistrada;
+
+    // Avisar (sin bloquear) cuando se da de baja más de lo que figura en la ficha.
+    var alerta = document.querySelector('.eq-cant-alerta[data-idx="' + idx + '"]');
+    if (alerta) {
+      if (cantBaja > cantRegistrada) {
+        alerta.textContent = '⚠ Vas a dar de baja ' + cantBaja + ' equipos y en la ficha figuran ' + cantRegistrada + '. Se guarda igual.';
+        alerta.style.display = '';
+      } else {
+        alerta.style.display = 'none';
+      }
     }
+
+    if (cantBaja < 1) return;
+    _equiposBaja.push({
+      modelo: nombreModelo(equipos[idx].modelo),
+      cantidad: cantBaja,
+      domicilio: equipos[idx].domicilio,
+      localidad: equipos[idx].localidad
+    });
   });
 }
 

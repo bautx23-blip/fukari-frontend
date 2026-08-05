@@ -118,6 +118,16 @@ tr.fila-anulada td:last-child{opacity:1;text-decoration:none;}
 .edit-form .section-title:first-child{margin-top:0;padding-top:0;border-top:none;}
 .edit-form .doc-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#c0392b;text-decoration:none;margin-top:4px;}
 .edit-form .doc-link:hover{text-decoration:underline;}
+/* Editor de equipos dados de baja */
+.eq-edit-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed #f3f4f6;}
+.eq-edit-row .eq-f{flex:2;min-width:110px;}
+.eq-edit-row .eq-f.cant{flex:0.5;min-width:64px;}
+.eq-edit-row .eq-f.loc{flex:1.2;min-width:100px;}
+.eq-edit-del{padding:8px 11px;background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca;border-radius:6px;font-family:inherit;font-size:12px;cursor:pointer;line-height:1;}
+.eq-edit-del:hover{background:#fee2e2;}
+.btn-eq-add{margin-top:4px;padding:7px 14px;background:#f3f4f6;color:#374151;border:1.5px dashed #d1d5db;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-eq-add:hover{background:#e5e7eb;}
+.eq-edit-hint{font-size:11px;color:#6b7280;margin-top:8px;line-height:1.5;}
 .modal-editar .modal-footer{padding:16px 22px;border-top:1px solid #e5e7eb;display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:#fff;border-radius:0 0 10px 10px;}
 .btn-guardar-edit{padding:9px 24px;background:#c0392b;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
 .btn-guardar-edit:hover{background:#a93226;}
@@ -535,7 +545,8 @@ function cerrarModalAnular() {
 // ── EDITAR BAJA ──
 var _editBajaActual = null;
 
-function esc(v) { return (v||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// String() porque acá también entran números (cantidad de equipos).
+function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function abrirEdicionBaja(b) {
   _editBajaActual = b;
@@ -556,6 +567,13 @@ function abrirEdicionBaja(b) {
   html += '<div class="form-full"><label>Motivo</label><select id="edit-motivo"><option value="Solicitud del cliente"' + (b.motivo==='Solicitud del cliente'?' selected':'') + '>Solicitud del cliente</option><option value="Falta de pago"' + (b.motivo==='Falta de pago'?' selected':'') + '>Falta de pago</option><option value="Mudanza"' + (b.motivo==='Mudanza'?' selected':'') + '>Mudanza</option><option value="Vencimiento de contrato"' + (b.motivo==='Vencimiento de contrato'?' selected':'') + '>Vencimiento de contrato</option><option value="Otro"' + (b.motivo==='Otro'?' selected':'') + '>Otro</option></select></div>';
   html += '<div class="form-full"><label>Observaciones</label><textarea id="edit-observaciones">' + esc(b.observaciones) + '</textarea></div>';
   html += '<div><label>Vendedor</label><select id="edit-vendedor"><option value="René Biagioni"' + (b.vendedor==='René Biagioni'?' selected':'') + '>René Biagioni</option><option value="Agustín Calabrés"' + (b.vendedor==='Agustín Calabrés'?' selected':'') + '>Agustín Calabrés</option>' + (b.vendedor==='María Pía Bologñese' ? '<option value="María Pía Bologñese" selected>María Pía Bologñese</option>' : '') + '</select></div>';
+
+  html += '<div class="section-title">Equipos dados de baja</div>';
+  html += '<div class="form-full"><div id="edit-equipos-list"></div>' +
+    '<button type="button" class="btn-eq-add" onclick="agregarEquipoBajaEdit()">+ Agregar equipo</button>' +
+    '<p class="eq-edit-hint">La cantidad es libre: si la ficha del cliente estaba incompleta ' +
+    '(equipos de órdenes viejas que nunca se cargaron) podés poner más de lo que figuraba. ' +
+    'Esto es lo que se imprime en el PDF de la baja.</p></div>';
 
   html += '<div class="section-title">Responsable</div>';
   html += '<div><label>Responsable</label><input type="text" id="edit-responsable" value="' + esc(b.responsable) + '"></div>';
@@ -579,12 +597,75 @@ function abrirEdicionBaja(b) {
 
   html += '</div>';
   document.getElementById('edit-form-body').innerHTML = html;
+  // equipos_baja es la fuente; productos_ref es el espejo que imprime el PDF.
+  cargarEquiposBajaEdit((b.equipos_baja && b.equipos_baja.length) ? b.equipos_baja : (b.productos_ref || []));
   document.getElementById('modal-editar-overlay').classList.add('open');
+}
+
+// ── Editor de equipos de la baja ──
+var _editEquiposBaja = [];
+
+function cargarEquiposBajaEdit(equipos) {
+  _editEquiposBaja = (equipos || []).map(function(e) {
+    return {
+      modelo: e.modelo || '',
+      cantidad: parseInt(e.cantidad) || 1,
+      domicilio: e.domicilio || '',
+      localidad: e.localidad || ''
+    };
+  });
+  pintarEquiposBajaEdit();
+}
+
+function pintarEquiposBajaEdit() {
+  var cont = document.getElementById('edit-equipos-list');
+  if (!cont) return;
+  if (!_editEquiposBaja.length) {
+    cont.innerHTML = '<p style="font-size:11px;color:#9ca3af;margin-bottom:6px;">Sin equipos cargados en esta baja.</p>';
+    return;
+  }
+  cont.innerHTML = _editEquiposBaja.map(function(e, i) {
+    return '<div class="eq-edit-row">' +
+      '<div class="eq-f"><label>Modelo</label><input type="text" value="' + esc(e.modelo) + '" oninput="setEquipoBajaEdit(' + i + ',&quot;modelo&quot;,this.value)"></div>' +
+      '<div class="eq-f cant"><label>Cant.</label><input type="number" min="1" step="1" value="' + esc(e.cantidad) + '" oninput="setEquipoBajaEdit(' + i + ',&quot;cantidad&quot;,this.value)"></div>' +
+      '<div class="eq-f"><label>Domicilio</label><input type="text" value="' + esc(e.domicilio) + '" oninput="setEquipoBajaEdit(' + i + ',&quot;domicilio&quot;,this.value)"></div>' +
+      '<div class="eq-f loc"><label>Localidad</label><input type="text" value="' + esc(e.localidad) + '" oninput="setEquipoBajaEdit(' + i + ',&quot;localidad&quot;,this.value)"></div>' +
+      '<button type="button" class="eq-edit-del" onclick="quitarEquipoBajaEdit(' + i + ')" title="Quitar equipo">&#10005;</button>' +
+      '</div>';
+  }).join('');
+}
+
+// Sólo muta el array: repintar en cada tecla haría perder el foco del input.
+function setEquipoBajaEdit(i, campo, valor) {
+  if (!_editEquiposBaja[i]) return;
+  _editEquiposBaja[i][campo] = valor;
+}
+
+function agregarEquipoBajaEdit() {
+  _editEquiposBaja.push({ modelo: '', cantidad: 1, domicilio: '', localidad: '' });
+  pintarEquiposBajaEdit();
+}
+
+function quitarEquipoBajaEdit(i) {
+  _editEquiposBaja.splice(i, 1);
+  pintarEquiposBajaEdit();
+}
+
+function getEquiposBajaEdit() {
+  return _editEquiposBaja.map(function(e) {
+    return {
+      modelo: String(e.modelo || '').trim(),
+      cantidad: parseInt(e.cantidad) || 1,
+      domicilio: String(e.domicilio || '').trim(),
+      localidad: String(e.localidad || '').trim()
+    };
+  }).filter(function(e) { return e.modelo || e.domicilio || e.localidad; });
 }
 
 function cerrarModalEditar() {
   document.getElementById('modal-editar-overlay').classList.remove('open');
   _editBajaActual = null;
+  _editEquiposBaja = [];
 }
 
 async function subirArchivoBajaEdit(fileInput, nombreBase) {
@@ -630,6 +711,11 @@ async function guardarEdicionBaja() {
       dom_retiro: document.getElementById('edit-dom_retiro').value.trim(),
       localidad_retiro: document.getElementById('edit-localidad_retiro').value.trim()
     };
+
+    // Los dos campos van juntos: equipos_baja es el dato, productos_ref es lo que arma el PDF.
+    var equipos = getEquiposBajaEdit();
+    payload.equipos_baja = equipos;
+    payload.productos_ref = equipos;
 
     // Subir archivos nuevos si se seleccionaron
     var base = _editBajaActual.numero_completo || _editBajaActual.id;
