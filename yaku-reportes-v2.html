@@ -996,6 +996,14 @@ var FUENTES_REPORTE = [
 function renderFuentes(data) {
   var html = '<div class="report-section">';
   html += '<div class="section-header"><div class="bar" style="background:#2563eb"></div><h2 style="color:#2563eb">Fuentes de adquisición</h2></div>';
+  // Aclaración explícita: se cuentan ÓRDENES, no equipos. Una orden con 3
+  // dispensers entró por una sola fuente y suma 1, no 3. Es la diferencia con
+  // "Equipos vendidos por vendedor", que sí cuenta equipos.
+  html += '<p style="font-size:12px;color:#6b7280;margin:-6px 0 14px;line-height:1.5;">' +
+    'Se cuenta <strong>una orden = una fuente</strong>, sin importar cuántos equipos tenga. ' +
+    'Sólo órdenes <strong>instaladas</strong>, por fecha de instalación — mismo universo que el resto del reporte, ' +
+    'así que el total cierra con la columna “Ordenes” de <em>Facturado por vendedor</em>. ' +
+    'No cierra con “Equipos vendidos por vendedor” porque esa cuenta equipos, no órdenes.</p>';
 
   var conteos = FUENTES_REPORTE.map(function(f) { return data[f.key] || 0; });
   var sinAsignar = data.sin_asignar || 0;
