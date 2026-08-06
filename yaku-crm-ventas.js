@@ -2078,11 +2078,12 @@ window.cerLoad = async function(){
   var slot = document.getElementById('cer-slot'); if(!slot) return;
   var elD = document.getElementById('cer-desde'), elH = document.getElementById('cer-hasta');
   var desde = (elD && elD.value) || '', hasta = (elH && elH.value) || '';
-  // pauta_* y no desde/hasta: el período mide solo las consultas por pauta. El resto
-  // de las tarjetas (cerradas, gasto, conversaciones) son históricas y no se filtran.
+  // El período filtra ventas cerradas (desde/hasta) y consultas por pauta (pauta_*).
+  // Van con nombres distintos porque el backend las mide en tablas distintas.
+  // Gasto en IA y total de conversaciones quedan históricos, rotulados como tales.
   var qs = [];
-  if (desde) qs.push('pauta_desde=' + encodeURIComponent(desde));
-  if (hasta) qs.push('pauta_hasta=' + encodeURIComponent(hasta));
+  if (desde) qs.push('desde=' + encodeURIComponent(desde) + '&pauta_desde=' + encodeURIComponent(desde));
+  if (hasta) qs.push('hasta=' + encodeURIComponent(hasta) + '&pauta_hasta=' + encodeURIComponent(hasta));
   var clave = desde + '|' + hasta;
   // El cache es por período: si no, al cambiar de filtro se verían un instante los
   // números del filtro anterior como si fueran los nuevos.
@@ -2107,10 +2108,15 @@ window.cerLoad = async function(){
       if(s<86400) return 'hace '+Math.floor(s/3600)+' h';
       return 'hace '+Math.floor(s/86400)+' días';
     }
+    // Las tarjetas filtradas dicen qué ventana muestran; las históricas lo aclaran
+    // para que no se lean como si respondieran al período.
+    var rotuloPeriodo = (desde || hasta)
+      ? '<span class="cer-gasto-mes">' + (desde || '…') + ' → ' + (hasta || '…') + '</span>'
+      : '<span class="cer-gasto-mes">histórico completo</span>';
     var html = '<div class="cer-cards">'
-      + '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span></div>'
-      + '<div class="cer-total-card cer-gasto"><span class="cer-total-num">'+usd(u.total_usd)+'</span><span class="cer-total-lbl">gasto en IA (tokens reales)</span><span class="cer-gasto-mes">Este mes: '+usd(u.mes_usd)+'</span></div>'
-      + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">conversaciones del bot</span></div>'
+      + '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span>'+rotuloPeriodo+'</div>'
+      + '<div class="cer-total-card cer-gasto"><span class="cer-total-num">'+usd(u.total_usd)+'</span><span class="cer-total-lbl">gasto en IA (tokens reales)</span><span class="cer-gasto-mes">Histórico · este mes: '+usd(u.mes_usd)+'</span></div>'
+      + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">conversaciones del bot</span><span class="cer-gasto-mes">Histórico</span></div>'
       + '<div class="cer-total-card cer-resp"><span class="cer-total-num" style="font-size:24px;">'+hace(a.ultima_respuesta_bot)+'</span><span class="cer-total-lbl">última respuesta del bot</span></div>';
     // Pauta: cuántas consultas entraron por un anuncio (lo detectamos por el texto
     // prellenado del click-to-WhatsApp). El denominador son las conversaciones que

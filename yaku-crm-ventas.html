@@ -762,7 +762,10 @@ tbody tr:hover{background:#f8fafc;}
   .cer-total-num{font-size:34px;font-weight:800;line-height:1;}
   .cer-total-lbl{font-size:12px;color:#9ca3af;}
   .cer-total-card.cer-gasto{background:#0f766e;}
-  .cer-gasto-mes{font-size:12px;color:#99f6e4;margin-top:6px;}
+  /* Ahora también rotula el período en las otras tarjetas, que tienen otro fondo:
+     blanco apagado por defecto y el celeste original sólo en la de gasto. */
+  .cer-gasto-mes{font-size:12px;color:rgba(255,255,255,.62);margin-top:6px;}
+  .cer-total-card.cer-gasto .cer-gasto-mes{color:#99f6e4;}
   .cer-total-card.cer-conv{background:#1d4ed8;}
   .cer-total-card.cer-resp{background:#7c3aed;}
   .cer-total-card.cer-pauta{background:#b45309;}
@@ -792,10 +795,10 @@ tbody tr:hover{background:#f8fafc;}
   <div class="view" id="view-cerrados">
     <div class="cer-title">Métricas</div>
     <div class="cer-sub">Ventas cerradas por el bot, consultas por pauta y gasto en IA.</div>
-    <!-- El período mueve SOLO la tarjeta de consultas por pauta y su desglose. Se
-         aclara en el título para que nadie lea las otras tarjetas como filtradas. -->
+    <!-- El período mueve las ventas cerradas y las consultas por pauta. El gasto en
+         IA y el total de conversaciones son históricos y lo dicen en la tarjeta. -->
     <div class="cer-periodo">
-      <span class="cer-periodo-tit">Período de pauta</span>
+      <span class="cer-periodo-tit">Período</span>
       <label>Desde</label><input type="date" id="cer-desde" onchange="cerFechaManual()">
       <label>Hasta</label><input type="date" id="cer-hasta" onchange="cerFechaManual()">
       <div class="cer-per-btns">
