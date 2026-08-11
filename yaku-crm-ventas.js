@@ -94,7 +94,23 @@ function switchView(view) {
   if (view === 'agentes') agLoad();
   if (view === 'agenda') calCargar();
   if (view === 'cerrados') cerLoad();
+  // El gasto en IA y las conversaciones se mueven durante el día: la vista se
+  // refresca sola mientras esté abierta, y el polling se corta al salir.
+  cerAutoRefresh(view === 'cerrados');
 }
+
+// ── Auto-refresh de métricas ──
+var _cerTimer = null;
+function cerAutoRefresh(on) {
+  if (_cerTimer) { clearInterval(_cerTimer); _cerTimer = null; }
+  if (!on) return;
+  // document.hidden: una pestaña olvidada en otro monitor no tiene por qué
+  // pegarle al backend cada minuto. Al volver a primer plano refresca enseguida.
+  _cerTimer = setInterval(function(){ if (!document.hidden) cerLoad(); }, 60000);
+}
+document.addEventListener('visibilitychange', function(){
+  if (!document.hidden && _cerTimer) cerLoad();
+});
 
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('open');
@@ -2136,6 +2152,9 @@ window.cerLoad = async function(){
         + '<span class="cer-pauta-sub">'+esc(sub)+'</span></div>';
     }
     html += '</div>';
+    var hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    html += '<div class="cer-refresh">Se actualiza solo cada 60 s · última lectura ' + hora
+      + ' · ' + (u.llamadas || 0).toLocaleString('es-AR') + ' llamadas a la IA</div>';
     if (meses.length){
       html += '<div class="cer-meses-t">Por mes</div><div class="cer-meses">' + meses.map(function(m){
         var w = Math.round((m.cantidad||0)/max*100);
