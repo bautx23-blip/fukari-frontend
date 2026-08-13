@@ -1947,6 +1947,9 @@ switchView = function(view) {
 
   function evClase(e){
     if (e.estado==='hecho') return 'hecho';
+    // Cerrado porque el lead se cayó (no calificado, derivado a una persona). No es
+    // una instalación cumplida, pero tampoco algo pendiente que haya que avisar.
+    if (e.estado==='cancelado') return 'cancelado';
     var h=hoyAR(); var fl=String(e.fecha_limite).slice(0,10);
     if (fl<h) return 'vencida';
     if (fl===h) return 'hoy';
@@ -1983,9 +1986,10 @@ switchView = function(view) {
     document.getElementById('cal-modal-title').textContent='Instalaciones — '+p[2]+'/'+p[1]+'/'+p[0];
     document.getElementById('cal-modal-body').innerHTML = evs.length ? evs.map(function(e){
       var cls=evClase(e);
-      var chip = cls==='vencida'?'<span class="cal-chip vencida">vencida</span>':(cls==='hoy'?'<span class="cal-chip hoy">vence hoy</span>':(cls==='hecho'?'<span class="cal-chip hecho">hecho</span>':''));
+      var chip = cls==='vencida'?'<span class="cal-chip vencida">vencida</span>':(cls==='hoy'?'<span class="cal-chip hoy">vence hoy</span>':(cls==='hecho'?'<span class="cal-chip hecho">instalada</span>':(cls==='cancelado'?'<span class="cal-chip cancelado">cancelada</span>':'')));
       // Planilla pre-cargada: todos los datos que capturó el bot al cerrar.
-      return '<div class="cal-item'+(e.estado==='hecho'?' hecho':'')+'">'
+      var cerrado = (e.estado==='hecho' || e.estado==='cancelado');
+      return '<div class="cal-item'+(cerrado?' hecho':'')+'">'
         + '<div class="n">'+esc(e.nombre||'(sin nombre)')+chip+'</div>'
         + '<div class="m" style="line-height:1.7;">'
         +   (e.telefono?'&#128222; '+esc(e.telefono)+'<br>':'')
@@ -1995,7 +1999,7 @@ switchView = function(view) {
         + '</div>'
         + '<div class="acc" style="display:flex;gap:8px;flex-wrap:wrap;">'
         +   '<button class="cal-btn" style="background:#0ea5e9;color:#fff;" onclick="calCopiarPlanilla(\''+e.id+'\')">Copiar planilla</button>'
-        +   (e.estado==='hecho' ? '' : '<button class="cal-btn cal-btn-done" onclick="calMarcarHecho(\''+e.id+'\')">Marcar como contactado</button>')
+        +   (cerrado ? '' : '<button class="cal-btn cal-btn-done" onclick="calMarcarHecho(\''+e.id+'\')">Marcar como contactado</button>')
         +   '<button class="cal-btn" style="background:#fee2e2;color:#b91c1c;" onclick="calEliminar(\''+e.id+'\')">Eliminar</button>'
         + '</div>'
         + '</div>';
