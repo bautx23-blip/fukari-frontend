@@ -702,6 +702,28 @@ document.getElementById('wa-search').addEventListener('input', function() {
 });
 
 // Muestra la etapa del pipeline del contacto (chip) en el header del chat.
+// Abre la orden de instalación de siempre, con los datos del cierre precargados.
+// No crea nada: el alta se hace desde el formulario como cualquier otra orden, con
+// su consulta al BCRA. La usan el botón de la agenda y el del chat.
+function abrirOrdenPrellenada(x){
+  // Las notas del cierre traen "Modelo: X · Tipo: Y · Personas: Z · Dir: ...".
+  // De ahí sale la dirección, que no existe como columna propia.
+  var dir = '';
+  var m = /Dir:\s*([^·]+)/.exec(x.notas || '');
+  if (m) dir = m[1].trim();
+  var q = [];
+  function add(k, v){ if (v) q.push(k + '=' + encodeURIComponent(v)); }
+  add('nombre', x.nombre); add('telefono', x.telefono); add('email', x.email);
+  add('localidad', x.localidad); add('direccion', dir);
+  window.open('/yaku-orden-instalacion.html' + (q.length ? '?' + q.join('&') : ''), '_blank');
+}
+
+// Etapas en las que la venta ya está cerrada: ahí tiene sentido arrancar la orden.
+// 'aguardando instalacion' es el cierre del bot; 'venta cerrada' la mueve el comercial
+// cuando ya se instaló, y se incluye por si la orden nunca llegó a cargarse.
+var WA_ETAPAS_CERRADAS = ['aguardando instalacion', 'venta cerrada'];
+var WA_ORIGEN_LABEL = { meta: 'Meta Ads', google: 'Google Ads', organico: 'Orgánico' };
+
 var _waPipeCache = null, _waPipeCacheAt = 0;
 async function waMostrarEtapa(tel) {
   var n = String(tel || '').replace(/\D/g, '').slice(-10);
@@ -718,9 +740,25 @@ async function waMostrarEtapa(tel) {
     if (!slot) return;
     if (!lead) { slot.innerHTML = ''; return; }
     var st = ((window.plStages || []).find(function (s) { return s.key === lead.etapa; })) || { label: lead.etapa || '—', color: '#64748b' };
-    slot.innerHTML = '<span class="wa-etapa-chip" style="background:' + st.color + '22;color:' + st.color + ';">' + esc(st.label) + '</span>';
+    var html = '<span class="wa-etapa-chip" style="background:' + st.color + '22;color:' + st.color + ';">' + esc(st.label) + '</span>';
+
+    // Origen de la consulta, sellado cuando el lead entró.
+    var origen = WA_ORIGEN_LABEL[lead.origen] || (lead.origen ? lead.origen : 'sin registrar');
+    html += '<span class="wa-origen-chip" title="Origen sellado al ingresar — no se puede modificar">'
+         +  'Origen: ' + esc(origen) + '</span>';
+
+    // Sólo con la venta ya cerrada: antes de eso no hay nada que cargar.
+    if (WA_ETAPAS_CERRADAS.indexOf(lead.etapa) !== -1) {
+      window._waLeadActual = lead;
+      html += '<button class="wa-btn-orden" onclick="waIniciarOrden()">Iniciar orden de instalación</button>';
+    }
+    slot.innerHTML = html;
   } catch (e) {}
 }
+
+window.waIniciarOrden = function(){
+  if (window._waLeadActual) abrirOrdenPrellenada(window._waLeadActual);
+};
 
 async function seleccionarConversacion(id) {
   var conv = waConversaciones.find(function(c) { return c.id === id; });
@@ -1733,9 +1771,32 @@ switchView = function(view) {
     var o = PL_ORIGEN[l.origen];
     if (!o) return '';
     var det = l.origen_creatividad && l.origen_creatividad !== 'otras' ? ' · ' + l.origen_creatividad : '';
-    return '<span class="pl-chip" style="background:'+o.bg+';color:'+o.fg+';font-weight:700;" '
-      + 'title="Origen sellado al ingresar — no se puede modificar">&#128274; '+plEsc(o.label+det)+'</span>';
+    // Sólo bi.lab puede corregirlo; para el resto es un chip informativo con candado.
+    var admin = _currentUserEmail === 'info@wearebilab.com';
+    var attrs = admin
+      ? 'style="background:'+o.bg+';color:'+o.fg+';font-weight:700;cursor:pointer;" '
+        + 'title="Origen sellado. Clic para corregirlo (solo bi.lab)" '
+        + 'onclick="event.stopPropagation();plEditarOrigen(\''+l.id+'\')"'
+      : 'style="background:'+o.bg+';color:'+o.fg+';font-weight:700;" '
+        + 'title="Origen sellado al ingresar — no se puede modificar"';
+    return '<span class="pl-chip" '+attrs+'>&#128274; '+plEsc(o.label+det)+'</span>';
   }
+
+  // Corregir un origen mal clasificado. Sólo bi.lab: el backend además lo valida.
+  window.plEditarOrigen = async function(id){
+    var l = plLeads.find(function(x){ return x.id===id; }); if(!l) return;
+    var v = window.prompt('Origen del lead (meta / google / organico).\nVacío = borrarlo.', l.origen || '');
+    if (v === null) return;
+    v = v.trim().toLowerCase();
+    try {
+      var r = await fetch(API_URL + '/api/sales-bot/pipeline/' + id + '/origen', {
+        method:'PATCH', headers: plHeaders(), body: JSON.stringify({ origen: v || null }) });
+      var d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'error');
+      l.origen = d.origen; l.origen_creatividad = d.origen_creatividad;
+      plRender();
+    } catch(e){ alert('No se pudo cambiar el origen: ' + e.message); }
+  };
 
   function plRender(){
     document.getElementById('pl-total').textContent = plLeads.length + ' contacto' + (plLeads.length===1?'':'s') + ' en total';
@@ -2022,21 +2083,9 @@ switchView = function(view) {
     }).join('') : '<div style="color:#9ca3af;font-size:13px">Sin instalaciones este día.</div>';
     document.getElementById('cal-modal').classList.add('open');
   };
-  // Abre la orden de instalación de siempre, con los datos del cierre precargados.
-  // No crea nada: la orden se da de alta desde el formulario como cualquier otra,
-  // con su consulta al BCRA incluida.
   window.calIniciarOrden = function(id){
     var e = calEventos.find(function(x){ return x.id===id; }); if(!e) return;
-    // Las notas del cierre traen "Modelo: X · Tipo: Y · Personas: Z · Dir: ...".
-    // De ahí sale la dirección, que es el dato que no está como columna propia.
-    var dir = '';
-    var m = /Dir:\s*([^·]+)/.exec(e.notas || '');
-    if (m) dir = m[1].trim();
-    var q = [];
-    function add(k, v){ if (v) q.push(k + '=' + encodeURIComponent(v)); }
-    add('nombre', e.nombre); add('telefono', e.telefono); add('email', e.email);
-    add('localidad', e.localidad); add('direccion', dir);
-    window.open('/yaku-orden-instalacion.html' + (q.length ? '?' + q.join('&') : ''), '_blank');
+    abrirOrdenPrellenada(e);
   };
 
   window.calCopiarPlanilla = function(id){
