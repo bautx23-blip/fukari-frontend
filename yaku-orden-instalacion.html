@@ -513,6 +513,46 @@ var _stockPrecios = {};
 var _stockPromos = {}; // modelo → { precio_promocion, precio_post_promocion }
 var _stockCargado = false;
 
+
+// ── Prellenado desde la URL ──────────────────────────────────────────────────
+// Lo usa el botón "Iniciar orden de instalación" de la agenda del CRM: abre esta
+// misma ficha con los datos que ya capturó el bot al cerrar la venta.
+// Sólo completa campos: el circuito de alta es el de siempre, y todo se puede editar
+// antes de guardar. El BCRA se sigue consultando acá como en cualquier orden.
+function prellenarDesdeURL() {
+  var mapa = {
+    nombre: 'razon-social', cuit: 'cuit', telefono: 'telefono',
+    email: 'email', direccion: 'dom-instalacion',
+  };
+  var algo = false;
+  Object.keys(mapa).forEach(function(k) {
+    var v = URL_PARAMS.get(k);
+    if (!v) return;
+    var el = document.getElementById(mapa[k]);
+    if (el) { el.value = v; algo = true; }
+  });
+
+  var loc = URL_PARAMS.get('localidad');
+  if (loc) {
+    var hid = document.getElementById('localidad-input');
+    if (hid) hid.value = loc;
+    // El campo visible de localidad es el de la fila del encabezado.
+    var vis = document.querySelector('.localidad-wrap input');
+    if (vis) vis.value = loc;
+    algo = true;
+  }
+
+  if (algo) {
+    var aviso = document.createElement('div');
+    aviso.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;'
+      + 'background:#0f766e;color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;'
+      + 'box-shadow:0 4px 14px rgba(0,0,0,.2);font-family:inherit;';
+    aviso.textContent = 'Datos precargados desde el cierre del bot. Revisalos antes de guardar.';
+    document.body.appendChild(aviso);
+    setTimeout(function(){ aviso.remove(); }, 6000);
+  }
+}
+
 function cargarStockModelos() {
   // El cambio usa el mismo catálogo de equipos que el alquiler (no hay stock tipo 'cambio')
   return fetch(API_URL + '/api/stock?tipo=' + (ES_CAMBIO ? 'alquiler' : TIPO_ORDEN))
@@ -597,6 +637,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Cargar modelos del stock y después crear las filas iniciales
   cargarStockModelos().then(function() {
     for (var i = 0; i < 5; i++) agregarFila();
+    prellenarDesdeURL();
   });
 
   // Preseleccionar vendedor según usuario logueado

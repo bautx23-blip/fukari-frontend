@@ -1714,12 +1714,27 @@ switchView = function(view) {
       + '<div class="pl-card-top"><div class="pl-card-name">'+plEsc(l.nombre||'(sin nombre)')+'</div>'
       + '<button class="pl-card-x" title="Sacar del pipeline" onclick="event.stopPropagation();plDel(\''+l.id+'\')">&times;</button></div>'
       + (l.telefono?'<div class="pl-card-tel">'+PL_TEL_SVG+plEsc(l.telefono)+'</div>':'')
-      + ((l.localidad||l.email||modelo)?('<div class="pl-card-tags">'
+      + ((l.localidad||l.email||modelo||l.origen)?('<div class="pl-card-tags">'
+          + plChipOrigen(l)
           + (l.localidad?'<span class="pl-chip loc">'+plEsc(l.localidad)+'</span>':'')
           + (modelo?'<span class="pl-chip eq">'+plEsc(modelo)+'</span>':'')
           + (l.email?'<span class="pl-chip">'+plEsc(l.email)+'</span>':'')
         + '</div>'):'')
       + '</div>';
+  }
+
+  // Origen del lead: se sella cuando entra y no se puede cambiar (lo impide un trigger
+  // en la base). El candado deja claro que no es un campo editable.
+  var PL_ORIGEN = {
+    meta:   { label: 'Meta Ads',   bg: '#e0e7ff', fg: '#3730a3' },
+    google: { label: 'Google Ads', bg: '#fef3c7', fg: '#92400e' },
+  };
+  function plChipOrigen(l){
+    var o = PL_ORIGEN[l.origen];
+    if (!o) return '';
+    var det = l.origen_creatividad && l.origen_creatividad !== 'otras' ? ' · ' + l.origen_creatividad : '';
+    return '<span class="pl-chip" style="background:'+o.bg+';color:'+o.fg+';font-weight:700;" '
+      + 'title="Origen sellado al ingresar — no se puede modificar">&#128274; '+plEsc(o.label+det)+'</span>';
   }
 
   function plRender(){
@@ -1998,6 +2013,7 @@ switchView = function(view) {
         +   (e.notas?'&#128203; '+esc(e.notas):'')
         + '</div>'
         + '<div class="acc" style="display:flex;gap:8px;flex-wrap:wrap;">'
+        +   '<button class="cal-btn" style="background:#0f766e;color:#fff;font-weight:700;" onclick="calIniciarOrden(\''+e.id+'\')">Iniciar orden de instalación</button>'
         +   '<button class="cal-btn" style="background:#0ea5e9;color:#fff;" onclick="calCopiarPlanilla(\''+e.id+'\')">Copiar planilla</button>'
         +   (cerrado ? '' : '<button class="cal-btn cal-btn-done" onclick="calMarcarHecho(\''+e.id+'\')">Marcar como contactado</button>')
         +   '<button class="cal-btn" style="background:#fee2e2;color:#b91c1c;" onclick="calEliminar(\''+e.id+'\')">Eliminar</button>'
@@ -2006,6 +2022,23 @@ switchView = function(view) {
     }).join('') : '<div style="color:#9ca3af;font-size:13px">Sin instalaciones este día.</div>';
     document.getElementById('cal-modal').classList.add('open');
   };
+  // Abre la orden de instalación de siempre, con los datos del cierre precargados.
+  // No crea nada: la orden se da de alta desde el formulario como cualquier otra,
+  // con su consulta al BCRA incluida.
+  window.calIniciarOrden = function(id){
+    var e = calEventos.find(function(x){ return x.id===id; }); if(!e) return;
+    // Las notas del cierre traen "Modelo: X · Tipo: Y · Personas: Z · Dir: ...".
+    // De ahí sale la dirección, que es el dato que no está como columna propia.
+    var dir = '';
+    var m = /Dir:\s*([^·]+)/.exec(e.notas || '');
+    if (m) dir = m[1].trim();
+    var q = [];
+    function add(k, v){ if (v) q.push(k + '=' + encodeURIComponent(v)); }
+    add('nombre', e.nombre); add('telefono', e.telefono); add('email', e.email);
+    add('localidad', e.localidad); add('direccion', dir);
+    window.open('/yaku-orden-instalacion.html' + (q.length ? '?' + q.join('&') : ''), '_blank');
+  };
+
   window.calCopiarPlanilla = function(id){
     var e = calEventos.find(function(x){ return x.id===id; }); if(!e) return;
     var txt = ['PLANILLA — INSTALACIÓN (cierre del bot)',
