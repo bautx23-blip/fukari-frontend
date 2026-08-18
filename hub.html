@@ -386,6 +386,17 @@
       </div>
     </a>
 
+    <a href="/yaku-prellenado.html" class="task-card clientes" id="card-prellenado" style="display:none;">
+      <div class="task-icon" style="font-size:20px;">&#128221;</div>
+      <div class="task-body">
+        <div class="task-title">Prellenado</div>
+        <div class="task-desc">Ordenes armadas con los datos del bot, con el BCRA ya consultado. En pruebas: no reemplaza la carga manual.</div>
+      </div>
+      <div class="task-footer">
+        <span class="task-badge" style="background:#fef3c7;color:#92400e;">En pruebas</span>
+        <span class="task-arrow">&rarr;</span>
+      </div>
+    </a>
     <a href="/yaku-papelera.html" class="task-card papelera" id="card-papelera" style="display:none;">
       <div class="task-icon" style="font-size:20px;">&#128465;</div>
       <div class="task-body">
@@ -424,6 +435,7 @@
       document.getElementById('card-crm-pipeline').style.display = ''; // René ve el CRM de ventas
     }
     if (email === 'info@wearebilab.com') {
+      document.getElementById('card-prellenado').style.display = ''; // sección en pruebas, sólo bi.lab
       document.getElementById('card-cobranzas').style.display = '';
       document.getElementById('card-crm-pipeline').style.display = '';
       document.getElementById('card-cobertura').style.display = '';
