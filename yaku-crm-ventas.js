@@ -721,7 +721,8 @@ function abrirOrdenPrellenada(x){
 // Etapas en las que la venta ya está cerrada: ahí tiene sentido arrancar la orden.
 // 'aguardando instalacion' es el cierre del bot; 'venta cerrada' la mueve el comercial
 // cuando ya se instaló, y se incluye por si la orden nunca llegó a cargarse.
-var WA_ETAPAS_CERRADAS = ['aguardando instalacion', 'venta cerrada'];
+// La comparten los tres lugares que ofrecen el botón: agenda, chat y pipeline.
+var ETAPAS_CON_ORDEN = ['aguardando instalacion', 'venta cerrada'];
 var WA_ORIGEN_LABEL = { meta: 'Meta Ads', google: 'Google Ads', organico: 'Orgánico' };
 
 var _waPipeCache = null, _waPipeCacheAt = 0;
@@ -748,7 +749,7 @@ async function waMostrarEtapa(tel) {
          +  'Origen: ' + esc(origen) + '</span>';
 
     // Sólo con la venta ya cerrada: antes de eso no hay nada que cargar.
-    if (WA_ETAPAS_CERRADAS.indexOf(lead.etapa) !== -1) {
+    if (ETAPAS_CON_ORDEN.indexOf(lead.etapa) !== -1) {
       window._waLeadActual = lead;
       html += '<button class="wa-btn-orden" onclick="waIniciarOrden()">Iniciar orden de instalación</button>';
     }
@@ -1924,10 +1925,21 @@ switchView = function(view) {
       + row('Ingreso', fecha)
       + '<label class="pld-lbl">Notas</label>'
       + '<textarea id="pld-notas" class="pld-ta">'+plEsc(l.notas||'')+'</textarea>'
-      + '<div class="pl-modal-actions"><button class="pl-btn pl-btn-primary" onclick="plGuardarNotas(\''+l.id+'\')">Guardar notas</button></div>';
+      + '<div class="pl-modal-actions">'
+      +   (ETAPAS_CON_ORDEN.indexOf(l.etapa) !== -1
+            ? '<button class="pl-btn" style="background:#0f766e;color:#fff;font-weight:700;" onclick="plIniciarOrden(\''+l.id+'\')">Iniciar orden de instalación</button>'
+            : '')
+      +   '<button class="pl-btn pl-btn-primary" onclick="plGuardarNotas(\''+l.id+'\')">Guardar notas</button>'
+      + '</div>';
     document.getElementById('pld-nombre-txt').textContent = l.nombre || '(sin nombre)';
     document.getElementById('pld-body').innerHTML = html;
     document.getElementById('pl-detalle').classList.add('open');
+  };
+  // Mismo destino que el botón de la agenda y el del chat: abre la ficha de orden
+  // prellenada. No guarda nada acá.
+  window.plIniciarOrden = function(id){
+    var l = plLeads.find(function(x){ return x.id===id; }); if(!l) return;
+    abrirOrdenPrellenada(l);
   };
   window.plVerClose = function(){ document.getElementById('pl-detalle').classList.remove('open'); };
   window.plGuardarNotas = async function(id){
