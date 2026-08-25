@@ -740,12 +740,15 @@ tbody tr:hover{background:#f8fafc;}
   .cal-chip.cancelado{background:#f1f5f9;color:#64748b;}
   .cal-noti-bg{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:800;display:none;align-items:flex-start;justify-content:center;padding:60px 16px;}
   .cal-noti-bg.open{display:flex;}
-  .cal-noti{background:#fff;border-radius:14px;width:100%;max-width:460px;padding:22px;box-shadow:0 24px 60px rgba(15,23,42,.25);}
+  .cal-noti{background:#fff;border-radius:14px;width:100%;max-width:460px;padding:22px;box-shadow:0 24px 60px rgba(15,23,42,.25);display:flex;flex-direction:column;max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);}
+  .cal-noti h3,.cal-noti .d{flex:0 0 auto;}
+  .cal-noti-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0 -22px;padding:0 22px;}
   .cal-noti h3{font-size:16px;font-weight:800;color:#b45309;display:flex;align-items:center;gap:8px;margin-bottom:6px;}
   .cal-noti .d{font-size:12.5px;color:#6b7280;margin-bottom:12px;}
   .cal-noti-item{font-size:13px;padding:9px 0;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;gap:10px;align-items:center;}
   .cal-noti-item:last-child{border-bottom:none;}
-  .cal-noti-cerrar{margin-top:16px;width:100%;background:#1a1a2e;color:#fff;border:none;padding:10px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .cal-noti-cerrar{flex:0 0 auto;margin-top:16px;width:100%;background:#1a1a2e;color:#fff;border:none;padding:10px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+  @media (max-width:640px){.cal-noti-bg{padding:20px 12px;}.cal-noti{max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);}}
   </style>
   <div class="view" id="view-agenda">
     <div class="cal-head">
@@ -839,7 +842,7 @@ tbody tr:hover{background:#f8fafc;}
   <div class="cal-noti">
     <h3>&#128276; Instalaciones por coordinar</h3>
     <div class="d">Estas instalaciones vencen hoy o ya están vencidas (el técnico tiene que contactar dentro de 72 hs hábiles).</div>
-    <div id="cal-noti-body"></div>
+    <div class="cal-noti-body" id="cal-noti-body"></div>
     <button class="cal-noti-cerrar" onclick="calCerrarNotis()">Entendido</button>
   </div>
 </div>
@@ -849,7 +852,7 @@ tbody tr:hover{background:#f8fafc;}
   <div class="cal-noti">
     <h3 style="color:#b45309;">&#128587; Leads para contactar</h3>
     <div class="d">El bot derivó estos leads a un asesor (pidieron hablar con alguien o hay algo que resolver a mano). Contactalos vos.</div>
-    <div id="pl-noti-body"></div>
+    <div class="cal-noti-body" id="pl-noti-body"></div>
     <button class="cal-noti-cerrar" onclick="plCerrarNotiHandoff()">Entendido</button>
   </div>
 </div>
