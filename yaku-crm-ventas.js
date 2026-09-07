@@ -2246,15 +2246,18 @@ window.cerLoad = async function(){
       // backend sólo suma si el período llega hasta antes de esa fecha.
       var medidas = (p.medidas != null) ? p.medidas : (p.total||0);
       var previas = p.previas || 0;
-      var clasificadas = medidas + (p.organicas||0);
-      var pct = clasificadas ? Math.round(medidas/clasificadas*100) : 0;
-      var sub = previas
-        ? medidas + ' medidas + ' + previas + ' previas al bot'
-        : pct + '% de ' + clasificadas + ' · ' + (p.organicas||0) + ' orgánicas';
       // Re-consultas: clientes que ya tenían conversación y volvieron a entrar por un
       // anuncio. Meta las cuenta como "conversación iniciada"; acá van adentro de las
-      // medidas, y se dicen aparte para que el número cierre contra Meta.
-      if (p.reentradas) sub += ' · incl. ' + p.reentradas + ' re-consultas';
+      // medidas pero NO son conversaciones nuevas, así que el porcentaje se calcula
+      // sobre las nuevas (pauta nueva + orgánicas = conversaciones del período).
+      var reentradas = p.reentradas || 0;
+      var nuevas = medidas - reentradas;
+      var clasificadas = nuevas + (p.organicas||0);
+      var pct = clasificadas ? Math.round(nuevas/clasificadas*100) : 0;
+      var sub = previas
+        ? medidas + ' medidas + ' + previas + ' previas al bot'
+        : nuevas + ' de ' + clasificadas + ' conversaciones (' + pct + '%) · ' + (p.organicas||0) + ' orgánicas';
+      if (reentradas) sub += ' · +' + reentradas + ' re-consultas';
       html += '<div class="cer-total-card cer-pauta"><span class="cer-total-num">'+(p.total||0)+'</span>'
         + '<span class="cer-total-lbl">consultas por pauta</span>'
         + '<span class="cer-pauta-sub">'+esc(sub)+'</span></div>';
