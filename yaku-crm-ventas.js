@@ -2239,8 +2239,8 @@ window.cerLoad = async function(){
       + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">conversaciones del bot</span>'+rotuloPeriodo+'</div>'
       + '<div class="cer-total-card cer-resp"><span class="cer-total-num" style="font-size:24px;">'+hace(a.ultima_respuesta_bot)+'</span><span class="cer-total-lbl">última respuesta del bot</span></div>';
     // Pauta: cuántas consultas entraron por un anuncio (lo detectamos por el texto
-    // prellenado del click-to-WhatsApp). El denominador son las conversaciones que
-    // arrancaron con un mensaje de texto, no el total: sin texto no se puede clasificar.
+    // prellenado del click-to-WhatsApp). El denominador son las conversaciones con al
+    // menos un mensaje entrante en el período (las mismas de "conversaciones del bot").
     if (p.disponible) {
       // medidas = las que salen de la base. previas = las anteriores al bot, que el
       // backend sólo suma si el período llega hasta antes de esa fecha.
@@ -2251,6 +2251,10 @@ window.cerLoad = async function(){
       var sub = previas
         ? medidas + ' medidas + ' + previas + ' previas al bot'
         : pct + '% de ' + clasificadas + ' · ' + (p.organicas||0) + ' orgánicas';
+      // Re-consultas: clientes que ya tenían conversación y volvieron a entrar por un
+      // anuncio. Meta las cuenta como "conversación iniciada"; acá van adentro de las
+      // medidas, y se dicen aparte para que el número cierre contra Meta.
+      if (p.reentradas) sub += ' · incl. ' + p.reentradas + ' re-consultas';
       html += '<div class="cer-total-card cer-pauta"><span class="cer-total-num">'+(p.total||0)+'</span>'
         + '<span class="cer-total-lbl">consultas por pauta</span>'
         + '<span class="cer-pauta-sub">'+esc(sub)+'</span></div>';
@@ -2281,6 +2285,9 @@ window.cerLoad = async function(){
         var pd = String(p.previas_hasta || '').split('-');
         var fechaCorte = pd.length === 3 ? (pd[2] + '/' + pd[1] + '/' + pd[0]) : (p.previas_hasta || '');
         html += '<div class="cer-nota">Desglose de las ' + (p.medidas||0) + ' medidas. Las ' + p.previas + ' previas al bot (antes del ' + esc(fechaCorte) + ') no tienen creatividad registrada.</div>';
+      }
+      if (p.reentradas) {
+        html += '<div class="cer-nota">Incluye ' + p.reentradas + ' re-consultas: mensajes con texto de anuncio en conversaciones que ya existían. Meta las cuenta como conversación iniciada.</div>';
       }
       html += '<div class="cer-meses">' + creas.map(function(c){
         var w = Math.round((c.cantidad||0)/maxC*100);
