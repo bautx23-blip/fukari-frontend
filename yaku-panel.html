@@ -1154,9 +1154,13 @@ function abrirFuente(id, actual) {
   }).then(function(res) {
     if (!res.ok) return res.json().then(function(e){ throw new Error(e.error||'Error'); });
     return res.json();
-  }).then(function() {
+  }).then(function(data) {
     var orden = todasLasOrdenes.find(function(o){ return o.id == id; });
-    if (orden) orden.fuente_adquisicion = fuente;
+    if (orden) {
+      orden.fuente_adquisicion = fuente;
+      // El backend regenera el PDF con la fuente: apuntar al archivo nuevo.
+      if (data && data.pdf_url) orden.pdf_url = data.pdf_url;
+    }
     filtrar();
   }).catch(function(err) {
     alert('Error: ' + err.message);
