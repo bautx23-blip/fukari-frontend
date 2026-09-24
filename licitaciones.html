@@ -605,7 +605,10 @@ function renderActivas() {
                 </div>
               </td>
               <td class="muted" style="max-width:220px;">${escHtml(a.observaciones || '')}</td>
-              <td>${isAdmin ? `<button class="btn btn-secondary" onclick='editarActiva("${a.id}")' style="padding:5px 10px;font-size:12px;">Editar</button>` : ''}</td>
+              <td>${isAdmin ? `
+                <button class="btn btn-secondary" onclick='editarActiva("${a.id}")' style="padding:5px 10px;font-size:12px;">Editar</button>
+                <button class="btn btn-danger" onclick='borrarActiva("${a.id}")' style="padding:5px 10px;font-size:12px;" title="Eliminar esta licitación activa">×</button>
+              ` : ''}</td>
             </tr>
           `;
         }).join('')}
@@ -1159,6 +1162,33 @@ async function guardarPerdidaEdit() {
     toast('Guardado', 'success');
     closeModal('modalEditarPerdida');
     cargarPerdidas();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+// Baja de una licitación ACTIVA. El confirm nombra la fila (organismo + vigencia +
+// observaciones) porque hay organismos con varias activas a la vez —
+// MUNICIPALIDAD DE SANTA FE tiene una por dependencia— y un "¿Eliminar?" pelado
+// no deja distinguir cuál se está por borrar. No hay papelera: esto no se deshace.
+async function borrarActiva(id) {
+  if (!ADMIN_EMAILS.includes(_email)) return toast('Solo el administrador puede eliminar', 'error');
+  const a = (_activas || []).find(x => String(x.id) === String(id));
+  const detalle = a
+    ? '\n\n' + a.organismo
+      + '\nVigencia: ' + fmtFecha(a.vigencia_desde) + ' → ' + (a.prorroga_indefinida ? 'indefinido' : fmtFecha(a.prorroga_hasta || a.vigencia_hasta))
+      + (a.observaciones ? '\nObs: ' + a.observaciones : '')
+    : '';
+  if (!confirm('¿Eliminar esta licitación activa?' + detalle + '\n\nNo se puede deshacer.')) return;
+  try {
+    const r = await fetch(`${API_URL}/api/licitaciones/activas/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-user-email': _email },
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error');
+    toast('Licitación eliminada', 'success');
+    cargarActivas();
   } catch (err) {
     toast('Error: ' + err.message, 'error');
   }
