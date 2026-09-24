@@ -514,6 +514,18 @@ function fmtFecha(iso) {
   if (isNaN(d)) return '—';
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
+// Compara nombres de organismo venidos de Excel y de carga manual: sin acentos,
+// sin dobles espacios, sin puntuación de borde. No intenta ser exacto — sólo
+// decidir si vale la pena avisar de un posible duplicado.
+function normOrganismo(s) {
+  return String(s || '')
+    .toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.,;]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function fmtFechaHora(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -994,6 +1006,23 @@ async function confirmarGanar() {
     vigencia_desde: document.getElementById('mg-vdesde').value || null,
     vigencia_hasta: document.getElementById('mg-vhasta').value || null,
   };
+
+  // "Ganada x Yakú" SIEMPRE crea una activa nueva, no actualiza la que hubiera.
+  // Si el organismo ya tiene una activa, avisamos antes de duplicarlo (le pasó a
+  // René el 24/9 con las dos de PAMI). No bloquea: puede ser una renovación o una
+  // dependencia distinta del mismo organismo, y eso lo sabe él.
+  const pres = (_presentarse || []).find(x => String(x.id) === String(_ganarPresId));
+  const yaActivas = pres ? (_activas || []).filter(a => normOrganismo(a.organismo) === normOrganismo(pres.organismo)) : [];
+  if (yaActivas.length) {
+    const lista = yaActivas.map(a =>
+      '· ' + a.organismo
+      + ' (' + fmtFecha(a.vigencia_desde) + ' → ' + (a.prorroga_indefinida ? 'indefinido' : fmtFecha(a.prorroga_hasta || a.vigencia_hasta)) + ')'
+      + (a.observaciones ? ' — ' + a.observaciones : '')
+    ).join('\n');
+    const msg = 'Ojo: ya hay ' + (yaActivas.length === 1 ? 'una licitación activa' : yaActivas.length + ' licitaciones activas') + ' de este organismo:\n\n' + lista
+      + '\n\nConfirmar crea OTRA activa aparte, no actualiza la que ya está.\n¿Seguís?';
+    if (!confirm(msg)) return;
+  }
 
   const btn = document.getElementById('btn-confirmar-ganar');
   btn.disabled = true; btn.textContent = 'Procesando...';
