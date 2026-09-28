@@ -2254,6 +2254,7 @@ window.cerLoad = async function(){
     var m = await fetch(API_URL + '/api/sales-bot/metricas' + (qs.length ? '?' + qs.join('&') : ''), { headers: hdr }).then(function(r){ return r.ok?r.json():null; });
     if (!m) throw new Error('no se pudo cargar');
     window._cerCache = m; window._cerCacheKey = clave;
+    var eq = m.equipos || null;
     var d = m.cerrados || {total:0,por_mes:[]}, u = m.uso || {total_usd:0,mes_usd:0}, a = m.actividad || {conversaciones:0,ultima_respuesta_bot:null};
     var p = m.pauta || {conversaciones:0,de_anuncios:0,organicas:0,disponible:false};
     var meses = d.por_mes || [];
@@ -2282,6 +2283,8 @@ window.cerLoad = async function(){
       : '<span class="cer-gasto-mes">Histórico · este mes: '+usd(u.mes_usd)+'</span>';
     var html = '<div class="cer-cards">'
       + '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span>'+rotuloPeriodo+'</div>'
+      + (eq ? '<div class="cer-total-card cer-equipos"><span class="cer-total-num">'+(eq.total||0)+'</span><span class="cer-total-lbl">equipos vendidos por el bot</span>'
+          + '<span class="cer-gasto-mes">en ' + (eq.ventas||0) + ' ventas' + (eq.estimados ? ' · ' + eq.estimados + ' sin orden cargada (estimado)' : '') + '</span></div>' : '')
       + '<div class="cer-total-card cer-gasto"><span class="cer-total-num">'+usd(u.total_usd)+'</span><span class="cer-total-lbl">gasto en IA (tokens reales)</span>'+rotuloGasto+'</div>'
       + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">contactos creados</span>'+rotuloPeriodo+'</div>'
       + '<div class="cer-total-card cer-resp"><span class="cer-total-num" style="font-size:24px;">'+hace(a.ultima_respuesta_bot)+'</span><span class="cer-total-lbl">última respuesta del bot</span></div>';
@@ -2297,6 +2300,19 @@ window.cerLoad = async function(){
     var hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     html += '<div class="cer-refresh">Se actualiza solo cada 60 s · última lectura ' + hora
       + ' · ' + (u.llamadas || 0).toLocaleString('es-AR') + ' llamadas a la IA</div>';
+    // Equipos vendidos por modelo: suma las cantidades de las órdenes (una orden
+    // puede traer más de un equipo), no la cantidad de ventas.
+    if (eq && eq.por_modelo && eq.por_modelo.length){
+      var maxM = eq.por_modelo.reduce(function(a,x){ return Math.max(a, x.cantidad||0); }, 1);
+      html += '<div class="cer-meses-t">Equipos vendidos por modelo</div>'
+        + '<div class="cer-nota">Cantidades de la orden de instalación de cada venta (cruzada por teléfono). Si todavía no se cargó la orden, se usa lo que capturó el bot.</div>'
+        + '<div class="cer-meses" style="margin-bottom:22px;">' + eq.por_modelo.map(function(x){
+          var w = Math.round((x.cantidad||0)/maxM*100);
+          return '<div class="cer-mes-row"><span class="cer-mes-lbl">'+esc(x.modelo)+'</span>'
+            + '<div class="cer-bar-wrap"><div class="cer-bar cer-bar-equipos" style="width:'+w+'%"></div></div>'
+            + '<span class="cer-mes-val">'+(x.cantidad||0)+'</span></div>';
+        }).join('') + '</div>';
+    }
     if (meses.length){
       html += '<div class="cer-meses-t">Por mes</div><div class="cer-meses">' + meses.map(function(m){
         var w = Math.round((m.cantidad||0)/max*100);
