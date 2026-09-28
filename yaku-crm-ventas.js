@@ -2188,6 +2188,42 @@ window.cerFechaManual = function(){
   cerLoad();
 };
 
+// Preview del creativo al pasar el mouse. position:fixed porque la tabla está dentro
+// de un contenedor con overflow y un tooltip absoluto quedaría recortado.
+(function(){
+  var box = null;
+  function caja(){
+    if (box) return box;
+    box = document.createElement('div');
+    box.className = 'cer-preview';
+    document.body.appendChild(box);
+    return box;
+  }
+  function ubicar(e){
+    var b = caja(), w = b.offsetWidth || 260, h = b.offsetHeight || 260;
+    var x = e.clientX + 18, y = e.clientY + 18;
+    if (x + w > window.innerWidth - 8) x = e.clientX - w - 18;
+    if (y + h > window.innerHeight - 8) y = Math.max(8, window.innerHeight - h - 8);
+    b.style.left = x + 'px'; b.style.top = y + 'px';
+  }
+  document.addEventListener('mouseover', function(e){
+    var el = e.target.closest && e.target.closest('[data-preview]');
+    if (!el) return;
+    var b = caja();
+    b.innerHTML = '<img src="' + el.getAttribute('data-preview') + '" alt="">'
+      + (el.getAttribute('data-media') === 'video' ? '<span class="cer-preview-tag">&#9654; Video</span>' : '');
+    b.style.display = 'block';
+    ubicar(e);
+  });
+  document.addEventListener('mousemove', function(e){
+    if (box && box.style.display === 'block' && e.target.closest && e.target.closest('[data-preview]')) ubicar(e);
+  });
+  document.addEventListener('mouseout', function(e){
+    var el = e.target.closest && e.target.closest('[data-preview]');
+    if (el && box && !(e.relatedTarget && el.contains(e.relatedTarget))) box.style.display = 'none';
+  });
+})();
+
 window.cerLoad = async function(){
   var slot = document.getElementById('cer-slot'); if(!slot) return;
   var elD = document.getElementById('cer-desde'), elH = document.getElementById('cer-hasta');
@@ -2301,33 +2337,53 @@ window.cerLoad = async function(){
     }
     // Por anuncio: cada creativo individual, identificado por el referral que manda
     // Meta en el click-to-WhatsApp (recuperado del historial de Kapso desde el 22/07).
+    // Agrupado por campaña: la audiencia sale del texto del propio anuncio.
     var ads = m.embudo_anuncios;
     if (ads){
       html += '<div class="cer-meses-t" style="margin-top:26px;">Conversión por creativo</div>';
       if (!ads.length){
         html += '<div class="cer-empty">No hay leads con anuncio identificado en este período.</div>';
       } else {
-        html += '<div class="cer-nota">Cada anuncio de Meta, ordenado por ventas. Leads que entraron en el período y en qué etapa están hoy. Conversión = ventas cerradas / leads. Tocá el creativo para abrirlo.</div>'
+        var pctTxt = function(v, l){ return (l ? (v/l*100) : 0).toFixed(1).replace('.', ',') + '%'; };
+        var ORDEN_CAMP = ['hogar', 'oficinas', 'gimnasios', 'otras'];
+        var grupos = {};
+        ads.forEach(function(a){
+          var k = a.audiencia || 'otras';
+          var g = grupos[k] || (grupos[k] = { label: a.audiencia_label || 'Otras', ads: [], leads: 0, conversando: 0, sin_cobertura: 0, derivados: 0, ventas: 0 });
+          g.ads.push(a);
+          ['leads','conversando','sin_cobertura','derivados','ventas'].forEach(function(c){ g[c] += a[c] || 0; });
+        });
+        var claves = Object.keys(grupos).sort(function(x, y){ return ORDEN_CAMP.indexOf(x) - ORDEN_CAMP.indexOf(y); });
+        html += '<div class="cer-nota">Cada anuncio de Meta agrupado por campaña (según a quién apunta el anuncio). Leads que entraron en el período y en qué etapa están hoy. Conversión = ventas cerradas / leads. Pasá el mouse por un creativo para verlo; tocalo para abrirlo.</div>'
           + '<div class="cer-emb-wrap"><table class="cer-emb"><thead><tr>'
           + '<th>Creativo</th><th>Leads</th><th>Conversando</th><th>Sin cobertura</th><th>Derivados</th><th>Ventas</th><th>Conversión</th>'
-          + '</tr></thead><tbody>' + ads.map(function(a){
-            var conv = a.leads ? a.ventas/a.leads : 0;
+          + '</tr></thead><tbody>';
+        claves.forEach(function(k){
+          var g = grupos[k];
+          html += '<tr class="cer-camp"><td>' + esc(g.label) + ' <span class="cer-camp-n">' + g.ads.length + (g.ads.length === 1 ? ' creativo' : ' creativos') + '</span></td>'
+            + '<td>' + g.leads + '</td><td>' + g.conversando + '</td><td>' + g.sin_cobertura + '</td><td>' + g.derivados + '</td>'
+            + '<td>' + g.ventas + '</td><td class="cer-emb-conv">' + pctTxt(g.ventas, g.leads) + '</td></tr>';
+          g.ads.forEach(function(a){
             var nom = esc(a.titulo || ('Anuncio ' + a.ad_id));
-            // La URL viene de Meta, pero igual: sólo http(s) y comillas escapadas (esc no las toca).
-            var urlOk = /^https?:\/\//i.test(a.url || '') ? esc(a.url).replace(/"/g, '&quot;') : '';
+            // Las URLs vienen de Meta/Storage, pero igual: sólo http(s) y comillas escapadas (esc no las toca).
+            var seguro = function(u){ return /^https?:\/\//i.test(u || '') ? esc(u).replace(/"/g, '&quot;') : ''; };
+            var urlOk = seguro(a.url), prevOk = seguro(a.preview);
             var tipo = a.media === 'video' ? '&#127916; Video' : (a.media === 'image' ? '&#128247; Imagen' : '');
             var cuerpo = a.cuerpo ? String(a.cuerpo).split('\n')[0] : '';
             if (cuerpo.length > 90) cuerpo = cuerpo.slice(0, 90) + '…';
+            var attrs = ' class="cer-ad-link"' + (prevOk ? ' data-preview="' + prevOk + '" data-media="' + esc(a.media || '') + '"' : '');
             var cab = urlOk
-              ? '<a class="cer-ad-link" href="' + urlOk + '" target="_blank" rel="noopener">' + nom + ' &#8599;</a>'
-              : '<span class="cer-ad-nom">' + nom + '</span>';
-            return '<tr><td>' + cab
+              ? '<a' + attrs + ' href="' + urlOk + '" target="_blank" rel="noopener">' + nom + ' &#8599;</a>'
+              : '<span' + attrs + '>' + nom + '</span>';
+            html += '<tr class="cer-ad-row"><td>' + cab
               + (cuerpo ? '<div class="cer-ad-body">' + esc(cuerpo) + '</div>' : '')
               + '<div class="cer-ad-id">' + (tipo ? tipo + ' · ' : '') + 'ID ' + esc(a.ad_id) + '</div></td>'
               + '<td><b>' + a.leads + '</b></td><td>' + a.conversando + '</td><td>' + a.sin_cobertura + '</td><td>' + a.derivados + '</td>'
               + '<td><b>' + a.ventas + '</b></td>'
-              + '<td class="cer-emb-conv">' + (conv*100).toFixed(1).replace('.', ',') + '%</td></tr>';
-          }).join('') + '</tbody></table></div>';
+              + '<td class="cer-emb-conv">' + pctTxt(a.ventas, a.leads) + '</td></tr>';
+          });
+        });
+        html += '</tbody></table></div>';
       }
     }
     slot.innerHTML = html;
