@@ -2300,27 +2300,31 @@ window.cerLoad = async function(){
       }).join('') + '</div>';
     }
     // Por anuncio: cada creativo individual, identificado por el referral que manda
-    // Meta en el click-to-WhatsApp. No hay histórico: arranca cuando se empezó a guardar.
+    // Meta en el click-to-WhatsApp (recuperado del historial de Kapso desde el 22/07).
     var ads = m.embudo_anuncios;
     if (ads){
-      html += '<div class="cer-meses-t" style="margin-top:26px;">Por anuncio</div>';
+      html += '<div class="cer-meses-t" style="margin-top:26px;">Conversión por creativo</div>';
       if (!ads.length){
-        html += '<div class="cer-empty">Todavía no hay leads con anuncio identificado en este período. Desde el 28/09 se registra el creativo exacto (con su link) de cada lead nuevo que entra por un anuncio de Meta; los anteriores no traen ese dato.</div>';
+        html += '<div class="cer-empty">No hay leads con anuncio identificado en este período.</div>';
       } else {
-        html += '<div class="cer-nota">Cada creativo, ordenado por ventas. Conversión = ventas cerradas / leads.</div>'
+        html += '<div class="cer-nota">Cada anuncio de Meta, ordenado por ventas. Leads que entraron en el período y en qué etapa están hoy. Conversión = ventas cerradas / leads. Tocá el creativo para abrirlo.</div>'
           + '<div class="cer-emb-wrap"><table class="cer-emb"><thead><tr>'
-          + '<th>Anuncio</th><th>Campaña</th><th>Leads</th><th>Sin cobertura</th><th>Derivados</th><th>Ventas</th><th>Conversión</th>'
+          + '<th>Creativo</th><th>Leads</th><th>Conversando</th><th>Sin cobertura</th><th>Derivados</th><th>Ventas</th><th>Conversión</th>'
           + '</tr></thead><tbody>' + ads.map(function(a){
             var conv = a.leads ? a.ventas/a.leads : 0;
             var nom = esc(a.titulo || ('Anuncio ' + a.ad_id));
             // La URL viene de Meta, pero igual: sólo http(s) y comillas escapadas (esc no las toca).
             var urlOk = /^https?:\/\//i.test(a.url || '') ? esc(a.url).replace(/"/g, '&quot;') : '';
-            var link = urlOk
+            var tipo = a.media === 'video' ? '&#127916; Video' : (a.media === 'image' ? '&#128247; Imagen' : '');
+            var cuerpo = a.cuerpo ? String(a.cuerpo).split('\n')[0] : '';
+            if (cuerpo.length > 90) cuerpo = cuerpo.slice(0, 90) + '…';
+            var cab = urlOk
               ? '<a class="cer-ad-link" href="' + urlOk + '" target="_blank" rel="noopener">' + nom + ' &#8599;</a>'
-              : nom;
-            return '<tr><td>' + link + '<div class="cer-ad-id">ID ' + esc(a.ad_id) + '</div></td>'
-              + '<td style="text-align:left">' + esc(a.campana || '—') + '</td>'
-              + '<td><b>' + a.leads + '</b></td><td>' + a.sin_cobertura + '</td><td>' + a.derivados + '</td>'
+              : '<span class="cer-ad-nom">' + nom + '</span>';
+            return '<tr><td>' + cab
+              + (cuerpo ? '<div class="cer-ad-body">' + esc(cuerpo) + '</div>' : '')
+              + '<div class="cer-ad-id">' + (tipo ? tipo + ' · ' : '') + 'ID ' + esc(a.ad_id) + '</div></td>'
+              + '<td><b>' + a.leads + '</b></td><td>' + a.conversando + '</td><td>' + a.sin_cobertura + '</td><td>' + a.derivados + '</td>'
               + '<td><b>' + a.ventas + '</b></td>'
               + '<td class="cer-emb-conv">' + (conv*100).toFixed(1).replace('.', ',') + '%</td></tr>';
           }).join('') + '</tbody></table></div>';
