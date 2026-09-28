@@ -2283,7 +2283,7 @@ window.cerLoad = async function(){
     var html = '<div class="cer-cards">'
       + '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span>'+rotuloPeriodo+'</div>'
       + '<div class="cer-total-card cer-gasto"><span class="cer-total-num">'+usd(u.total_usd)+'</span><span class="cer-total-lbl">gasto en IA (tokens reales)</span>'+rotuloGasto+'</div>'
-      + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">conversaciones nuevas</span>'+rotuloPeriodo+'</div>'
+      + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">contactos creados</span>'+rotuloPeriodo+'</div>'
       + '<div class="cer-total-card cer-resp"><span class="cer-total-num" style="font-size:24px;">'+hace(a.ultima_respuesta_bot)+'</span><span class="cer-total-lbl">última respuesta del bot</span></div>';
     // De anuncios: de las conversaciones nuevas del período, cuántas entraron tocando
     // un anuncio de Meta (dato exacto del click, no el texto del mensaje).
@@ -2291,7 +2291,7 @@ window.cerLoad = async function(){
       var pct = p.conversaciones ? Math.round(p.de_anuncios / p.conversaciones * 100) : 0;
       html += '<div class="cer-total-card cer-pauta"><span class="cer-total-num">' + (p.de_anuncios||0) + '</span>'
         + '<span class="cer-total-lbl">conversaciones de anuncios</span>'
-        + '<span class="cer-pauta-sub">' + pct + '% de las ' + (p.conversaciones||0) + ' nuevas · ' + (p.organicas||0) + ' orgánicas</span></div>';
+        + '<span class="cer-pauta-sub">' + pct + '% de los ' + (p.conversaciones||0) + ' contactos creados · ' + (p.organicas||0) + ' orgánicas</span></div>';
     }
     html += '</div>';
     var hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
