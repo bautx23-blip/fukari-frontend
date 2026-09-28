@@ -2224,6 +2224,17 @@ window.cerFechaManual = function(){
   });
 })();
 
+// Abre/cierra los creativos de una campaña en la tabla de conversión.
+window.cerToggleCamp = function(tr){
+  var k = tr.getAttribute('data-camp');
+  window._cerCampAbiertas = window._cerCampAbiertas || {};
+  var abrir = !tr.classList.contains('abierta');
+  window._cerCampAbiertas[k] = abrir;
+  tr.classList.toggle('abierta', abrir);
+  var filas = tr.parentNode.querySelectorAll('tr.cer-ad-row');
+  for (var i = 0; i < filas.length; i++) if (filas[i].getAttribute('data-camp') === k) filas[i].hidden = !abrir;
+};
+
 window.cerLoad = async function(){
   var slot = document.getElementById('cer-slot'); if(!slot) return;
   var elD = document.getElementById('cer-desde'), elH = document.getElementById('cer-hasta');
@@ -2354,13 +2365,16 @@ window.cerLoad = async function(){
           ['leads','conversando','sin_cobertura','derivados','ventas'].forEach(function(c){ g[c] += a[c] || 0; });
         });
         var claves = Object.keys(grupos).sort(function(x, y){ return ORDEN_CAMP.indexOf(x) - ORDEN_CAMP.indexOf(y); });
-        html += '<div class="cer-nota">Cada anuncio de Meta agrupado por campaña (según a quién apunta el anuncio). Leads que entraron en el período y en qué etapa están hoy. Conversión = ventas cerradas / leads. Pasá el mouse por un creativo para verlo; tocalo para abrirlo.</div>'
+        html += '<div class="cer-nota">Cada anuncio de Meta agrupado por campaña (según a quién apunta el anuncio). Tocá una campaña para ver sus creativos. Conversión = ventas cerradas / leads. Pasá el mouse por un creativo para verlo; tocalo para abrirlo.</div>'
           + '<div class="cer-emb-wrap"><table class="cer-emb"><thead><tr>'
           + '<th>Creativo</th><th>Leads</th><th>Conversando</th><th>Sin cobertura</th><th>Derivados</th><th>Ventas</th><th>Conversión</th>'
           + '</tr></thead><tbody>';
         claves.forEach(function(k){
           var g = grupos[k];
-          html += '<tr class="cer-camp"><td>' + esc(g.label) + ' <span class="cer-camp-n">' + g.ads.length + (g.ads.length === 1 ? ' creativo' : ' creativos') + '</span></td>'
+          // Desplegable, cerrada por defecto. Lo abierto se recuerda en window._cerCampAbiertas
+          // porque la tabla se vuelve a dibujar sola cada 60 s.
+          var abierta = !!(window._cerCampAbiertas && window._cerCampAbiertas[k]);
+          html += '<tr class="cer-camp' + (abierta ? ' abierta' : '') + '" data-camp="' + esc(k) + '" onclick="cerToggleCamp(this)"><td><span class="cer-camp-chev">&#9656;</span>' + esc(g.label) + ' <span class="cer-camp-n">' + g.ads.length + (g.ads.length === 1 ? ' creativo' : ' creativos') + '</span></td>'
             + '<td>' + g.leads + '</td><td>' + g.conversando + '</td><td>' + g.sin_cobertura + '</td><td>' + g.derivados + '</td>'
             + '<td>' + g.ventas + '</td><td class="cer-emb-conv">' + pctTxt(g.ventas, g.leads) + '</td></tr>';
           g.ads.forEach(function(a){
@@ -2375,7 +2389,7 @@ window.cerLoad = async function(){
             var cab = urlOk
               ? '<a' + attrs + ' href="' + urlOk + '" target="_blank" rel="noopener">' + nom + ' &#8599;</a>'
               : '<span' + attrs + '>' + nom + '</span>';
-            html += '<tr class="cer-ad-row"><td>' + cab
+            html += '<tr class="cer-ad-row" data-camp="' + esc(k) + '"' + (abierta ? '' : ' hidden') + '><td>' + cab
               + (cuerpo ? '<div class="cer-ad-body">' + esc(cuerpo) + '</div>' : '')
               + '<div class="cer-ad-id">' + (tipo ? tipo + ' · ' : '') + 'ID ' + esc(a.ad_id) + '</div></td>'
               + '<td><b>' + a.leads + '</b></td><td>' + a.conversando + '</td><td>' + a.sin_cobertura + '</td><td>' + a.derivados + '</td>'
