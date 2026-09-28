@@ -2323,29 +2323,6 @@ window.cerLoad = async function(){
     } else {
       html += '<div class="cer-empty">Todavía no hay ventas cerradas por el bot.</div>';
     }
-    // Desglose por creatividad: qué anuncio trae más consultas.
-    var creas = p.por_creatividad || [];
-    if (creas.length){
-      var maxC = creas.reduce(function(a,c){ return Math.max(a, c.cantidad||0); }, 1);
-      html += '<div class="cer-meses-t" style="margin-top:26px;">Consultas por pauta</div>';
-      // De las previas al bot no sabemos qué anuncio las trajo, así que el desglose
-      // suma menos que la tarjeta. Decirlo evita que parezca un error de cuentas.
-      if (p.previas) {
-        // YYYY-MM-DD -> DD/MM/YYYY. Sin new Date() para no correr el día por UTC.
-        var pd = String(p.previas_hasta || '').split('-');
-        var fechaCorte = pd.length === 3 ? (pd[2] + '/' + pd[1] + '/' + pd[0]) : (p.previas_hasta || '');
-        html += '<div class="cer-nota">Desglose de las ' + (p.medidas||0) + ' medidas. Las ' + p.previas + ' previas al bot (antes del ' + esc(fechaCorte) + ') no tienen creatividad registrada.</div>';
-      }
-      if (p.reentradas) {
-        html += '<div class="cer-nota">Incluye ' + p.reentradas + ' re-consultas: mensajes con texto de anuncio en conversaciones que ya existían. Meta las cuenta como conversación iniciada.</div>';
-      }
-      html += '<div class="cer-meses">' + creas.map(function(c){
-        var w = Math.round((c.cantidad||0)/maxC*100);
-        return '<div class="cer-mes-row"><span class="cer-mes-lbl cer-crea-lbl">'+esc(c.label||c.clave)+'</span>'
-          + '<div class="cer-bar-wrap"><div class="cer-bar cer-bar-pauta" style="width:'+w+'%"></div></div>'
-          + '<span class="cer-mes-val">'+(c.cantidad||0)+'</span></div>';
-      }).join('') + '</div>';
-    }
     // Por anuncio: cada creativo individual, identificado por el referral que manda
     // Meta en el click-to-WhatsApp (recuperado del historial de Kapso desde el 22/07).
     // Agrupado por campaña: la audiencia sale del texto del propio anuncio.
