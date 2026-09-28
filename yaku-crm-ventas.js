@@ -2299,34 +2299,13 @@ window.cerLoad = async function(){
           + '<span class="cer-mes-val">'+(c.cantidad||0)+'</span></div>';
       }).join('') + '</div>';
     }
-    // Embudo por creatividad: qué anuncio termina en venta, no sólo cuál trae consultas.
-    // Cuenta leads del pipeline creados en el período (no mensajes), así que el total
-    // no tiene por qué coincidir con "consultas por pauta".
-    var emb = m.embudo_creatividad || [];
-    if (emb.length){
-      var maxConv = emb.reduce(function(a,e){ return Math.max(a, e.leads ? e.ventas/e.leads : 0); }, 0);
-      html += '<div class="cer-meses-t" style="margin-top:26px;">Embudo por creativo</div>'
-        + '<div class="cer-nota">Leads que entraron en el período y en qué etapa están hoy. Conversión = ventas cerradas / leads.</div>'
-        + '<div class="cer-emb-wrap"><table class="cer-emb"><thead><tr>'
-        + '<th>Creativo</th><th>Leads</th><th>Conversando</th><th>No calificado</th><th>Sin cobertura</th><th>Derivados</th><th>Ventas</th><th>Conversión</th>'
-        + '</tr></thead><tbody>' + emb.map(function(e){
-          var conv = e.leads ? e.ventas/e.leads : 0;
-          var top = e.ventas > 0 && conv === maxConv && e.clave !== 'organico';
-          return '<tr' + (e.clave === 'organico' ? ' class="cer-emb-org"' : '') + '>'
-            + '<td>' + esc(e.label) + (top ? ' <span class="cer-emb-top">mejor</span>' : '') + '</td>'
-            + '<td><b>' + e.leads + '</b></td><td>' + e.conversando + '</td><td>' + e.no_calificado + '</td>'
-            + '<td>' + e.sin_cobertura + '</td><td>' + e.derivados + '</td>'
-            + '<td><b>' + e.ventas + '</b></td>'
-            + '<td class="cer-emb-conv">' + (conv*100).toFixed(1).replace('.', ',') + '%</td></tr>';
-        }).join('') + '</tbody></table></div>';
-    }
     // Por anuncio: cada creativo individual, identificado por el referral que manda
     // Meta en el click-to-WhatsApp. No hay histórico: arranca cuando se empezó a guardar.
     var ads = m.embudo_anuncios;
     if (ads){
       html += '<div class="cer-meses-t" style="margin-top:26px;">Por anuncio</div>';
       if (!ads.length){
-        html += '<div class="cer-empty">Todavía no hay leads con anuncio identificado en este período. Se registra el creativo exacto de cada lead nuevo que entra por un anuncio de Meta.</div>';
+        html += '<div class="cer-empty">Todavía no hay leads con anuncio identificado en este período. Desde el 28/09 se registra el creativo exacto (con su link) de cada lead nuevo que entra por un anuncio de Meta; los anteriores no traen ese dato.</div>';
       } else {
         html += '<div class="cer-nota">Cada creativo, ordenado por ventas. Conversión = ventas cerradas / leads.</div>'
           + '<div class="cer-emb-wrap"><table class="cer-emb"><thead><tr>'
