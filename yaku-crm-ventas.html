@@ -785,7 +785,6 @@ tbody tr:hover{background:#f8fafc;}
   .cer-pauta-sub{font-size:12px;color:#fde68a;margin-top:6px;}
   /* Etiqueta de creatividad: más ancha que la de meses ("Instituciones educativas" no entra en 78px). */
   .cer-mes-lbl.cer-crea-lbl{width:150px;text-transform:none;}
-  .cer-bar.cer-bar-pauta{background:#d97706;}
   .cer-meses-t{font-size:11px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
   .cer-meses{display:flex;flex-direction:column;gap:8px;max-width:540px;}
   .cer-mes-row{display:flex;align-items:center;gap:10px;}
@@ -836,9 +835,8 @@ tbody tr:hover{background:#f8fafc;}
   </style>
   <div class="view" id="view-cerrados">
     <div class="cer-title">Métricas</div>
-    <div class="cer-sub">Ventas cerradas por el bot, consultas por pauta y gasto en IA.</div>
-    <!-- El período mueve las ventas cerradas y las consultas por pauta. El gasto en
-         IA y el total de conversaciones son históricos y lo dicen en la tarjeta. -->
+    <div class="cer-sub">Ventas cerradas por el bot, conversaciones nuevas (y cuántas de anuncios), gasto en IA y conversión por creativo.</div>
+    <!-- El período mueve todas las tarjetas; cada una dice qué ventana muestra. -->
     <div class="cer-periodo">
       <span class="cer-periodo-tit">Período</span>
       <label>Desde</label><input type="date" id="cer-desde" onchange="cerFechaManual()">

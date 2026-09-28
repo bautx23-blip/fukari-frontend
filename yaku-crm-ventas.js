@@ -2243,8 +2243,8 @@ window.cerLoad = async function(){
   // Van con nombres distintos porque el backend las mide en tablas distintas.
   // Gasto en IA y total de conversaciones quedan históricos, rotulados como tales.
   var qs = [];
-  if (desde) qs.push('desde=' + encodeURIComponent(desde) + '&pauta_desde=' + encodeURIComponent(desde));
-  if (hasta) qs.push('hasta=' + encodeURIComponent(hasta) + '&pauta_hasta=' + encodeURIComponent(hasta));
+  if (desde) qs.push('desde=' + encodeURIComponent(desde));
+  if (hasta) qs.push('hasta=' + encodeURIComponent(hasta));
   var clave = desde + '|' + hasta;
   // El cache es por período: si no, al cambiar de filtro se verían un instante los
   // números del filtro anterior como si fueran los nuevos.
@@ -2255,7 +2255,7 @@ window.cerLoad = async function(){
     if (!m) throw new Error('no se pudo cargar');
     window._cerCache = m; window._cerCacheKey = clave;
     var d = m.cerrados || {total:0,por_mes:[]}, u = m.uso || {total_usd:0,mes_usd:0}, a = m.actividad || {conversaciones:0,ultima_respuesta_bot:null};
-    var p = m.pauta || {total:0,organicas:0,por_creatividad:[],disponible:false};
+    var p = m.pauta || {conversaciones:0,de_anuncios:0,organicas:0,disponible:false};
     var meses = d.por_mes || [];
     var max = meses.reduce(function(a,m){ return Math.max(a, m.cantidad||0); }, 1);
     var MESN = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -2283,31 +2283,15 @@ window.cerLoad = async function(){
     var html = '<div class="cer-cards">'
       + '<div class="cer-total-card"><span class="cer-total-num">'+(d.total||0)+'</span><span class="cer-total-lbl">ventas cerradas por el bot</span>'+rotuloPeriodo+'</div>'
       + '<div class="cer-total-card cer-gasto"><span class="cer-total-num">'+usd(u.total_usd)+'</span><span class="cer-total-lbl">gasto en IA (tokens reales)</span>'+rotuloGasto+'</div>'
-      + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">conversaciones del bot</span>'+rotuloPeriodo+'</div>'
+      + '<div class="cer-total-card cer-conv"><span class="cer-total-num">'+(a.conversaciones||0)+'</span><span class="cer-total-lbl">conversaciones nuevas</span>'+rotuloPeriodo+'</div>'
       + '<div class="cer-total-card cer-resp"><span class="cer-total-num" style="font-size:24px;">'+hace(a.ultima_respuesta_bot)+'</span><span class="cer-total-lbl">última respuesta del bot</span></div>';
-    // Pauta: cuántas consultas entraron por un anuncio (lo detectamos por el texto
-    // prellenado del click-to-WhatsApp). El denominador son las conversaciones con al
-    // menos un mensaje entrante en el período (las mismas de "conversaciones del bot").
+    // De anuncios: de las conversaciones nuevas del período, cuántas entraron tocando
+    // un anuncio de Meta (dato exacto del click, no el texto del mensaje).
     if (p.disponible) {
-      // medidas = las que salen de la base. previas = las anteriores al bot, que el
-      // backend sólo suma si el período llega hasta antes de esa fecha.
-      var medidas = (p.medidas != null) ? p.medidas : (p.total||0);
-      var previas = p.previas || 0;
-      // Re-consultas: clientes que ya tenían conversación y volvieron a entrar por un
-      // anuncio. Meta las cuenta como "conversación iniciada"; acá van adentro de las
-      // medidas pero NO son conversaciones nuevas, así que el porcentaje se calcula
-      // sobre las nuevas (pauta nueva + orgánicas = conversaciones del período).
-      var reentradas = p.reentradas || 0;
-      var nuevas = medidas - reentradas;
-      var clasificadas = nuevas + (p.organicas||0);
-      var pct = clasificadas ? Math.round(nuevas/clasificadas*100) : 0;
-      var sub = previas
-        ? medidas + ' medidas + ' + previas + ' previas al bot'
-        : nuevas + ' de ' + clasificadas + ' conversaciones (' + pct + '%) · ' + (p.organicas||0) + ' orgánicas';
-      if (reentradas) sub += ' · +' + reentradas + ' re-consultas';
-      html += '<div class="cer-total-card cer-pauta"><span class="cer-total-num">'+(p.total||0)+'</span>'
-        + '<span class="cer-total-lbl">consultas por pauta</span>'
-        + '<span class="cer-pauta-sub">'+esc(sub)+'</span></div>';
+      var pct = p.conversaciones ? Math.round(p.de_anuncios / p.conversaciones * 100) : 0;
+      html += '<div class="cer-total-card cer-pauta"><span class="cer-total-num">' + (p.de_anuncios||0) + '</span>'
+        + '<span class="cer-total-lbl">conversaciones de anuncios</span>'
+        + '<span class="cer-pauta-sub">' + pct + '% de las ' + (p.conversaciones||0) + ' nuevas · ' + (p.organicas||0) + ' orgánicas</span></div>';
     }
     html += '</div>';
     var hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
