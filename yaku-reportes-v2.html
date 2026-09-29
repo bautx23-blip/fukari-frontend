@@ -1137,10 +1137,12 @@ function renderFuentes(data) {
   html += '</div>';
 
   if (asignadas > 0) {
-    // Torta (reparto del período) y barras mes a mes, una al lado de la otra.
+    // Torta (reparto del período) y barras mes a mes, una al lado de la otra. Las
+    // barras sólo si el backend manda por_mes: sin datos no se dibuja un recuadro vacío.
+    var hayPorMes = Array.isArray(data.por_mes) && data.por_mes.length > 0;
     html += '<div class="fuentes-graficos">'
-      + '<div class="tabla-wrap fuentes-torta"><div style="max-width:320px;margin:0 auto;"><canvas id="chart-fuentes"></canvas></div></div>'
-      + '<div class="tabla-wrap fuentes-barras"><div class="fuentes-barras-t">Clientes adquiridos por mes, por fuente</div><div style="position:relative;height:300px;"><canvas id="chart-fuentes-mes"></canvas></div></div>'
+      + '<div class="tabla-wrap fuentes-torta"' + (hayPorMes ? '' : ' style="flex:1 1 100%;justify-content:center;"') + '><div style="max-width:320px;margin:0 auto;"><canvas id="chart-fuentes"></canvas></div></div>'
+      + (hayPorMes ? '<div class="tabla-wrap fuentes-barras"><div class="fuentes-barras-t">Clientes adquiridos por mes, por fuente</div><div style="position:relative;height:300px;"><canvas id="chart-fuentes-mes"></canvas></div></div>' : '')
       + '</div>';
   }
 
