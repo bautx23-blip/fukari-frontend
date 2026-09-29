@@ -162,6 +162,9 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 .panel-tab.active{color:#1a1a2e;border-bottom-color:#1a1a2e;}
 .panel-tab-badge{background:#d97706;color:#fff;border-radius:10px;font-size:11px;font-weight:700;padding:1px 8px;}
 .panel-tab-badge:empty{display:none;}
+.panel-tab-badge.gris{background:#9ca3af;}
+.btn-nf-react{background:#fff;color:#2563eb;border:1.5px solid #2563eb;border-radius:5px;padding:3px 10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;}
+.btn-nf-react:hover{background:#2563eb;color:#fff;}
 .pend-atraso{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#fef3c7;color:#92400e;}
 .pend-atraso.fuerte{background:#fee2e2;color:#991b1b;}
 .pend-eq{display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;}
@@ -188,6 +191,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
   <div class="panel-tabs">
     <button class="panel-tab active" id="tab-btn-ordenes" onclick="cambiarVista('ordenes')">Órdenes de instalación</button>
     <button class="panel-tab" id="tab-btn-pendientes" onclick="cambiarVista('pendientes')">Pendientes de instalación <span class="panel-tab-badge" id="pend-badge"></span></button>
+    <button class="panel-tab" id="tab-btn-nofactibles" onclick="cambiarVista('nofactibles')">No factibles <span class="panel-tab-badge gris" id="nf-badge"></span></button>
   </div>
   <div id="vista-ordenes">
   <div class="stats-row">
@@ -258,15 +262,6 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 
   <!-- Órdenes de meses anteriores que todavía no se instalaron (pedido de René). -->
   <div id="vista-pendientes" style="display:none;">
-    <div class="filtros">
-      <label style="font-size:11px;color:#6b7280;font-weight:600;">Mes</label>
-      <select id="pend-mes" onchange="pendElegirMes()" style="max-width:220px;"></select>
-      <label style="font-size:11px;color:#6b7280;font-weight:600;">Desde</label>
-      <input type="date" id="pend-desde" onchange="pendFechaManual()" style="max-width:150px;">
-      <label style="font-size:11px;color:#6b7280;font-weight:600;">Hasta</label>
-      <input type="date" id="pend-hasta" onchange="pendFechaManual()" style="max-width:150px;">
-      <button class="btn-refresh" onclick="cargarPendientes()">&#8635; Actualizar</button>
-    </div>
     <div class="stats-row">
       <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Órdenes pendientes</div><div class="value" style="color:#d97706" id="pend-ordenes">—</div><div class="sub" id="pend-ordenes-sub">de meses anteriores</div></div>
       <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Equipos a instalar</div><div class="value" style="color:#d97706" id="pend-equipos">—</div><div class="sub">suma de las órdenes pendientes</div></div>
@@ -278,6 +273,18 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
       </div>
       <div style="font-size:12px;color:#6b7280;padding:10px 20px 0;">Órdenes cargadas antes del mes en curso que todavía no están marcadas como instaladas (sin anuladas ni no factibles). Las más viejas primero.</div>
       <div id="pend-tabla-body"><div class="loading">Cargando...</div></div>
+    </div>
+  </div>
+
+  <!-- Órdenes marcadas como no factibles, con opción de reactivarlas (como la papelera). -->
+  <div id="vista-nofactibles" style="display:none;">
+    <div class="tabla-wrap">
+      <div class="tabla-header">
+        <h3>Órdenes no factibles</h3>
+        <span id="nf-contador" style="font-size:12px;color:#6b7280;"></span>
+      </div>
+      <div style="font-size:12px;color:#6b7280;padding:10px 20px 0;">Órdenes marcadas como no factibles. Al reactivar una vuelve a la lista de órdenes con su estado anterior, y desde ahí se puede marcar como instalada.</div>
+      <div id="nf-tabla-body"><div class="loading">Cargando...</div></div>
     </div>
   </div>
 </div>
@@ -382,7 +389,8 @@ function iniciarPanel() {
   }
 
   cargarOrdenes();
-  cargarPendientes(); // para el contador de la solapa
+  cargarPendientes(); // para los contadores de las solapas
+  cargarNoFactibles();
 }
 
 async function toggleCompletada(id, completada) {
@@ -1070,11 +1078,64 @@ async function guardarEdicion() {
 // ── Solapa "Pendientes de instalación" ─────────────────────────────────────
 // Órdenes de meses anteriores (no del mes en curso) que siguen sin instalarse.
 function cambiarVista(v) {
-  document.getElementById('vista-ordenes').style.display = v === 'ordenes' ? '' : 'none';
-  document.getElementById('vista-pendientes').style.display = v === 'pendientes' ? '' : 'none';
-  document.getElementById('tab-btn-ordenes').classList.toggle('active', v === 'ordenes');
-  document.getElementById('tab-btn-pendientes').classList.toggle('active', v === 'pendientes');
+  ['ordenes', 'pendientes', 'nofactibles'].forEach(function(k){
+    document.getElementById('vista-' + k).style.display = v === k ? '' : 'none';
+    document.getElementById('tab-btn-' + k).classList.toggle('active', v === k);
+  });
   if (v === 'pendientes') cargarPendientes();
+  if (v === 'nofactibles') cargarNoFactibles();
+}
+
+// ── Solapa "No factibles" ──────────────────────────────────────────────────
+async function cargarNoFactibles() {
+  var body = document.getElementById('nf-tabla-body');
+  if (document.getElementById('vista-nofactibles').style.display !== 'none') body.innerHTML = '<div class="loading">Cargando...</div>';
+  try {
+    var res = await fetch(API_URL + '/api/ordenes/no-factibles');
+    if (!res.ok) throw new Error('Error ' + res.status);
+    var ords = await res.json();
+    if (_currentUserEmail === PIA_EMAIL) ords = ords.filter(function(o){ return o.vendedor === PIA_VENDEDOR; });
+    document.getElementById('nf-badge').textContent = ords.length ? ords.length : '';
+    document.getElementById('nf-contador').textContent = ords.length + (ords.length === 1 ? ' orden' : ' órdenes');
+    if (!ords.length) {
+      body.innerHTML = '<div class="empty-msg" style="padding:28px;text-align:center;color:#9ca3af;">No hay órdenes no factibles.</div>';
+      return;
+    }
+    var puedeReactivar = ADMIN_EMAILS.includes(_currentUserEmail) && !window._esLector;
+    var fmtF = function(f){ return f ? new Date(String(f).slice(0, 10) + 'T12:00:00').toLocaleDateString('es-AR') : '—'; };
+    var html = '<table><thead><tr><th>N° Orden</th><th>Cliente</th><th>Fecha orden</th><th>No factible desde</th><th>Motivo</th><th>Marcada por</th><th>Equipos</th><th></th></tr></thead><tbody>';
+    ords.forEach(function(o){
+      var equipos = (Array.isArray(o.productos) ? o.productos : []).filter(function(x){ return parseInt(x.cantidad) > 0; })
+        .map(function(x){ return '<span class="pend-eq">' + esc(String(x.modelo || 'Sin modelo')) + ' × ' + parseInt(x.cantidad) + '</span>'; }).join('') || '—';
+      var pdf = /^https?:\/\//.test(o.pdf_url || '') ? '<a class="btn-ver" style="text-decoration:none;" href="' + esc(o.pdf_url) + '" target="_blank" rel="noopener">PDF</a>' : '';
+      var react = puedeReactivar ? '<button class="btn-nf-react" onclick="reactivarNoFactible(' + JSON.stringify(o.id) + ', \'' + esc(o.numero_completo || '').replace(/'/g, '') + '\')">&#8634; Reactivar</button>' : '';
+      html += '<tr><td><span class="badge-num">' + esc(o.numero_completo || '—') + '</span></td><td>' + esc(o.razon_social || '—') + '</td>'
+        + '<td>' + fmtF(o.fecha_orden) + '</td><td>' + fmtF(o.no_factible_fecha) + '</td>'
+        + '<td style="font-size:12px;max-width:260px;white-space:normal;">' + esc(o.no_factible_motivo || '—') + '</td>'
+        + '<td style="font-size:12px;color:#6b7280;">' + esc(o.no_factible_por || '—') + '</td>'
+        + '<td>' + equipos + '</td><td><div class="acciones-wrap">' + pdf + react + '</div></td></tr>';
+    });
+    body.innerHTML = html + '</tbody></table>';
+  } catch (err) {
+    body.innerHTML = '<div class="empty-msg" style="padding:20px;color:#991b1b;">Error: ' + esc(err.message) + '</div>';
+  }
+}
+
+async function reactivarNoFactible(id, numero) {
+  if (!confirm('¿Reactivar la orden ' + numero + '? Deja de ser no factible y vuelve a la lista de órdenes.')) return;
+  try {
+    var res = await fetch(API_URL + '/api/ordenes/' + id + '/reactivar-no-factible', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-user-email': _currentUserEmail },
+      body: JSON.stringify({ email: _currentUserEmail })
+    });
+    if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw new Error(e.error || 'Error al reactivar'); }
+    cargarNoFactibles();
+    cargarPendientes();
+    cargarOrdenes();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
 }
 
 // Fecha de hoy en Argentina (YYYY-MM-DD). Con toISOString, después de las 21 hs ya es mañana.
@@ -1088,79 +1149,27 @@ function finMesAnteriorAR() {
   return new Date(Date.UTC(+p[0], +p[1] - 1, 0)).toISOString().slice(0, 10);
 }
 
-// Opciones del selector de mes: los 12 meses anteriores al actual.
-function pendArmarMeses() {
-  var sel = document.getElementById('pend-mes');
-  if (sel.options.length) return;
-  var MES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  var p = hoyAR().split('-'), y = +p[0], m = +p[1] - 1;
-  var html = '<option value="">Todos los meses anteriores</option>';
-  for (var i = 1; i <= 12; i++) {
-    var d = new Date(Date.UTC(y, m - i, 1));
-    var k = d.toISOString().slice(0, 7);
-    html += '<option value="' + k + '">' + MES[d.getUTCMonth()] + ' ' + d.getUTCFullYear() + '</option>';
-  }
-  html += '<option value="custom" disabled>Personalizado</option>';
-  sel.innerHTML = html;
-}
-
-// Elegir un mes completa Desde/Hasta con ese mes; "Todos" las vacía.
-function pendElegirMes() {
-  var k = document.getElementById('pend-mes').value;
-  var desde = '', hasta = '';
-  if (k && k !== 'custom') {
-    var p = k.split('-');
-    desde = k + '-01';
-    hasta = new Date(Date.UTC(+p[0], +p[1], 0)).toISOString().slice(0, 10);
-  }
-  document.getElementById('pend-desde').value = desde;
-  document.getElementById('pend-hasta').value = hasta;
-  cargarPendientes();
-}
-
-// Tocar las fechas a mano deja el selector en "Personalizado".
-function pendFechaManual() {
-  var d = document.getElementById('pend-desde').value, h = document.getElementById('pend-hasta').value;
-  document.getElementById('pend-mes').value = (d || h) ? 'custom' : '';
-  cargarPendientes();
-}
-
 async function cargarPendientes() {
   var body = document.getElementById('pend-tabla-body');
   if (document.getElementById('vista-pendientes').style.display !== 'none') body.innerHTML = '<div class="loading">Cargando...</div>';
-  pendArmarMeses();
   try {
     var hoy = hoyAR();
-    var finMesAnterior = finMesAnteriorAR();
-    var fDesde = document.getElementById('pend-desde').value;
-    var fHasta = document.getElementById('pend-hasta').value;
-    // Se trae todo lo pendiente hasta el fin del mes anterior (o hasta la fecha
-    // elegida si es posterior) y el filtro se aplica acá: así el contador de la
-    // solapa sigue mostrando el total aunque haya un filtro puesto.
-    var tope = fHasta && fHasta > finMesAnterior ? fHasta : finMesAnterior;
-    var res = await fetch(API_URL + '/api/ordenes?origen=app&hasta=' + tope);
+    // TODO lo pendiente, menos lo cargado en el mes en curso (pedido de René: sin
+    // filtro de mes).
+    var res = await fetch(API_URL + '/api/ordenes?origen=app&hasta=' + finMesAnteriorAR());
     if (!res.ok) throw new Error('Error ' + res.status);
-    var todas = (await res.json()).filter(function(o){ return !o.completada && !o.anulada && !o.no_factible && !o.deleted_at; });
+    var ords = (await res.json()).filter(function(o){ return !o.completada && !o.anulada && !o.no_factible && !o.deleted_at; });
     // Misma restricción que la vista principal: Pía ve sólo sus órdenes.
-    if (_currentUserEmail === PIA_EMAIL) todas = todas.filter(function(o){ return o.vendedor === PIA_VENDEDOR; });
-    var totalAnteriores = todas.filter(function(o){ return String(o.fecha_orden) <= finMesAnterior; }).length;
-    document.getElementById('pend-badge').textContent = totalAnteriores ? totalAnteriores : '';
-    var ords = todas.filter(function(o){
-      var f = String(o.fecha_orden || '');
-      if (fDesde && f < fDesde) return false;
-      if (fHasta ? f > fHasta : f > finMesAnterior) return false;
-      return true;
-    });
+    if (_currentUserEmail === PIA_EMAIL) ords = ords.filter(function(o){ return o.vendedor === PIA_VENDEDOR; });
+    document.getElementById('pend-badge').textContent = ords.length ? ords.length : '';
     ords.sort(function(a, b){ return String(a.fecha_orden).localeCompare(String(b.fecha_orden)); });
     var cantEq = function(o){ return (Array.isArray(o.productos) ? o.productos : []).reduce(function(a, x){ return a + (parseInt(x.cantidad) || 0); }, 0); };
     var totalEq = ords.reduce(function(a, o){ return a + cantEq(o); }, 0);
     document.getElementById('pend-ordenes').textContent = ords.length;
-    document.getElementById('pend-ordenes-sub').textContent = (fDesde || fHasta)
-      ? 'en el período elegido' : 'de meses anteriores';
     document.getElementById('pend-equipos').textContent = totalEq;
     document.getElementById('pend-contador').textContent = ords.length + (ords.length === 1 ? ' orden' : ' órdenes');
     if (!ords.length) {
-      body.innerHTML = '<div class="empty-msg" style="padding:28px;text-align:center;color:#9ca3af;">' + (fDesde || fHasta ? 'No hay órdenes pendientes en ese período.' : 'No hay órdenes pendientes de meses anteriores. 🎉') + '</div>';
+      body.innerHTML = '<div class="empty-msg" style="padding:28px;text-align:center;color:#9ca3af;">No hay órdenes pendientes de meses anteriores. 🎉</div>';
       return;
     }
     var msHoy = new Date(hoy + 'T12:00:00').getTime();
