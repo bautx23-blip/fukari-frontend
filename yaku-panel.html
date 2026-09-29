@@ -165,11 +165,11 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 .panel-tab-badge.gris{background:#9ca3af;}
 .btn-nf-react{background:#fff;color:#2563eb;border:1.5px solid #2563eb;border-radius:5px;padding:3px 10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;}
 .btn-nf-react:hover{background:#2563eb;color:#fff;}
+.btn-pend-ir{background:#fff;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:5px;padding:3px 9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.btn-pend-ir:hover{background:#1a1a2e;color:#fff;}
 .pend-atraso{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#fef3c7;color:#92400e;}
 .pend-atraso.fuerte{background:#fee2e2;color:#991b1b;}
 .pend-eq{display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;}
-.btn-pend-inst{background:#16a34a;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;}
-.btn-pend-inst:hover{background:#15803d;}
 </style>
 </head>
 <body>
@@ -388,9 +388,7 @@ function iniciarPanel() {
     if (filtroOrigen) filtroOrigen.style.display = 'none';
   }
 
-  cargarOrdenes();
-  cargarPendientes(); // para los contadores de las solapas
-  cargarNoFactibles();
+  cargarOrdenes(); // también carga Pendientes y No factibles (contadores de las solapas)
 }
 
 async function toggleCompletada(id, completada) {
@@ -466,6 +464,10 @@ async function cargarOrdenes() {
     todasLasOrdenes = await res.json();
     filtrar();
     calcularStats();
+    // Editar, anular o marcar NF desde cualquier solapa termina acá: refrescar las
+    // listas de Pendientes y No factibles (y sus contadores).
+    cargarPendientes();
+    cargarNoFactibles();
   } catch(err) {
     document.getElementById('tabla-body').innerHTML = '<div class="error-msg">Error al cargar: ' + err.message + '</div>';
   }
@@ -667,6 +669,7 @@ async function ejecutarBorrar() {
     });
     filtrar();
     calcularStats();
+    cargarPendientes();
 
     // Si el cliente quedó huérfano, preguntar si eliminarlo
     if (result.cliente_huerfano && result.cliente_id) {
@@ -1101,19 +1104,22 @@ async function cargarNoFactibles() {
       body.innerHTML = '<div class="empty-msg" style="padding:28px;text-align:center;color:#9ca3af;">No hay órdenes no factibles.</div>';
       return;
     }
-    var puedeReactivar = ADMIN_EMAILS.includes(_currentUserEmail) && !window._esLector;
+    var puedeReactivar = esAdminPanel();
     var fmtF = function(f){ return f ? new Date(String(f).slice(0, 10) + 'T12:00:00').toLocaleDateString('es-AR') : '—'; };
     var html = '<table><thead><tr><th>N° Orden</th><th>Cliente</th><th>Fecha orden</th><th>No factible desde</th><th>Motivo</th><th>Marcada por</th><th>Equipos</th><th></th></tr></thead><tbody>';
     ords.forEach(function(o){
       var equipos = (Array.isArray(o.productos) ? o.productos : []).filter(function(x){ return parseInt(x.cantidad) > 0; })
         .map(function(x){ return '<span class="pend-eq">' + esc(String(x.modelo || 'Sin modelo')) + ' × ' + parseInt(x.cantidad) + '</span>'; }).join('') || '—';
       var pdf = /^https?:\/\//.test(o.pdf_url || '') ? '<a class="btn-ver" style="text-decoration:none;" href="' + esc(o.pdf_url) + '" target="_blank" rel="noopener">PDF</a>' : '';
+      // /no-factibles trae sólo algunos campos: el lápiz pide la orden completa antes
+      // de abrir el modal (si no, al guardar se vaciarían los campos que faltan).
+      var lapiz = puedeReactivar ? '<button class="btn-edit-orden" onclick="editarOrdenCompleta(' + JSON.stringify(o.id) + ')" title="Editar orden">&#9998;</button>' : '';
       var react = puedeReactivar ? '<button class="btn-nf-react" onclick="reactivarNoFactible(' + JSON.stringify(o.id) + ', \'' + esc(o.numero_completo || '').replace(/'/g, '') + '\')">&#8634; Reactivar</button>' : '';
       html += '<tr><td><span class="badge-num">' + esc(o.numero_completo || '—') + '</span></td><td>' + esc(o.razon_social || '—') + '</td>'
         + '<td>' + fmtF(o.fecha_orden) + '</td><td>' + fmtF(o.no_factible_fecha) + '</td>'
         + '<td style="font-size:12px;max-width:260px;white-space:normal;">' + esc(o.no_factible_motivo || '—') + '</td>'
         + '<td style="font-size:12px;color:#6b7280;">' + esc(o.no_factible_por || '—') + '</td>'
-        + '<td>' + equipos + '</td><td><div class="acciones-wrap">' + pdf + react + '</div></td></tr>';
+        + '<td>' + equipos + '</td><td><div class="acciones-wrap">' + pdf + lapiz + react + '</div></td></tr>';
     });
     body.innerHTML = html + '</tbody></table>';
   } catch (err) {
@@ -1181,12 +1187,20 @@ async function cargarPendientes() {
       var equipos = (Array.isArray(o.productos) ? o.productos : []).filter(function(x){ return parseInt(x.cantidad) > 0; })
         .map(function(x){ return '<span class="pend-eq">' + esc(String(x.modelo || 'Sin modelo')) + ' × ' + parseInt(x.cantidad) + '</span>'; }).join('') || '—';
       var tipo = o.tipo_orden === 'venta' ? 'Venta' : (o.tipo_orden === 'cambio' ? 'Cambio' : 'Alquiler');
-      var instBtn = window._esLector ? '' : '<button class="btn-pend-inst" onclick="pendMarcarInstalada(' + JSON.stringify(o.id) + ')" title="Marcar como instalada hoy">✓ Instalada</button>';
+      // Mismos botones y permisos que la lista principal (sólo admin), más "Ir a la
+      // orden": la abre en la planilla normal para cargarle la fecha de instalación.
+      var num = (o.numero_completo || '').replace(/'/g, '');
+      var acc = '<button class="btn-pend-ir" onclick="irAOrden(\'' + esc(o.fecha_orden || '') + '\', \'' + esc(num) + '\')" title="Abrir en la planilla de órdenes para cargarle la instalación">&#8594; Ir a la orden</button>';
+      if (esAdminPanel()) {
+        acc += '<button class="btn-edit-orden" onclick=\'abrirEdicion(' + JSON.stringify(o).replace(/'/g, "&#39;") + ')\' title="Editar orden">&#9998;</button>'
+          + '<button style="background:transparent;border:1px solid #d97706;color:#d97706;padding:2px 7px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;font-weight:600;" onclick="marcarNoFactible(\'' + o.id + '\',\'' + num + '\')" title="Marcar como No Factible">NF</button>'
+          + '<button class="btn-del-orden" onclick="confirmarBorrar(\'' + o.id + '\',\'' + num + '\')" title="Anular orden">&#9888; Anular</button>';
+      }
       html += '<tr><td><span class="badge-num">' + esc(o.numero_completo || '—') + '</span></td><td>' + tipo + '</td><td>' + esc(o.razon_social || '—') + '</td>'
         + '<td>' + localidadesUnicas(o).map(function(l){ return '<span class="pend-eq">' + esc(l) + '</span>'; }).join('') + '</td>'
         + '<td>' + fecha + '</td><td>' + atraso + '</td><td style="font-size:12px;color:#6b7280;">' + esc(o.vendedor || '—') + '</td>'
         + '<td>' + equipos + ' <b style="margin-left:4px;">' + cantEq(o) + '</b></td>'
-        + '<td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g, "&#39;") + ')\'>Ver</button>' + instBtn + '</div></td></tr>';
+        + '<td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g, "&#39;") + ')\'>Ver</button>' + acc + '</div></td></tr>';
     });
     html += '<tr><td colspan="7" style="text-align:right;font-weight:700;">Total equipos</td><td style="font-weight:700;">' + totalEq + '</td><td></td></tr>';
     body.innerHTML = html + '</tbody></table>';
@@ -1195,20 +1209,33 @@ async function cargarPendientes() {
   }
 }
 
-async function pendMarcarInstalada(id) {
+async function editarOrdenCompleta(id) {
   try {
-    var res = await fetch(API_URL + '/api/ordenes/' + id + '/completada', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ completada: true, fecha_completada: hoyAR() })
-    });
-    if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw new Error(e.error || 'Error al actualizar'); }
-    cargarPendientes();
-    cargarOrdenes();
+    var res = await fetch(API_URL + '/api/ordenes/' + id);
+    if (!res.ok) throw new Error('No se pudo cargar la orden (' + res.status + ')');
+    abrirEdicion(await res.json());
   } catch (err) {
     alert('Error: ' + err.message);
   }
 }
+
+function esAdminPanel() {
+  return ADMIN_EMAILS.includes(_currentUserEmail) && !window._esLector;
+}
+
+// Lleva una orden pendiente a la planilla normal: cambia de solapa y deja los filtros
+// de forma que aparezca (desde su fecha, hasta hoy, buscada por número). Ahí se le
+// carga la instalación como a cualquier orden. No modifica la orden.
+function irAOrden(fechaOrden, numero) {
+  cambiarVista('ordenes');
+  if (fechaOrden) document.getElementById('filtro-desde').value = String(fechaOrden).slice(0, 10);
+  document.getElementById('filtro-hasta').value = hoyAR();
+  document.getElementById('filtro-estado').value = 'activas';
+  document.getElementById('filtro-buscar').value = numero || '';
+  cargarOrdenes();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 
 function esc(v) { return (v||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 

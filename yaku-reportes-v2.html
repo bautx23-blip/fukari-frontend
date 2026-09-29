@@ -328,8 +328,9 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
   html += renderBajas(bajas, resumen);
   html += renderRechazos(rechazos || []);
   html += renderNoFactibles(noFactibles || []);
-  html += renderFuentes(fuentesResumen || {});
   html += renderMonitoreoCompetencia(llamadasCompetencia || []);
+  // Fuentes de adquisición al final del reporte (pedido de René).
+  html += renderFuentes(fuentesResumen || {});
   // Sección "Clientes" removida del reporte a pedido del cliente: la base de
   // clientes no está migrada completa, así que sus totales no son reales.
   contenido.innerHTML = html;
@@ -340,7 +341,6 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
   setTimeout(function() {
     renderChartFacturadoMes(instalaciones.facturado_12m || instalaciones.por_mes);
     renderChartOrdenesMes2026(instalaciones.por_mes);
-    renderChartPromoMes(promoStats && promoStats.por_mes || []);
     renderChartBajasMes2026(bajas.por_mes);
     renderChartMotivos(bajas.por_motivo);
     renderChartFuentes(fuentesResumen || {});
@@ -405,9 +405,6 @@ function renderInstalaciones(data, promoStats) {
   html += '<div class="chart-wrap"><div class="chart-header"><h3>Ordenes por mes — 2026</h3></div>';
   html += '<div class="chart-body"><canvas id="chart-ordenes-mes-2026"></canvas></div></div>';
 
-  // Chart: Cerrados por promoción por mes
-  html += '<div class="chart-wrap"><div class="chart-header"><h3>Cerrados por promoción por mes</h3></div>';
-  html += '<div class="chart-body"><canvas id="chart-promo-mes"></canvas></div></div>';
 
   // Tabla vendedores
   html += '<div class="tabla-wrap"><div class="tabla-header"><h3>Facturado por vendedor</h3></div>';
@@ -901,61 +898,6 @@ function renderChartOrdenesMes2026(porMes) {
       });
       _chartInstances.push(chart);
     });
-}
-
-/* ══════════════════════════════════════════
-   CHART.JS — Cerrados por promoción por mes
-   ══════════════════════════════════════════ */
-function renderChartPromoMes(porMes) {
-  var canvas = document.getElementById('chart-promo-mes');
-  if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-
-  var labels = (porMes || []).map(function(m) { return mesLabel(m.mes); });
-  var values = (porMes || []).map(function(m) { return m.cantidad; });
-
-  if (!labels.length) {
-    labels = ['Sin datos'];
-    values = [0];
-  }
-
-  var chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Cerrados por promoción',
-        data: values,
-        backgroundColor: '#7c3aed',
-        borderRadius: 4,
-        maxBarThickness: 48
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) { return ctx.parsed.y + ' cerrados'; }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { font: { size: 11 }, stepSize: 1, precision: 0 },
-          grid: { color: '#f3f4f6' }
-        },
-        x: {
-          ticks: { font: { size: 11 } },
-          grid: { display: false }
-        }
-      }
-    }
-  });
-  _chartInstances.push(chart);
 }
 
 /* ══════════════════════════════════════════
