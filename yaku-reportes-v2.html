@@ -394,7 +394,6 @@ function renderInstalaciones(data, promoStats) {
   html += '<div class="stat-card" style="border-top-color:#7c3aed"><div class="label" style="color:#7c3aed">Cambios de equipo</div><div class="value" style="color:#7c3aed">' + (t.equipos_cambio || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">' + (t.ordenes_cambio || 0) + ' órdenes · no suman equipos instalados</div></div>';
   html += '<div class="stat-card blue"><div class="label">Facturado sin IVA</div><div class="value">' + fmt(t.facturado_sin_iva) + '</div></div>';
   html += '<div class="stat-card blue"><div class="label">Ticket promedio</div><div class="value">' + fmt(t.ticket_promedio) + '</div></div>';
-  html += '<div class="stat-card" style="border-top-color:#7c3aed"><div class="label" style="color:#7c3aed">Cerrados por promo (período)</div><div class="value" style="color:#7c3aed">' + (promoStats.total || 0) + '</div><div style="font-size:11px;color:#6b7280;margin-top:2px">Completadas con promoción</div></div>';
   html += '</div>';
 
   // Chart facturado por mes
