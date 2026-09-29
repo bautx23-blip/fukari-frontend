@@ -338,7 +338,7 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
 
   // Render Chart.js charts after DOM is ready
   setTimeout(function() {
-    renderChartFacturadoMes(instalaciones.por_mes);
+    renderChartFacturadoMes(instalaciones.facturado_12m || instalaciones.por_mes);
     renderChartOrdenesMes2026(instalaciones.por_mes);
     renderChartPromoMes(promoStats && promoStats.por_mes || []);
     renderChartBajasMes2026(bajas.por_mes);
@@ -398,7 +398,7 @@ function renderInstalaciones(data, promoStats) {
   html += '</div>';
 
   // Chart facturado por mes
-  html += '<div class="chart-wrap"><div class="chart-header"><h3>Facturado por mes (sin IVA) — Ultimos 12 meses</h3></div>';
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Facturado por mes (sin IVA) — Ultimos 12 meses</h3><span class="chart-hint">en naranja, los meses del período filtrado</span></div>';
   html += '<div class="chart-body"><canvas id="chart-facturado-mes"></canvas></div></div>';
 
   // Chart ordenes por mes 2026
@@ -650,9 +650,9 @@ function renderEquiposMes(data) {
   if (!mod.length && !loc.length) return '';
   var html = '<div class="report-section">';
   html += '<div class="section-header"><div class="bar blue"></div><h2 class="blue">Equipos instalados</h2></div>';
-  html += '<div class="chart-wrap"><div class="chart-header"><h3>Equipos por mes, por tipo</h3><span class="chart-hint">códigos viejos traducidos a nombres comerciales · total del mes arriba</span></div>';
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Equipos por mes, por tipo</h3><span class="chart-hint">códigos viejos traducidos a nombres comerciales · total del mes en el tooltip</span></div>';
   html += '<div class="chart-body"><canvas id="chart-eq-modelo"></canvas></div><div class="chart-nota" id="nota-eq-modelo"></div></div>';
-  html += '<div class="chart-wrap"><div class="chart-header"><h3>Equipos por mes, por localidad</h3><span class="chart-hint">localidad de cada equipo · total del mes arriba</span></div>';
+  html += '<div class="chart-wrap"><div class="chart-header"><h3>Equipos por mes, por localidad</h3><span class="chart-hint">localidad de cada equipo · total del mes en el tooltip</span></div>';
   html += '<div class="chart-body"><canvas id="chart-eq-localidad"></canvas></div><div class="chart-nota" id="nota-eq-localidad"></div></div>';
   html += '</div>';
   return html;
@@ -660,24 +660,6 @@ function renderEquiposMes(data) {
 
 var PALETA_STACK = ['#2563eb','#27ae60','#d97706','#7c3aed','#0891b2','#db2777','#65a30d','#dc2626'];
 
-// Escribe el total arriba de cada barra apilada: sin esto hay que sumar a ojo.
-// Va como plugin del gráfico (no global) para no tocar los otros charts.
-var pluginTotalesArriba = {
-  id: 'totalesArriba',
-  afterDatasetsDraw: function(chart, args, opts) {
-    if (!opts || !opts.totales) return;
-    var ctx = chart.ctx, meta = chart.getDatasetMeta(chart.data.datasets.length - 1);
-    ctx.save();
-    ctx.font = '600 11px Inter, Arial, sans-serif';
-    ctx.fillStyle = '#374151';
-    ctx.textAlign = 'center';
-    meta.data.forEach(function(bar, i) {
-      var t = opts.totales[i];
-      if (t) ctx.fillText(t, bar.x, bar.y - 6);
-    });
-    ctx.restore();
-  }
-};
 
 // Apila las top N categorías y junta el resto en "Otros": con ~20 modelos y ~40
 // localidades, apilar todo hace un gráfico ilegible.
@@ -710,21 +692,20 @@ function renderStackEquipos(canvasId, notaId, filas, topN, etiquetaOtros) {
           backgroundColor: s.k === etiquetaOtros ? '#9ca3af' : PALETA_STACK[i % PALETA_STACK.length] };
       })
     },
-    plugins: [pluginTotalesArriba],
     options: {
       responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 18 } },
       plugins: {
         legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12, padding: 12 } },
         tooltip: { callbacks: {
           label: function(c){ return c.dataset.label + ': ' + c.parsed.y + ' equipos'; },
           footer: function(items){ return 'Total del mes: ' + totalesMes[items[0].dataIndex] + ' equipos'; }
-        } },
-        totalesArriba: { totales: totalesMes }
+        } }
       },
+      // Barras agrupadas (una al lado de la otra), no apiladas: se compara cada
+      // tipo/localidad directo contra las demás.
       scales: {
-        x: { stacked: true, ticks: { font: { size: 11 } }, grid: { display: false } },
-        y: { stacked: true, beginAtZero: true, ticks: { font: { size: 11 }, precision: 0 }, grid: { color: '#f3f4f6' } }
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { font: { size: 11 }, precision: 0 }, grid: { color: '#f3f4f6' } }
       }
     }
   });
@@ -786,6 +767,8 @@ function renderChartFacturadoMes(porMes) {
 
   var labels = porMes.map(function(m) { return mesLabel(m.mes); });
   var values = porMes.map(function(m) { return m.facturado; });
+  // Siempre los 12 meses; los del período filtrado van en otro color.
+  var colores = porMes.map(function(m) { return m.en_periodo ? '#f59e0b' : '#2563eb'; });
 
   var chart = new Chart(ctx, {
     type: 'bar',
@@ -794,7 +777,7 @@ function renderChartFacturadoMes(porMes) {
       datasets: [{
         label: 'Facturado sin IVA',
         data: values,
-        backgroundColor: '#2563eb',
+        backgroundColor: colores,
         borderRadius: 4,
         maxBarThickness: 48
       }]
