@@ -156,6 +156,17 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 .rechazos-stat{background:#fff;border-radius:8px;padding:14px 20px;flex:1;min-width:180px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
 .rechazos-stat .label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
 .rechazos-stat .value{font-size:22px;font-weight:700;color:#dc2626;margin-top:4px;}
+.panel-tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:2px solid #e5e7eb;}
+.panel-tab{background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;padding:10px 16px;font-family:inherit;font-size:13.5px;font-weight:600;color:#6b7280;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.panel-tab:hover{color:#1a1a2e;}
+.panel-tab.active{color:#1a1a2e;border-bottom-color:#1a1a2e;}
+.panel-tab-badge{background:#d97706;color:#fff;border-radius:10px;font-size:11px;font-weight:700;padding:1px 8px;}
+.panel-tab-badge:empty{display:none;}
+.pend-atraso{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#fef3c7;color:#92400e;}
+.pend-atraso.fuerte{background:#fee2e2;color:#991b1b;}
+.pend-eq{display:inline-block;background:#f3f4f6;border-radius:4px;padding:1px 7px;font-size:11px;margin:1px;}
+.btn-pend-inst{background:#16a34a;color:#fff;border:none;border-radius:5px;padding:4px 10px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;}
+.btn-pend-inst:hover{background:#15803d;}
 </style>
 </head>
 <body>
@@ -174,6 +185,11 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
 </div>
 
 <div class="contenido">
+  <div class="panel-tabs">
+    <button class="panel-tab active" id="tab-btn-ordenes" onclick="cambiarVista('ordenes')">Órdenes de instalación</button>
+    <button class="panel-tab" id="tab-btn-pendientes" onclick="cambiarVista('pendientes')">Pendientes de instalación <span class="panel-tab-badge" id="pend-badge"></span></button>
+  </div>
+  <div id="vista-ordenes">
   <div class="stats-row">
     <div class="stat-card"><div class="label">Solicitadas</div><div class="value" id="stat-mes">—</div><div class="sub" id="stat-mes-label">no anuladas en el rango</div></div>
     <div class="stat-card" style="border-left:3px solid #16a34a"><div class="label">Completadas</div><div class="value" style="color:#16a34a" id="stat-completadas">—</div><div class="sub" id="stat-completadas-sub">en el rango</div></div>
@@ -236,6 +252,23 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
         <div class="tabla-header"><h3>Detalle de Rechazos</h3><span id="rechazos-contador"></span></div>
         <div id="rechazos-tabla-body"><div class="empty-msg">Cargando...</div></div>
       </div>
+    </div>
+  </div>
+  </div><!-- /vista-ordenes -->
+
+  <!-- Órdenes de meses anteriores que todavía no se instalaron (pedido de René). -->
+  <div id="vista-pendientes" style="display:none;">
+    <div class="stats-row">
+      <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Órdenes pendientes</div><div class="value" style="color:#d97706" id="pend-ordenes">—</div><div class="sub" id="pend-ordenes-sub">de meses anteriores</div></div>
+      <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Equipos a instalar</div><div class="value" style="color:#d97706" id="pend-equipos">—</div><div class="sub">suma de las órdenes pendientes</div></div>
+    </div>
+    <div class="tabla-wrap">
+      <div class="tabla-header">
+        <h3>Órdenes pendientes de instalación</h3>
+        <span id="pend-contador" style="font-size:12px;color:#6b7280;"></span>
+      </div>
+      <div style="font-size:12px;color:#6b7280;padding:10px 20px 0;">Órdenes cargadas antes del mes en curso que todavía no están marcadas como instaladas (sin anuladas ni no factibles). Las más viejas primero.</div>
+      <div id="pend-tabla-body"><div class="loading">Cargando...</div></div>
     </div>
   </div>
 </div>
@@ -340,6 +373,7 @@ function iniciarPanel() {
   }
 
   cargarOrdenes();
+  cargarPendientes(); // para el contador de la solapa
 }
 
 async function toggleCompletada(id, completada) {
@@ -1021,6 +1055,83 @@ async function guardarEdicion() {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Guardar cambios';
+  }
+}
+
+// ── Solapa "Pendientes de instalación" ─────────────────────────────────────
+// Órdenes de meses anteriores (no del mes en curso) que siguen sin instalarse.
+function cambiarVista(v) {
+  document.getElementById('vista-ordenes').style.display = v === 'ordenes' ? '' : 'none';
+  document.getElementById('vista-pendientes').style.display = v === 'pendientes' ? '' : 'none';
+  document.getElementById('tab-btn-ordenes').classList.toggle('active', v === 'ordenes');
+  document.getElementById('tab-btn-pendientes').classList.toggle('active', v === 'pendientes');
+  if (v === 'pendientes') cargarPendientes();
+}
+
+// Fecha de hoy en Argentina (YYYY-MM-DD). Con toISOString, después de las 21 hs ya es mañana.
+function hoyAR() {
+  return new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
+}
+
+async function cargarPendientes() {
+  var body = document.getElementById('pend-tabla-body');
+  if (document.getElementById('vista-pendientes').style.display !== 'none') body.innerHTML = '<div class="loading">Cargando...</div>';
+  try {
+    var hoy = hoyAR();
+    // Último día del mes anterior: el mes en curso no entra.
+    var p = hoy.split('-');
+    var finMesAnterior = new Date(Date.UTC(+p[0], +p[1] - 1, 0)).toISOString().slice(0, 10);
+    var res = await fetch(API_URL + '/api/ordenes?origen=app&hasta=' + finMesAnterior);
+    if (!res.ok) throw new Error('Error ' + res.status);
+    var ords = (await res.json()).filter(function(o){ return !o.completada && !o.anulada && !o.no_factible && !o.deleted_at; });
+    // Misma restricción que la vista principal: Pía ve sólo sus órdenes.
+    if (_currentUserEmail === PIA_EMAIL) ords = ords.filter(function(o){ return o.vendedor === PIA_VENDEDOR; });
+    ords.sort(function(a, b){ return String(a.fecha_orden).localeCompare(String(b.fecha_orden)); });
+    var cantEq = function(o){ return (Array.isArray(o.productos) ? o.productos : []).reduce(function(a, x){ return a + (parseInt(x.cantidad) || 0); }, 0); };
+    var totalEq = ords.reduce(function(a, o){ return a + cantEq(o); }, 0);
+    document.getElementById('pend-ordenes').textContent = ords.length;
+    document.getElementById('pend-equipos').textContent = totalEq;
+    document.getElementById('pend-badge').textContent = ords.length ? ords.length : '';
+    document.getElementById('pend-contador').textContent = ords.length + (ords.length === 1 ? ' orden' : ' órdenes');
+    if (!ords.length) {
+      body.innerHTML = '<div class="empty-msg" style="padding:28px;text-align:center;color:#9ca3af;">No hay órdenes pendientes de meses anteriores. 🎉</div>';
+      return;
+    }
+    var msHoy = new Date(hoy + 'T12:00:00').getTime();
+    var html = '<table><thead><tr><th>N° Orden</th><th>Tipo</th><th>Cliente</th><th>Localidad</th><th>Fecha orden</th><th>Pendiente hace</th><th>Vendedor</th><th>Equipos</th><th></th></tr></thead><tbody>';
+    ords.forEach(function(o){
+      var fecha = o.fecha_orden ? new Date(o.fecha_orden + 'T12:00:00').toLocaleDateString('es-AR') : '—';
+      var dias = o.fecha_orden ? Math.round((msHoy - new Date(o.fecha_orden + 'T12:00:00').getTime()) / 86400000) : null;
+      var atraso = dias == null ? '—' : '<span class="pend-atraso' + (dias > 30 ? ' fuerte' : '') + '">' + dias + ' días</span>';
+      var equipos = (Array.isArray(o.productos) ? o.productos : []).filter(function(x){ return parseInt(x.cantidad) > 0; })
+        .map(function(x){ return '<span class="pend-eq">' + esc(String(x.modelo || 'Sin modelo')) + ' × ' + parseInt(x.cantidad) + '</span>'; }).join('') || '—';
+      var tipo = o.tipo_orden === 'venta' ? 'Venta' : (o.tipo_orden === 'cambio' ? 'Cambio' : 'Alquiler');
+      var instBtn = window._esLector ? '' : '<button class="btn-pend-inst" onclick="pendMarcarInstalada(' + JSON.stringify(o.id) + ')" title="Marcar como instalada hoy">✓ Instalada</button>';
+      html += '<tr><td><span class="badge-num">' + esc(o.numero_completo || '—') + '</span></td><td>' + tipo + '</td><td>' + esc(o.razon_social || '—') + '</td>'
+        + '<td>' + localidadesUnicas(o).map(function(l){ return '<span class="pend-eq">' + esc(l) + '</span>'; }).join('') + '</td>'
+        + '<td>' + fecha + '</td><td>' + atraso + '</td><td style="font-size:12px;color:#6b7280;">' + esc(o.vendedor || '—') + '</td>'
+        + '<td>' + equipos + ' <b style="margin-left:4px;">' + cantEq(o) + '</b></td>'
+        + '<td><div class="acciones-wrap"><button class="btn-ver" onclick=\'verDetalle(' + JSON.stringify(o).replace(/'/g, "&#39;") + ')\'>Ver</button>' + instBtn + '</div></td></tr>';
+    });
+    html += '<tr><td colspan="7" style="text-align:right;font-weight:700;">Total equipos</td><td style="font-weight:700;">' + totalEq + '</td><td></td></tr>';
+    body.innerHTML = html + '</tbody></table>';
+  } catch (err) {
+    body.innerHTML = '<div class="empty-msg" style="padding:20px;color:#991b1b;">Error: ' + esc(err.message) + '</div>';
+  }
+}
+
+async function pendMarcarInstalada(id) {
+  try {
+    var res = await fetch(API_URL + '/api/ordenes/' + id + '/completada', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completada: true, fecha_completada: hoyAR() })
+    });
+    if (!res.ok) { var e = await res.json().catch(function(){ return {}; }); throw new Error(e.error || 'Error al actualizar'); }
+    cargarPendientes();
+    cargarOrdenes();
+  } catch (err) {
+    alert('Error: ' + err.message);
   }
 }
 
