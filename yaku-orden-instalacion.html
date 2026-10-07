@@ -1588,9 +1588,10 @@ async function verificarBCRA() {
   document.getElementById('bcra-result').style.display = 'none';
   document.getElementById('bcra-btn-continuar').style.display = 'none';
   try {
-    // Timeout de 10 segundos para no quedar colgado
+    // Timeout para no quedar colgado. 25s: el backend reintenta y prueba las dos IPs
+    // del BCRA, y con 10s se cortaba antes de que llegara la respuesta buena.
     var controller = new AbortController();
-    var timeoutId = setTimeout(function(){ controller.abort(); }, 10000);
+    var timeoutId = setTimeout(function(){ controller.abort(); }, 25000);
     var res = await fetch(API_URL + '/api/bcra/' + raw, { signal: controller.signal });
     clearTimeout(timeoutId);
     var data = await res.json();
@@ -1611,7 +1612,10 @@ function mostrarResultadoBCRA(data, cuitRaw) {
   if (data.error || !data.results) {
     bcraData = { cuit: cuitRaw, situacion_peor: null, sin_datos: true, fecha_consulta: ahora.toISOString(), raw: data };
     var errMsg = data.error || '';
-    var esSrvError = /50[0-9]|timeout|agotado|conexi/i.test(errMsg);
+    // Cualquier error es "servicio no disponible": el "sin datos" real llega sin error
+    // (404 del BCRA → results null). Antes el regex no agarraba "No se pudo conectar"
+    // ni un 429, y se mostraba "Sin datos en la Central de Deudores" con el BCRA caído.
+    var esSrvError = !!errMsg;
     var titulo = esSrvError ? 'Servicio BCRA no disponible' : 'Sin datos en la Central de Deudores';
     var desc = esSrvError
       ? 'El servidor del BCRA no respondió en este momento. Podés continuar — la orden quedará registrada sin datos crediticios.'
