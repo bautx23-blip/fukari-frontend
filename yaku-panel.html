@@ -202,6 +202,7 @@ tr.fila-anulada td:last-child,tr.fila-anulada td:nth-last-child(2){opacity:1;tex
     <div class="stat-card" style="border-left:3px solid #2563eb"><div class="label">Órdenes de Alquiler</div><div class="value" style="color:#2563eb" id="stat-alquiler">—</div><div class="sub" id="stat-alquiler-sub">equipos instalados</div></div>
     <div class="stat-card" style="border-left:3px solid #d97706"><div class="label">Órdenes de Venta</div><div class="value" style="color:#d97706" id="stat-venta">—</div><div class="sub" id="stat-venta-sub">unidades vendidas</div></div>
     <div class="stat-card" style="border-left:3px solid #7c3aed"><div class="label">Órdenes de Cambio</div><div class="value" style="color:#7c3aed" id="stat-cambio">—</div><div class="sub" id="stat-cambio-sub">equipos cambiados (no instalados)</div></div>
+    <div class="stat-card" style="border-left:3px solid #0891b2"><div class="label">Total equipos vendidos</div><div class="value" style="color:#0891b2" id="stat-vendidos">—</div><div class="sub" id="stat-vendidos-sub">instalados + por instalar</div></div>
   </div>
 
   <div class="filtros">
@@ -536,6 +537,19 @@ function calcularStats() {
   if (statCambio) {
     statCambio.textContent = cambioComp.length;
     document.getElementById('stat-cambio-sub').textContent = equiposCambio + (equiposCambio === 1 ? ' equipo cambiado' : ' equipos cambiados');
+  }
+
+  // Equipos vendidos en el rango (alquiler + venta, sin cambios), estén instalados o no
+  var vendidas = noAnuladas.filter(function(o){ return (o.tipo_orden || '') !== 'cambio'; });
+  var eqInstalados = sumEquipos(vendidas.filter(function(o){ return o.completada; }));
+  var eqPorInstalar = sumEquipos(vendidas.filter(function(o){ return !o.completada; }));
+  var eqVenta = sumEquipos(vendidas.filter(function(o){ return (o.tipo_orden || '') === 'venta'; }));
+  var statVendidos = document.getElementById('stat-vendidos');
+  if (statVendidos) {
+    statVendidos.textContent = eqInstalados + eqPorInstalar;
+    var subV = document.getElementById('stat-vendidos-sub');
+    subV.textContent = eqInstalados + (eqInstalados === 1 ? ' instalado' : ' instalados') + ' · ' + eqPorInstalar + ' por instalar';
+    subV.title = (eqInstalados + eqPorInstalar - eqVenta) + ' en alquiler · ' + eqVenta + ' en venta';
   }
 }
 
