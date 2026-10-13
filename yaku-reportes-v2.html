@@ -327,7 +327,7 @@ function renderPlanillaVendedor() {
 /* ── RENDER ALL ── */
 function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactibles, fuentesResumen, promoStats, llamadasCompetencia) {
   var contenido = document.getElementById('contenido');
-  var html = '';
+  var html = '<div id="cierre-flota"></div>';
   html += renderResumen(resumen, instalaciones);
   html += renderInstalaciones(instalaciones, promoStats);
   html += renderEquiposMes(instalaciones);
@@ -340,6 +340,7 @@ function renderAll(resumen, instalaciones, bajas, clientes, rechazos, noFactible
   // Sección "Clientes" removida del reporte a pedido del cliente: la base de
   // clientes no está migrada completa, así que sus totales no son reales.
   contenido.innerHTML = html;
+  cargarCierreFlota();
   // Bind del selector de mes (después de pegar el HTML)
   bindMonitoreoCompetencia(llamadasCompetencia || []);
 
@@ -363,6 +364,65 @@ function chipEquiposPauta(pauta, total) {
   pauta = pauta || 0;
   var pct = total > 0 ? Math.round((pauta / total) * 100) : 0;
   return '<div class="stat-card" style="border-top-color:#2563eb"><div class="label" style="color:#2563eb">Equipos por pauta</div><div class="value" style="color:#2563eb">' + pauta + '</div><div style="font-size:10.5px;color:#9ca3af;margin-top:4px">' + pct + '% del alquiler · fuente CRM</div></div>';
+}
+
+/* ══════════════════════════════════════════
+   CIERRE DE EQUIPOS INSTALADOS (pedido de René)
+   Flota en alquiler al último cierre de mes calendario. Arranca de un número
+   fijo y se le suman altas (alquiler completado) y restan bajas mes a mes;
+   solo cambia el día de cierre (último día del mes), no con cada orden.
+   No depende de los filtros de fecha del reporte.
+   ══════════════════════════════════════════ */
+var CIERRE_BASE = { fecha: '2026-09-30', total: 3444 };
+
+function isoFecha(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function fechaCorta(iso) {
+  var p = iso.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function cargarCierreFlota() {
+  var hoy = new Date();
+  var finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+  // Hoy es día de cierre → cierra este mes; si no, vale el cierre del mes anterior
+  var cierre = hoy.getDate() === finMes.getDate() ? finMes : new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+  var proximo = hoy.getDate() === finMes.getDate() ? new Date(hoy.getFullYear(), hoy.getMonth() + 2, 0) : finMes;
+  var cierreIso = isoFecha(cierre);
+  var desdeMov = isoFecha(new Date(cierre.getFullYear(), cierre.getMonth() + 1, 1));
+  var finProxIso = isoFecha(proximo);
+
+  var pCierre = cierreIso > CIERRE_BASE.fecha
+    ? fetch(API_URL + '/api/reportes/resumen?desde=' + isoFecha(new Date(2026, 9, 1)) + '&hasta=' + cierreIso).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    : Promise.resolve({ equipos_instalados: 0, equipos_baja: 0 });
+  // Movimiento del mes en curso: informativo, entra en el próximo cierre
+  var pCurso = fetch(API_URL + '/api/reportes/resumen?desde=' + desdeMov + '&hasta=' + finProxIso).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); });
+
+  Promise.all([pCierre, pCurso]).then(function(res) {
+    var total = CIERRE_BASE.total + (res[0].equipos_instalados || 0) - (res[0].equipos_baja || 0);
+    var altas = res[1].equipos_instalados || 0, bajas = res[1].equipos_baja || 0;
+    var neto = altas - bajas;
+    var el = document.getElementById('cierre-flota');
+    if (!el) return;
+    el.innerHTML =
+      '<div class="report-section" style="margin-bottom:28px">' +
+        '<div style="background:linear-gradient(135deg,#1a1a2e,#2563eb);color:#fff;border-radius:10px;padding:22px 28px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 2px 10px rgba(37,99,235,0.25)">' +
+          '<div>' +
+            '<div style="font-size:11.5px;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;opacity:0.8">Cierre de equipos instalados</div>' +
+            '<div style="font-size:44px;font-weight:800;line-height:1.1;margin-top:4px">' + total.toLocaleString('es-AR') + '</div>' +
+            '<div style="font-size:12.5px;opacity:0.85;margin-top:4px">Total de equipos instalados al cierre del ' + fechaCorta(cierreIso) + '</div>' +
+          '</div>' +
+          '<div style="background:rgba(255,255,255,0.12);border-radius:8px;padding:12px 18px;font-size:12.5px;line-height:1.7">' +
+            '<div style="opacity:0.8">Mes en curso (entra en el cierre del ' + fechaCorta(finProxIso) + ')</div>' +
+            '<div><b style="color:#86efac">+' + altas + '</b> altas &nbsp;·&nbsp; <b style="color:#fca5a5">−' + bajas + '</b> bajas &nbsp;·&nbsp; neto <b>' + (neto >= 0 ? '+' : '−') + Math.abs(neto) + '</b></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }).catch(function(err) {
+    var el = document.getElementById('cierre-flota');
+    if (el) el.innerHTML = '<div class="error-msg">No se pudo calcular el cierre de equipos: ' + err.message + '</div>';
+  });
 }
 
 /* ══════════════════════════════════════════
