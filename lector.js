@@ -11,7 +11,10 @@
 // Para dar de alta un lector: agregar el email a LECTORES y crear el usuario en
 // Supabase Auth (ver memoria del proyecto). Nada más.
 (function () {
-  var LECTORES = ['matimusso@gmail.com'];
+  var LECTORES = [];
+  // Sin acceso: se le cierra la sesión apenas entra a cualquier página.
+  // Matías Musso dado de baja a pedido de Rina (2026-10-14).
+  var BLOQUEADOS = ['matimusso@gmail.com'];
   var PAGINAS_PERMITIDAS = ['/hub.html', '/yaku-panel.html', '/yaku-panel-bajas.html', '/yaku-clientes.html', '/yaku-reportes-v2.html', '/yaku-stock.html'];
   var SUPABASE_URL = 'https://bqjbblgbwgwqkziqzdyy.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxamJibGdid2d3cWt6aXF6ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2Mjg4MTAsImV4cCI6MjA4ODIwNDgxMH0.DLXFYR4EgaejMbk3wBlU9SSVCi17YJ2aPiJc2h4y5mE';
@@ -46,7 +49,13 @@
   }
 
   // ── 2. Resolver el rol y aplicar restricciones ─────────────────────────────
-  function aplicar(email) {
+  function aplicar(email, client) {
+    if (BLOQUEADOS.indexOf(email) !== -1) {
+      window._esLector = true; // por las dudas, que no escriba nada mientras sale
+      document.documentElement.style.visibility = 'hidden';
+      client.auth.signOut().finally(function () { location.replace('/index.html'); });
+      return;
+    }
     if (LECTORES.indexOf(email) === -1) return;
     window._esLector = true;
     document.documentElement.classList.add('lector');
@@ -89,7 +98,7 @@
     var client = window.sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     client.auth.getSession().then(function (r) {
       var email = r && r.data && r.data.session && r.data.session.user && r.data.session.user.email;
-      if (email) aplicar(email);
+      if (email) aplicar(email, client);
     });
   });
 })();
