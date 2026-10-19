@@ -612,7 +612,10 @@ function cargarEquiposBajaEdit(equipos) {
       modelo: e.modelo || '',
       cantidad: parseInt(e.cantidad) || 1,
       domicilio: e.domicilio || '',
-      localidad: e.localidad || ''
+      localidad: e.localidad || '',
+      // Equipos del sistema anterior: la serie evita que vuelvan a aparecer en otra baja.
+      serie_equipo: e.serie_equipo || '',
+      modelo_original: e.modelo_original || ''
     };
   });
   pintarEquiposBajaEdit();
@@ -654,12 +657,14 @@ function quitarEquipoBajaEdit(i) {
 
 function getEquiposBajaEdit() {
   return _editEquiposBaja.map(function(e) {
-    return {
+    var eq = {
       modelo: String(e.modelo || '').trim(),
       cantidad: parseInt(e.cantidad) || 1,
       domicilio: String(e.domicilio || '').trim(),
       localidad: String(e.localidad || '').trim()
     };
+    if (e.serie_equipo) { eq.serie_equipo = e.serie_equipo; eq.modelo_original = e.modelo_original; }
+    return eq;
   }).filter(function(e) { return e.modelo || e.domicilio || e.localidad; });
 }
 

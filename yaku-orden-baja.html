@@ -762,6 +762,8 @@ function cargarDatosCliente(cliente) {
   document.querySelector('#tabla-productos-ref').style.display = '';
   document.querySelector('#datos-cliente-section > p').style.display = '';
   document.getElementById('equipos-manual-section').style.display = 'none';
+  document.getElementById('equipos-manual-list').innerHTML = '';
+  _equipoManualCount = 0;
 
   // Rellenar campos readonly
   document.getElementById('razon-social').value = cliente.razon_social || '';
@@ -785,16 +787,9 @@ function cargarDatosCliente(cliente) {
   }
 
   // Tabla de productos / equipos
-  var tbody = document.getElementById('productos-ref-body');
-  var equipos = cliente.equipos_activos || [];
-  if (equipos.length > 0) {
-    tbody.innerHTML = equipos.map(function(e) {
-      return '<tr><td>' + nombreModelo(e.modelo) + '</td><td style="text-align:center;">' + (e.cantidad || 1) +
-        '</td><td>' + (e.domicilio || '—') + '</td><td>' + (e.localidad || '—') + '</td></tr>';
-    }).join('');
-  } else {
-    tbody.innerHTML = '<tr><td colspan="4" class="estado-vacio">Sin equipos registrados</td></tr>';
-  }
+  cliente._historicos = [];
+  pintarEquiposCliente();
+  cargarEquiposHistoricos(cliente);
 
   // Mostrar secciones
   document.getElementById('datos-cliente-section').style.display = 'block';
@@ -815,7 +810,67 @@ function cargarDatosCliente(cliente) {
   errEl.textContent = '✓ Cliente encontrado: ' + (cliente.razon_social || '') + ' — Orden ' + ('');
 }
 
+// ── EQUIPOS DEL CLIENTE ──
+// La ficha (clientes.equipos_activos) solo tiene lo cargado en el sistema nuevo.
+// Los equipos del sistema anterior vienen de las órdenes importadas, uno por
+// serie, y se suman acá para poder darlos de baja.
+function equiposDelCliente() {
+  if (_manualMode || !ordenRef) return [];
+  return (ordenRef.equipos_activos || []).concat(ordenRef._historicos || []);
+}
+
+// Baja parcial: lo tildado + lo agregado a mano (equipos que no figuran en ningún lado).
+function equiposBajaParcial() {
+  return _manualMode ? getEquiposManuales() : _equiposBaja.concat(getEquiposManuales());
+}
+
+function pintarEquiposCliente() {
+  var tbody = document.getElementById('productos-ref-body');
+  var equipos = equiposDelCliente();
+  if (equipos.length > 0) {
+    tbody.innerHTML = equipos.map(function(e) {
+      var modelo = nombreModelo(e.modelo) + (e.serie_equipo ? '<br><span style="font-size:9px;color:#6b7280;">Serie ' + e.serie_equipo + ' · sistema anterior</span>' : '');
+      return '<tr><td>' + modelo + '</td><td style="text-align:center;">' + (e.cantidad || 1) +
+        '</td><td>' + (e.domicilio || '—') + '</td><td>' + (e.localidad || '—') + '</td></tr>';
+    }).join('');
+  } else {
+    tbody.innerHTML = '<tr><td colspan="4" class="estado-vacio">Sin equipos registrados</td></tr>';
+  }
+}
+
+async function cargarEquiposHistoricos(cliente) {
+  if (!cliente || !cliente.id) return;
+  try {
+    var res = await fetch(API_URL + '/api/clientes/' + cliente.id + '/equipos-historicos');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var historicos = await res.json();
+    if (ordenRef !== cliente) return; // se eligió otro cliente mientras cargaba
+    cliente._historicos = Array.isArray(historicos) ? historicos : [];
+    pintarEquiposCliente();
+    if (_tipoBaja === 'parcial') pintarSelectorParcial();
+    if (_tipoBaja === 'total') pintarInfoTotal();
+  } catch (e) {
+    console.error('[BAJA] No se pudieron cargar los equipos del sistema anterior:', e.message);
+  }
+}
+
 // ── TIPO DE BAJA ──
+function pintarInfoTotal() {
+  var equipos = equiposDelCliente();
+  var infoEl = document.getElementById('baja-total-info');
+  if (equipos.length > 0) {
+    var totalCant = 0;
+    equipos.forEach(function(e) { totalCant += (parseInt(e.cantidad) || 1); });
+    document.getElementById('baja-total-cantidad').value = totalCant;
+    infoEl.innerHTML = '&#9989; El cliente tiene ' + totalCant + ' equipo(s) registrado(s) en la base de datos. Se darán de baja todos.';
+    infoEl.style.color = '#16a34a';
+  } else {
+    document.getElementById('baja-total-cantidad').value = 1;
+    infoEl.innerHTML = 'Este cliente no tiene equipos registrados en la base de datos. Ingresá la cantidad manualmente.';
+    infoEl.style.color = '#6b7280';
+  }
+}
+
 function seleccionarTipoBaja(tipo) {
   _tipoBaja = tipo;
   document.querySelectorAll('.tipo-baja-btn').forEach(function(b) { b.classList.remove('selected'); });
@@ -826,40 +881,43 @@ function seleccionarTipoBaja(tipo) {
     document.getElementById('equipos-selector').style.display = 'none';
     document.getElementById('baja-total-cant-section').style.display = 'block';
     _equiposBaja = [];
-    var equipos = _manualMode ? [] : ((ordenRef && ordenRef.equipos_activos) || []);
-    var infoEl = document.getElementById('baja-total-info');
-    if (equipos.length > 0) {
-      var totalCant = 0;
-      equipos.forEach(function(e) { totalCant += (parseInt(e.cantidad) || 1); });
-      document.getElementById('baja-total-cantidad').value = totalCant;
-      infoEl.innerHTML = '&#9989; El cliente tiene ' + totalCant + ' equipo(s) registrado(s) en la base de datos. Se darán de baja todos.';
-      infoEl.style.color = '#16a34a';
-    } else {
-      document.getElementById('baja-total-cantidad').value = 1;
-      infoEl.innerHTML = 'Este cliente no tiene equipos registrados en la base de datos. Ingresá la cantidad manualmente.';
-      infoEl.style.color = '#6b7280';
-    }
+    pintarInfoTotal();
     // Hide manual equipment section for baja total
-    if (_manualMode) {
-      document.getElementById('equipos-manual-section').style.display = 'none';
-    }
+    document.getElementById('equipos-manual-section').style.display = 'none';
   } else if (tipo === 'parcial') {
     // Baja parcial: show equipos selector with model details
     document.getElementById('baja-total-cant-section').style.display = 'none';
+    // La carga manual queda siempre disponible: hay equipos que no figuran en ningún lado.
+    document.getElementById('equipos-manual-section').style.display = 'block';
     // En modo manual el usuario carga directamente los equipos a dar de baja en la
     // sección "EQUIPOS A DAR DE BAJA (CARGA MANUAL)". El selector con checkboxes
     // es redundante y confunde (no se auto-refresca al agregar equipos).
     if (_manualMode) {
-      document.getElementById('equipos-manual-section').style.display = 'block';
       document.getElementById('equipos-selector').style.display = 'none';
       return;
     }
-    var equipos = (ordenRef && ordenRef.equipos_activos) || [];
+    pintarSelectorParcial();
+  } else {
+    document.getElementById('equipos-selector').style.display = 'none';
+    document.getElementById('baja-total-cant-section').style.display = 'none';
+    _equiposBaja = [];
+  }
+}
+
+function pintarSelectorParcial() {
+    _equiposBaja = [];
+    var equipos = equiposDelCliente();
     var list = document.getElementById('equipos-check-list');
     if (equipos.length === 0) {
-      list.innerHTML = '<p style="font-size:12px;color:#9ca3af;">Este cliente no tiene equipos registrados.</p>';
+      list.innerHTML = '<p style="font-size:12px;color:#9ca3af;">Este cliente no tiene equipos registrados. Cargalos abajo con "+ Agregar equipo".</p>';
     } else {
       list.innerHTML = equipos.map(function(e, i) {
+        // Equipo del sistema anterior: es una unidad con serie, se tilda o no.
+        if (e.serie_equipo) {
+          return '<div class="equipo-check" style="flex-wrap:wrap;"><input type="checkbox" value="' + i + '" onchange="actualizarEquiposBaja()">' +
+            '<div style="flex:1;"><div class="eq-info">' + nombreModelo(e.modelo) + ' — Serie ' + e.serie_equipo + '</div>' +
+            '<div class="eq-loc">' + (e.domicilio || '') + (e.localidad ? ' — ' + e.localidad : '') + ' · sistema anterior</div></div></div>';
+        }
         var cant = parseInt(e.cantidad) || 1;
         // La cantidad se escribe a mano: la ficha del cliente puede estar incompleta
         // (equipos de órdenes viejas que nunca se cargaron), así que se permite dar de
@@ -876,11 +934,6 @@ function seleccionarTipoBaja(tipo) {
       }).join('');
     }
     document.getElementById('equipos-selector').style.display = 'block';
-  } else {
-    document.getElementById('equipos-selector').style.display = 'none';
-    document.getElementById('baja-total-cant-section').style.display = 'none';
-    _equiposBaja = [];
-  }
 }
 
 function toggleCantBaja(cb, idx, cant) {
@@ -890,11 +943,23 @@ function toggleCantBaja(cb, idx, cant) {
 }
 
 function actualizarEquiposBaja() {
-  var equipos = _manualMode ? getEquiposManuales() : ((ordenRef && ordenRef.equipos_activos) || []);
+  var equipos = equiposDelCliente();
   _equiposBaja = [];
   document.querySelectorAll('#equipos-check-list input[type=checkbox]:checked').forEach(function(cb) {
     var idx = parseInt(cb.value);
     if (!equipos[idx]) return;
+    if (equipos[idx].serie_equipo) {
+      // La serie viaja en la baja para que el equipo no vuelva a aparecer.
+      _equiposBaja.push({
+        modelo: nombreModelo(equipos[idx].modelo),
+        cantidad: 1,
+        domicilio: equipos[idx].domicilio,
+        localidad: equipos[idx].localidad,
+        serie_equipo: equipos[idx].serie_equipo,
+        modelo_original: equipos[idx].modelo_original
+      });
+      return;
+    }
     var cantRegistrada = parseInt(equipos[idx].cantidad) || 1;
     var cantInput = document.querySelector('.eq-cant-select[data-idx="' + idx + '"]');
     var cantBaja = cantInput ? (parseInt(cantInput.value) || 0) : cantRegistrada;
@@ -929,7 +994,7 @@ function onRetiraChange() {
 
 function buildDomRetiroOptions() {
   var wrap = document.getElementById('dom-retiro-options');
-  var equipos = _manualMode ? getEquiposManuales() : ((ordenRef && ordenRef.equipos_activos) || []);
+  var equipos = _manualMode ? getEquiposManuales() : equiposDelCliente().concat(getEquiposManuales());
   
   // Get unique domicilios from equipos
   var domicilios = [];
@@ -1128,10 +1193,10 @@ function obtenerAdvertencias() {
   } else if (_manualMode) {
     tieneEquipos = getEquiposManuales().length > 0;
   } else {
-    tieneEquipos = (ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0);
+    tieneEquipos = equiposDelCliente().length > 0 || getEquiposManuales().length > 0;
   }
   if (!tieneEquipos) warns.push('Al menos 1 equipo');
-  if (_tipoBaja === 'parcial' && !_manualMode && _equiposBaja.length === 0) warns.push('Equipos seleccionados para baja parcial');
+  if (_tipoBaja === 'parcial' && !_manualMode && equiposBajaParcial().length === 0) warns.push('Equipos seleccionados para baja parcial');
   var retira = document.getElementById('retira-equipo').value;
   if (retira === 'si') {
     var domVal = document.getElementById('dom-retiro').value.trim();
@@ -1297,9 +1362,9 @@ async function guardarBaja() {
       localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '',
       cliente_manual: _manualMode,
       productos_ref: (function() {
-        if (_tipoBaja === 'parcial') return _manualMode ? getEquiposManuales() : _equiposBaja;
+        if (_tipoBaja === 'parcial') return equiposBajaParcial();
         if (_tipoBaja === 'total') {
-          if (!_manualMode && ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0) return ordenRef.equipos_activos;
+          if (equiposDelCliente().length > 0) return equiposDelCliente();
           var cantTotal = parseInt(document.getElementById('baja-total-cantidad').value) || 1;
           return [{ modelo: 'Baja total', cantidad: cantTotal, domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '', localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '' }];
         }
@@ -1314,10 +1379,10 @@ async function guardarBaja() {
       responsable_celular: document.getElementById('responsable-celular').value,
       tipo_baja: _tipoBaja || 'total',
       equipos_baja: _tipoBaja === 'total' ? (function() {
-        if (!_manualMode && ordenRef && ordenRef.equipos_activos && ordenRef.equipos_activos.length > 0) return ordenRef.equipos_activos;
+        if (equiposDelCliente().length > 0) return equiposDelCliente();
         var cantTotal = parseInt(document.getElementById('baja-total-cantidad').value) || 1;
         return [{ modelo: 'Baja total', cantidad: cantTotal, domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '', localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '' }];
-      })() : (_manualMode ? getEquiposManuales() : _equiposBaja),
+      })() : equiposBajaParcial(),
       retira_equipo: document.getElementById('retira-equipo').value === 'si',
       dom_retiro: document.getElementById('dom-retiro').value.trim() || (document.getElementById('dom-retiro-manual') ? document.getElementById('dom-retiro-manual').value.trim() : ''),
       localidad_retiro: document.getElementById('localidad-retiro').value.trim() || (document.getElementById('localidad-retiro-manual') ? document.getElementById('localidad-retiro-manual').value.trim() : ''),
@@ -1345,7 +1410,8 @@ async function guardarBaja() {
     if (ordenRef && ordenRef.id && _tipoBaja && !_manualMode) {
       try {
         var patchUrl = API_URL + '/api/clientes/' + ordenRef.id + '/baja';
-        var patchBody = { tipo: _tipoBaja, equipos_a_dar_baja: _equiposBaja };
+        // Los equipos del sistema anterior (con serie) no están en la ficha: no se descuentan de ahí.
+        var patchBody = { tipo: _tipoBaja, equipos_a_dar_baja: _equiposBaja.filter(function(e) { return !e.serie_equipo; }) };
         console.log('[BAJA] Enviando PATCH a:', patchUrl, 'body:', JSON.stringify(patchBody));
         var patchRes = await fetch(patchUrl, {
           method: 'PATCH',
