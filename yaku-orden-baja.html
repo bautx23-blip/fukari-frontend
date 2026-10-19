@@ -661,8 +661,8 @@ function agregarEquipoManual() {
   row.id = 'em-row-' + id;
   var modeloOpts = MODELOS.map(function(m){ return '<option value="' + m + '">' + m + '</option>'; }).join('');
   row.innerHTML =
-    '<div class="em-field" style="flex:2;"><label>Modelo</label><select id="em-modelo-' + id + '"><option value="">-- Modelo --</option>' + modeloOpts + '</select></div>' +
-    '<div class="em-field" style="flex:0.5;"><label>Cant.</label><input type="number" id="em-cant-' + id + '" value="1" min="1" style="width:50px;"></div>' +
+    '<div class="em-field" style="flex:2;"><label>Modelo</label><select id="em-modelo-' + id + '" onchange="onEquiposManualesChange()"><option value="">-- Modelo --</option>' + modeloOpts + '</select></div>' +
+    '<div class="em-field" style="flex:0.5;"><label>Cant.</label><input type="number" id="em-cant-' + id + '" value="1" min="1" style="width:50px;" oninput="onEquiposManualesChange()"></div>' +
     '<div class="em-field" style="flex:2;"><label>Domicilio</label><input type="text" id="em-dom-' + id + '" placeholder="Calle, nro..."></div>' +
     '<div class="em-field localidad-wrap" style="flex:1.5;position:relative;"><label>Localidad</label>' +
       '<input type="text" id="em-loc-' + id + '" placeholder="Buscar..." autocomplete="off"' +
@@ -675,6 +675,7 @@ function agregarEquipoManual() {
 function eliminarEquipoManual(id) {
   var row = document.getElementById('em-row-' + id);
   if (row) row.remove();
+  onEquiposManualesChange();
 }
 
 function getEquiposManuales() {
@@ -824,6 +825,25 @@ function equiposBajaParcial() {
   return _manualMode ? getEquiposManuales() : _equiposBaja.concat(getEquiposManuales());
 }
 
+// Baja total: todo lo del cliente + lo agregado a mano. Si la cantidad escrita
+// supera ese detalle, la diferencia se guarda como "Sin detalle" para que los
+// reportes cuenten la cantidad real.
+function equiposBajaTotal() {
+  var cantTotal = parseInt(document.getElementById('baja-total-cantidad').value) || 1;
+  var lista = equiposDelCliente().concat(_manualMode ? [] : getEquiposManuales());
+  if (lista.length === 0) {
+    return [{ modelo: 'Baja total', cantidad: cantTotal, domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '', localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '' }];
+  }
+  var diferencia = cantTotal - sumarCantidades(lista);
+  if (diferencia > 0) lista = lista.concat([{ modelo: 'Sin detalle', cantidad: diferencia, domicilio: '', localidad: '' }]);
+  return lista;
+}
+
+// Al agregar, quitar o cambiar un equipo a mano en la baja total, se recalcula la cantidad.
+function onEquiposManualesChange() {
+  if (_tipoBaja === 'total' && !_manualMode) pintarInfoTotal();
+}
+
 function pintarEquiposCliente() {
   var tbody = document.getElementById('productos-ref-body');
   var equipos = equiposDelCliente();
@@ -855,14 +875,23 @@ async function cargarEquiposHistoricos(cliente) {
 }
 
 // ── TIPO DE BAJA ──
+function sumarCantidades(equipos) {
+  var total = 0;
+  equipos.forEach(function(e) { total += (parseInt(e.cantidad) || 1); });
+  return total;
+}
+
 function pintarInfoTotal() {
   var equipos = equiposDelCliente();
+  var agregados = _manualMode ? [] : getEquiposManuales();
   var infoEl = document.getElementById('baja-total-info');
-  if (equipos.length > 0) {
-    var totalCant = 0;
-    equipos.forEach(function(e) { totalCant += (parseInt(e.cantidad) || 1); });
-    document.getElementById('baja-total-cantidad').value = totalCant;
-    infoEl.innerHTML = '&#9989; El cliente tiene ' + totalCant + ' equipo(s) registrado(s) en la base de datos. Se darán de baja todos.';
+  if (equipos.length > 0 || agregados.length > 0) {
+    var cantRegistrados = sumarCantidades(equipos);
+    var cantAgregados = sumarCantidades(agregados);
+    document.getElementById('baja-total-cantidad').value = cantRegistrados + cantAgregados;
+    infoEl.innerHTML = '&#9989; El cliente tiene ' + cantRegistrados + ' equipo(s) registrado(s) en la base de datos' +
+      (cantAgregados ? ' + ' + cantAgregados + ' agregado(s) a mano' : '') +
+      '. Se darán de baja todos. Si falta alguno, agregalo abajo con "+ Agregar equipo".';
     infoEl.style.color = '#16a34a';
   } else {
     document.getElementById('baja-total-cantidad').value = 1;
@@ -882,8 +911,9 @@ function seleccionarTipoBaja(tipo) {
     document.getElementById('baja-total-cant-section').style.display = 'block';
     _equiposBaja = [];
     pintarInfoTotal();
-    // Hide manual equipment section for baja total
-    document.getElementById('equipos-manual-section').style.display = 'none';
+    // Con cliente encontrado se pueden sumar equipos que no figuran en la base.
+    // En modo manual la baja total sigue siendo solo cantidad + domicilio.
+    document.getElementById('equipos-manual-section').style.display = _manualMode ? 'none' : 'block';
   } else if (tipo === 'parcial') {
     // Baja parcial: show equipos selector with model details
     document.getElementById('baja-total-cant-section').style.display = 'none';
@@ -1363,11 +1393,7 @@ async function guardarBaja() {
       cliente_manual: _manualMode,
       productos_ref: (function() {
         if (_tipoBaja === 'parcial') return equiposBajaParcial();
-        if (_tipoBaja === 'total') {
-          if (equiposDelCliente().length > 0) return equiposDelCliente();
-          var cantTotal = parseInt(document.getElementById('baja-total-cantidad').value) || 1;
-          return [{ modelo: 'Baja total', cantidad: cantTotal, domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '', localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '' }];
-        }
+        if (_tipoBaja === 'total') return equiposBajaTotal();
         return [];
       })(),
       cantidad_equipos: _tipoBaja === 'total' ? (parseInt(document.getElementById('baja-total-cantidad').value) || 1) : undefined,
@@ -1378,11 +1404,7 @@ async function guardarBaja() {
       responsable: responsable,
       responsable_celular: document.getElementById('responsable-celular').value,
       tipo_baja: _tipoBaja || 'total',
-      equipos_baja: _tipoBaja === 'total' ? (function() {
-        if (equiposDelCliente().length > 0) return equiposDelCliente();
-        var cantTotal = parseInt(document.getElementById('baja-total-cantidad').value) || 1;
-        return [{ modelo: 'Baja total', cantidad: cantTotal, domicilio: _manualMode ? (document.getElementById('domicilio-manual').value.trim() || '') : '', localidad: _manualMode ? (document.getElementById('localidad-manual').value.trim() || '') : '' }];
-      })() : equiposBajaParcial(),
+      equipos_baja: _tipoBaja === 'total' ? equiposBajaTotal() : equiposBajaParcial(),
       retira_equipo: document.getElementById('retira-equipo').value === 'si',
       dom_retiro: document.getElementById('dom-retiro').value.trim() || (document.getElementById('dom-retiro-manual') ? document.getElementById('dom-retiro-manual').value.trim() : ''),
       localidad_retiro: document.getElementById('localidad-retiro').value.trim() || (document.getElementById('localidad-retiro-manual') ? document.getElementById('localidad-retiro-manual').value.trim() : ''),
