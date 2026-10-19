@@ -723,7 +723,7 @@ function abrirOrdenPrellenada(x){
 // cuando ya se instaló, y se incluye por si la orden nunca llegó a cargarse.
 // La comparten los tres lugares que ofrecen el botón: agenda, chat y pipeline.
 var ETAPAS_CON_ORDEN = ['aguardando instalacion', 'venta cerrada'];
-var WA_ORIGEN_LABEL = { meta: 'Meta Ads', google: 'Google Ads', organico: 'Orgánico' };
+var WA_ORIGEN_LABEL = { meta: 'Meta Ads', google: 'Google Ads', web: 'Web', organico: 'Orgánico' };
 
 var _waPipeCache = null, _waPipeCacheAt = 0;
 async function waMostrarEtapa(tel) {
@@ -1767,6 +1767,7 @@ switchView = function(view) {
   var PL_ORIGEN = {
     meta:   { label: 'Meta Ads',   bg: '#e0e7ff', fg: '#3730a3' },
     google: { label: 'Google Ads', bg: '#fef3c7', fg: '#92400e' },
+    web:    { label: 'Web',        bg: '#dcfce7', fg: '#166534' },
   };
   function plChipOrigen(l){
     var o = PL_ORIGEN[l.origen];
