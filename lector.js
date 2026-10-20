@@ -21,19 +21,78 @@
 
   window._esLector = false;
 
+  // ── Sesión para la API del backend ─────────────────────────────────────────
+  // El backend exige la sesión de Supabase (Authorization: Bearer <access_token>).
+  // Se agrega acá, en el guard de fetch, así alcanza a todas las páginas sin
+  // tocar cada llamada.
+  var BACKEND_RE = /^https:\/\/fukari-backend-production(-[a-z0-9]+)?\.up\.railway\.app\//;
+  var STORAGE_KEY = 'sb-' + SUPABASE_URL.split('//')[1].split('.')[0] + '-auth-token';
+  var _authClient = null;
+  function clienteAuth() {
+    if (window.sb && window.sb.auth) return window.sb;
+    if (window._sb && window._sb.auth) return window._sb;
+    if (!_authClient && window.supabase && window.supabase.createClient) {
+      _authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    return _authClient;
+  }
+  function tokenGuardado() {
+    try {
+      var s = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      return s && s.access_token ? s : null;
+    } catch (e) { return null; }
+  }
+  // Devuelve el access_token vigente; si está por vencer, deja que supabase-js lo renueve.
+  function tokenActual() {
+    var s = tokenGuardado();
+    var vigente = s && s.expires_at && (s.expires_at * 1000 - Date.now() > 60 * 1000);
+    if (vigente) return Promise.resolve(s.access_token);
+    var c = clienteAuth();
+    if (!c) return Promise.resolve(s ? s.access_token : null);
+    return c.auth.getSession().then(function (r) {
+      return (r && r.data && r.data.session && r.data.session.access_token) || (s ? s.access_token : null);
+    }, function () { return s ? s.access_token : null; });
+  }
+  function urlDe(input) { return typeof input === 'string' ? input : (input && input.url) || String(input || ''); }
+
   // ── 1. Guard de fetch (se instala YA, decide en cada llamada) ──────────────
   var fetchOriginal = window.fetch;
   window.fetch = function (input, init) {
+    var url = urlDe(input);
     if (window._esLector) {
       var metodo = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
-      var url = typeof input === 'string' ? input : (input && input.url) || '';
       var esAuth = url.indexOf('/auth/v1/') !== -1; // refresh de sesión y logout tienen que pasar
       if (!esAuth && metodo !== 'GET' && metodo !== 'HEAD' && metodo !== 'OPTIONS') {
         avisar();
         return Promise.reject(new Error('Usuario de solo lectura: no se puede modificar.'));
       }
     }
-    return fetchOriginal.apply(this, arguments);
+    if (!BACKEND_RE.test(url)) return fetchOriginal.apply(this, arguments);
+    var self = this;
+    return tokenActual().then(function (token) {
+      var headers = new Headers((init && init.headers) || (typeof input !== 'string' && input && input.headers) || undefined);
+      if (token && !headers.has('Authorization')) headers.set('Authorization', 'Bearer ' + token);
+      return fetchOriginal.call(self, input, Object.assign({}, init, { headers: headers }));
+    });
+  };
+
+  // Descargas de la API (exportar a Excel, etc.): un link directo no puede mandar la
+  // sesión, así que se baja con fetch y se guarda el archivo.
+  window.descargarConSesion = function (url, nombre) {
+    return window.fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('No se pudo descargar (' + r.status + ')');
+      var cd = r.headers.get('Content-Disposition') || '';
+      var m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd);
+      var archivo = m ? decodeURIComponent(m[1]) : nombre || 'descarga';
+      return r.blob().then(function (b) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(b);
+        a.download = archivo;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      });
+    });
   };
 
   var _avisoTs = 0;

@@ -1013,7 +1013,8 @@ async function toggleHistorial(id) {
 // ── EXPORTAR ─────────────────────────────────────────────────
 function exportar() {
   toast('Generando archivo...', 'success');
-  window.location.href = `${API}/exportar?periodo=${periodoActual}`;
+  window.descargarConSesion(`${API}/exportar?periodo=${periodoActual}`, `Cobranzas_${periodoActual}.xlsx`)
+    .catch(e => toast(e.message, 'error'));
 }
 
 // ── PLANTILLAS ────────────────────────────────────────────────

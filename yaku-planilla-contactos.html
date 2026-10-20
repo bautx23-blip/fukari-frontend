@@ -480,7 +480,8 @@ async function borrar(id){
 
 function exportar(){
   if (PREVIEW) { toast('Exportar deshabilitado en preview', 'ok'); return; }
-  window.location.href = API_URL + '/api/planilla-contactos/export';
+  window.descargarConSesion(API_URL + '/api/planilla-contactos/export', 'planilla-contactos-' + new Date().toISOString().slice(0, 10) + '.xlsx')
+    .catch(function(e){ toast(e.message, 'error'); });
 }
 
 document.getElementById('import-file').addEventListener('change', async function(ev){
