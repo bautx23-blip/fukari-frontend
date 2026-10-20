@@ -1073,9 +1073,7 @@ async function guardarOrden() {
         if (file) {
           var ext = file.name.split('.').pop();
           var fileName = nroTemp + '-' + lado + '.' + ext;
-          var { data: upData, error: upErr } = await window._sb.storage
-            .from('ordenes-dni')
-            .upload(fileName, file, { upsert: true });
+          var { data: upData, error: upErr } = await window.subirDocumento(fileName, file);
           if (!upErr) {
             var { data: urlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(fileName);
             datos[lado.replace('-', '_') + '_url'] = urlData.publicUrl;
@@ -1089,9 +1087,7 @@ async function guardarOrden() {
       var cFile = _dniFiles['constancia'];
       var cExt = cFile.name.split('.').pop();
       var cFileName = nroTemp2 + '-constancia.' + cExt;
-      var { data: cUpData, error: cUpErr } = await window._sb.storage
-        .from('ordenes-dni')
-        .upload(cFileName, cFile, { upsert: true });
+      var { data: cUpData, error: cUpErr } = await window.subirDocumento(cFileName, cFile);
       if (!cUpErr) {
         var { data: cUrlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(cFileName);
         datos.constancia_url = cUrlData.publicUrl;
@@ -1102,9 +1098,7 @@ async function guardarOrden() {
       var oFile = _dniFiles['otro-documento'];
       var oExt = oFile.name.split('.').pop();
       var oFileName = nroTemp3 + '-otro-documento.' + oExt;
-      var { data: oUpData, error: oUpErr } = await window._sb.storage
-        .from('ordenes-dni')
-        .upload(oFileName, oFile, { upsert: true });
+      var { data: oUpData, error: oUpErr } = await window.subirDocumento(oFileName, oFile);
       if (!oUpErr) {
         var { data: oUrlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(oFileName);
         datos.otro_documento_url = oUrlData.publicUrl;

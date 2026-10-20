@@ -76,6 +76,25 @@
     });
   };
 
+  // Documentos de órdenes y bajas (DNI, constancias, foto del equipo): se suben por el
+  // backend, no directo a Supabase, así el bucket no queda abierto. Devuelve
+  // { data, error } como storage.upload(), para no cambiar el código que lo usa;
+  // la URL pública se sigue armando con getPublicUrl(nombre).
+  var API_BASE = location.hostname.indexOf('staging') !== -1
+    ? 'https://fukari-backend-production-92f1.up.railway.app'
+    : 'https://fukari-backend-production.up.railway.app';
+  window.subirDocumento = function (nombre, archivo) {
+    var fd = new FormData();
+    fd.append('nombre', nombre);
+    fd.append('archivo', archivo);
+    return window.fetch(API_BASE + '/api/archivos/documento', { method: 'POST', body: fd })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          return r.ok ? { data: { path: j.nombre }, error: null } : { data: null, error: new Error(j.error || 'Error ' + r.status) };
+        });
+      }, function (e) { return { data: null, error: e }; });
+  };
+
   // Descargas de la API (exportar a Excel, etc.): un link directo no puede mandar la
   // sesión, así que se baja con fetch y se guarda el archivo.
   window.descargarConSesion = function (url, nombre) {

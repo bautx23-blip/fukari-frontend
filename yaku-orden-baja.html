@@ -1324,9 +1324,7 @@ async function guardarBaja() {
       var nbRef = document.getElementById('nro-baja').value.replace(/[^a-zA-Z0-9\-]/g,'') || ('baja-' + Date.now());
       var ext = _fotoFile.name.split('.').pop();
       var fName = nbRef + '-foto-equipo.' + ext;
-      var { data: upData, error: upErr } = await window._sb.storage
-        .from('ordenes-dni')
-        .upload(fName, _fotoFile, { upsert: true });
+      var { data: upData, error: upErr } = await window.subirDocumento(fName, _fotoFile);
       if (!upErr) {
         var { data: urlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(fName);
         foto_equipo_url = urlData.publicUrl;
@@ -1343,8 +1341,7 @@ async function guardarBaja() {
         if (dFile) {
           var dExt = dFile.name.split('.').pop();
           var dName = nroBajaRef + '-' + lado + '.' + dExt;
-          var { data: dUpData, error: dUpErr } = await window._sb.storage
-            .from('ordenes-dni').upload(dName, dFile, { upsert: true });
+          var { data: dUpData, error: dUpErr } = await window.subirDocumento(dName, dFile);
           if (!dUpErr) {
             var { data: dUrlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(dName);
             if (lado === 'dni-frente') dni_frente_url = dUrlData.publicUrl;
@@ -1358,8 +1355,7 @@ async function guardarBaja() {
       var cFile = _docFiles['constancia'];
       var cExt = cFile.name.split('.').pop();
       var cName = nroBajaRef + '-constancia.' + cExt;
-      var { data: cUpData, error: cUpErr } = await window._sb.storage
-        .from('ordenes-dni').upload(cName, cFile, { upsert: true });
+      var { data: cUpData, error: cUpErr } = await window.subirDocumento(cName, cFile);
       if (!cUpErr) {
         var { data: cUrlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(cName);
         constancia_url = cUrlData.publicUrl;
@@ -1369,8 +1365,7 @@ async function guardarBaja() {
       var oFile = _docFiles['otro-documento'];
       var oExt = oFile.name.split('.').pop();
       var oName = nroBajaRef + '-otro-documento.' + oExt;
-      var { data: oUpData, error: oUpErr } = await window._sb.storage
-        .from('ordenes-dni').upload(oName, oFile, { upsert: true });
+      var { data: oUpData, error: oUpErr } = await window.subirDocumento(oName, oFile);
       if (!oUpErr) {
         var { data: oUrlData } = window._sb.storage.from('ordenes-dni').getPublicUrl(oName);
         otro_documento_url = oUrlData.publicUrl;

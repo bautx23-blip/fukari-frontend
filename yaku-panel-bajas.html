@@ -679,7 +679,7 @@ async function subirArchivoBajaEdit(fileInput, nombreBase) {
   if (!file) return null;
   var ext = file.name.split('.').pop();
   var fileName = nombreBase + '.' + ext;
-  var { error } = await sb.storage.from('ordenes-dni').upload(fileName, file, { upsert: true });
+  var { error } = await window.subirDocumento(fileName, file);
   if (error) { console.error('Upload error:', error); return null; }
   var { data } = sb.storage.from('ordenes-dni').getPublicUrl(fileName);
   return data.publicUrl;
