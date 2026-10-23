@@ -51,6 +51,8 @@ tbody td{padding:12px 16px;font-size:13px;color:#374151;vertical-align:middle;}
 .btn-dl:hover{background:#e5e7eb;}
 .btn-mail{padding:6px 10px;background:#f3f4f6;color:#374151;border:1.5px solid #d1d5db;border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;line-height:1;white-space:nowrap;}
 .btn-mail:hover{background:#e5e7eb;border-color:#9ca3af;}
+.btn-mail.enviado{background:#dcfce7;color:#15803d;border-color:#22c55e;font-weight:700;}
+.btn-mail.enviado:hover{background:#bbf7d0;border-color:#16a34a;}
 .btn-del-orden{background:#fee2e2;border:1.5px solid #fecaca;border-radius:6px;color:#dc2626;font-size:11px;padding:6px 10px;cursor:pointer;transition:all 0.15s;line-height:1;display:inline-flex;align-items:center;white-space:nowrap;}
 .btn-del-orden:hover{background:#fecaca;border-color:#f87171;}
 .btn-edit-orden{background:#fef3c7;border:1.5px solid #fde68a;border-radius:6px;color:#d97706;font-size:11px;padding:6px 10px;cursor:pointer;transition:all 0.15s;line-height:1;display:inline-flex;align-items:center;white-space:nowrap;}
@@ -245,6 +247,29 @@ var todasLasBajas = [];
 var bajasFiltradas = [];
 var paginaActual = 1;
 var _currentUserEmail = null;
+
+// Sobre de mail: al tocarlo se abre el mail armado (Outlook) y queda registrado como
+// enviado, así el sobre se pinta de verde para todos. _mailEnviados guarda los marcados
+// en esta sesión, para que se mantengan verdes si la tabla se vuelve a dibujar.
+var _mailEnviados = {};
+function mailBtnHtml(tabla, reg, subj, body) {
+  var env = reg.mail_enviado_at || _mailEnviados[reg.id];
+  var title = 'Enviar por mail';
+  if (env) {
+    var f = new Date(typeof env === 'string' ? env : env.at);
+    var por = typeof env === 'string' ? reg.mail_enviado_por : env.por;
+    title = 'Enviado por mail el ' + f.toLocaleDateString('es-AR') + ' ' + f.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}) + (por ? ' por ' + por : '') + ' · tocá para reenviar';
+  }
+  return '<a class="btn-mail' + (env ? ' enviado' : '') + '" href="mailto:?subject=' + subj + '&body=' + body + '" title="' + title.replace(/"/g, '&quot;') + '" onclick="marcarMailEnviado(\'' + tabla + '\',\'' + reg.id + '\',this)">&#9993;</a>';
+}
+function marcarMailEnviado(tabla, id, el) {
+  if (window._esLector) return;
+  el.classList.add('enviado');
+  _mailEnviados[id] = { at: new Date().toISOString(), por: _currentUserEmail };
+  // Sin await: el mailto se abre igual aunque el registro tarde o falle.
+  fetch(API_URL + '/api/' + tabla + '/' + id + '/mail-enviado', { method: 'PATCH' }).catch(function () {});
+}
+
 var ADMIN_EMAIL = 'renebiagioni@yakuagua.com.ar';
 var ADMIN_EMAILS = [ADMIN_EMAIL, 'agustincalabres@yakuagua.com.ar', 'info@wearebilab.com'];
 var PIA_EMAIL = 'ventas@yakuagua.com.ar';
@@ -435,7 +460,7 @@ function renderTabla() {
       var locBaja = (b.localidad_retiro || b.localidad || '').trim();
       var subjB = encodeURIComponent('Nueva orden de baja de servicio — ' + locBaja + ' — ' + (b.razon_social||''));
       var bodyB = encodeURIComponent('Hola Equipo. Cómo están? Les adjunto nueva orden de baja de servicio, para ' + (b.razon_social||'') + '. El responsable es ' + (b.responsable||'') + ' y su celular es ' + (b.responsable_celular||'') + '.\n\nLink de orden de baja: ' + b.pdf_url + '?t=' + Date.now());
-      mailBtn = '<a class="btn-mail" href="mailto:?subject=' + subjB + '&body=' + bodyB + '" title="Enviar por mail">&#9993;</a>';
+      mailBtn = mailBtnHtml('bajas', b, subjB, bodyB);
     }
     var deleteBtn = (esAdmin && !b.anulada) ? '<button class="btn-del-orden" onclick="confirmarAnular(\'' + b.id + '\',\'' + (b.numero_completo||'').replace(/'/g,'') + '\')" title="Anular baja">&#9888;</button>' : '';
     var editBtn = (esAdmin && !b.anulada) ? '<button class="btn-edit-orden" onclick=\'abrirEdicionBaja(' + JSON.stringify(b).replace(/'/g,"&#39;") + ')\' title="Editar baja">&#9998;</button>' : '';
